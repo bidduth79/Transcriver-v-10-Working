@@ -36,10 +36,40 @@ export const useTranscriptFormatter = (
     return new RegExp(`(${cleanMatches.join('|')})`, 'gi');
   }, [sensitiveSet]);
 
+  // Bounded cache for sensitive-only highlighting (avoids re-allocating React elements on re-renders)
+  const sensitiveHighlightCache = useMemo(() => new Map<string, (string | React.ReactNode)[]>(), [sensitiveRegex]);
+
   const formatText = useCallback((text: string, matchIndexRef: { current: number }) => {
     if (!text) return [];
     if (!searchRegex && !sensitiveRegex) {
       return [text];
+    }
+
+    // Fast path: when only sensitiveRegex is active (no active search term), use bounded cache
+    if (!searchRegex && sensitiveRegex && sensitiveSet.size > 0) {
+      const cached = sensitiveHighlightCache.get(text);
+      if (cached) return cached;
+
+      const result = text.split(sensitiveRegex).map((sub, subIdx) => {
+        if (sensitiveSet.has(sub.toLowerCase())) {
+          return (
+            <mark
+              key={`sens-0-${subIdx}`}
+              className="bg-red-500/20 text-red-700 dark:text-red-400 font-bold decoration-red-500/30 underline decoration-2 underline-offset-4"
+            >
+              {sub}
+            </mark>
+          );
+        }
+        return sub;
+      });
+
+      if (sensitiveHighlightCache.size >= 500) {
+        const firstKey = sensitiveHighlightCache.keys().next().value;
+        if (firstKey !== undefined) sensitiveHighlightCache.delete(firstKey);
+      }
+      sensitiveHighlightCache.set(text, result);
+      return result;
     }
 
     let elements: (string | React.ReactNode)[] = [text];
@@ -90,7 +120,7 @@ export const useTranscriptFormatter = (
     }
 
     return elements;
-  }, [searchRegex, trimmedSearch, currentMatchIndex, sensitiveRegex, sensitiveSet]);
+  }, [searchRegex, trimmedSearch, currentMatchIndex, sensitiveRegex, sensitiveSet, sensitiveHighlightCache]);
 
   return { formatText };
 };

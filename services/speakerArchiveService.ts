@@ -1,11 +1,19 @@
-import { getAllFromStore } from './db';
+import { getAllFromStore, STORES } from './db';
 import { SpeakerBgbMention, SpeakerDatabaseStats, SpeakerCustomNote } from '../types/speaker';
+import { useHistoryStore } from '../hooks/useHistoryStore';
 
 const BGB_KEYWORDS = [
   'বিজিবি', 'বর্ডার গার্ড', 'বর্ডার গার্ড বাংলাদেশ', 'bgb', 'border guard',
   'সীমান্ত', 'সীমান্তে', 'সীমান্তবর্তী', 'সীমান্ত হত্যা', 'ফেলানী',
   'বিডিআর', 'পিলখানা', 'বিএসএফ', 'bsf', 'চোরাচালান', 'অনুপ্রবেশ'
 ];
+
+const LOWER_BGB_KEYWORDS = BGB_KEYWORDS.map(kw => kw.toLowerCase());
+const POSITIVE_WORDS = ['সাহসী', 'বীরত্ব', 'ধন্যবাদ', 'প্রশংসা', 'পাহারায়', 'নিরাপত্তা', 'সতর্ক', 'শক্তিশালী', 'গর্ব'];
+const CRITICAL_WORDS = ['ব্যর্থ', 'অসহায়', 'হত্যা', 'গুলি', 'দুর্নীতি', 'নিষ্ক্রিয়', 'দায়িত্বজ্ঞানহীন', 'অভিযোগ', 'বর্বরোচিত', 'অন্যায়'];
+
+const SPEAKER_BOLD_REGEX = /^(\[[0-9০-৯]{1,2}:[0-9০-৯]{2}(?::[0-9০-৯]{2})?\])?\s*\*\*([^*]+)\*\*:\s*(.*)$/;
+const SPEAKER_PLAIN_REGEX = /^(\[[0-9০-৯]{1,2}:[0-9০-৯]{2}(?::[0-9০-৯]{2})?\])?\s*([A-Za-z0-9\u0980-\u09FF\s._-]+):\s*(.*)$/;
 
 const CUSTOM_NOTES_STORE_KEY = 'speaker_custom_dossier_notes';
 
@@ -34,12 +42,14 @@ export const scanDatabaseForSpeaker = async (
 ): Promise<SpeakerDatabaseStats> => {
   const normTarget = speakerName.trim().toLowerCase();
   
-  // 1. Fetch all items from studio_history
-  let historyItems: any[] = [];
-  try {
-    historyItems = await getAllFromStore('studio_history') as any[];
-  } catch (e) {
-    console.warn('Could not load history items for speaker scan:', e);
+  // 1. Prefer already-loaded in-memory history from Zustand store to avoid redundant IndexedDB full-table reads
+  let historyItems: any[] = useHistoryStore.getState().history;
+  if (!Array.isArray(historyItems) || historyItems.length === 0) {
+    try {
+      historyItems = await getAllFromStore(STORES.HISTORY) as any[];
+    } catch (e) {
+      console.warn('Could not load history items for speaker scan:', e);
+    }
   }
 
   // Also include the current transcript if not already in history
@@ -79,8 +89,7 @@ export const scanDatabaseForSpeaker = async (
 
     lines.forEach((line) => {
       // Regex to capture timestamp and speaker: [00:15] **Speaker Name:** or **Speaker Name:** or Speaker Name:
-      const speakerMatch = line.match(/^(\[[0-9০-৯]{1,2}:[0-9০-৯]{2}(?::[0-9০-৯]{2})?\])?\s*\*\*([^*]+)\*\*:\s*(.*)$/) ||
-                           line.match(/^(\[[0-9০-৯]{1,2}:[0-9০-৯]{2}(?::[0-9০-৯]{2})?\])?\s*([A-Za-z0-9\u0980-\u09FF\s._-]+):\s*(.*)$/);
+      const speakerMatch = line.match(SPEAKER_BOLD_REGEX) || line.match(SPEAKER_PLAIN_REGEX);
 
       if (speakerMatch) {
         const timestamp = speakerMatch[1] ? speakerMatch[1].replace(/[\[\]]/g, '') : '';
@@ -96,16 +105,14 @@ export const scanDatabaseForSpeaker = async (
 
           // Check if speechText contains BGB keywords
           const lowerSpeech = speechText.toLowerCase();
-          const hasBgbKeyword = BGB_KEYWORDS.some(kw => lowerSpeech.includes(kw.toLowerCase()));
+          const hasBgbKeyword = LOWER_BGB_KEYWORDS.some(kw => lowerSpeech.includes(kw));
 
           if (hasBgbKeyword && speechText.length > 5) {
             // Sentiment estimation
             let sentiment: 'supportive' | 'neutral' | 'critical' = 'neutral';
-            const positiveWords = ['সাহসী', 'বীরত্ব', 'ধন্যবাদ', 'প্রশংসা', 'পাহারায়', 'নিরাপত্তা', 'সতর্ক', 'শক্তিশালী', 'গর্ব'];
-            const criticalWords = ['ব্যর্থ', 'অসহায়', 'হত্যা', 'গুলি', 'দুর্নীতি', 'নিষ্ক্রিয়', 'দায়িত্বজ্ঞানহীন', 'অভিযোগ', 'বর্বরোচিত', 'অন্যায়'];
 
-            const hasPos = positiveWords.some(w => speechText.includes(w));
-            const hasCrit = criticalWords.some(w => speechText.includes(w));
+            const hasPos = POSITIVE_WORDS.some(w => speechText.includes(w));
+            const hasCrit = CRITICAL_WORDS.some(w => speechText.includes(w));
 
             if (hasCrit && !hasPos) sentiment = 'critical';
             else if (hasPos && !hasCrit) sentiment = 'supportive';
@@ -124,7 +131,7 @@ export const scanDatabaseForSpeaker = async (
       } else {
         // Line without direct speaker header, but if target speaker was found or transcript is raw
         const lowerLine = line.toLowerCase();
-        if ((lowerLine.includes(normTarget)) && BGB_KEYWORDS.some(kw => lowerLine.includes(kw.toLowerCase()))) {
+        if ((lowerLine.includes(normTarget)) && LOWER_BGB_KEYWORDS.some(kw => lowerLine.includes(kw))) {
           mentions.push({
             historyId: rec.id,
             fileName: rec.fileName,

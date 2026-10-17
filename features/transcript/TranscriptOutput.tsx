@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { TranscriptModals } from './components/TranscriptModals';
 import { TranscriptContent } from './components/TranscriptContent';
 import { ProcessingView } from './ProcessingView.tsx';
-import { useTranscriptScroll, useTranscriptSync, useLogoAnimation, useSensitiveKeywords } from './hooks/useTranscriptOutput';
+import { useTranscriptScroll, useLogoAnimation, useSensitiveKeywords } from './hooks/useTranscriptOutput';
 import { useBgbAnalysis } from './hooks/useBgbAnalysis';
 import { useSpeakerProfile } from '../../hooks/useSpeakerProfile';
 import { TranscriptSidebarTools } from './components/TranscriptSidebarTools';
@@ -77,18 +77,6 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = ({
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
 
   const { logoOffset, logoContainerRef, handleLogoMouseMove, handleLogoMouseLeave } = useLogoAnimation();
-  const { isSynced, isKaraokeEnabled, setIsKaraokeEnabled, transcriptSegments } = useTranscriptSync(fileUrl, transcript, activeTranscriptSourceMeta, fileMeta, status);
-
-  const handleToggleKaraoke = (enabled: boolean) => {
-    setIsKaraokeEnabled(enabled);
-    if (audioRef?.current) {
-      if (!enabled) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play().catch((e: any) => console.warn('Audio play failed:', e));
-      }
-    }
-  };
 
   const handleRenameSpeaker = React.useCallback(async (oldName: string) => {
     const newName = window.prompt(appLang === 'bn' ? `"${oldName}" এর নতুন নাম দিন:` : `Rename "${oldName}" to:`, oldName);
@@ -110,7 +98,7 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = ({
     }
   }, [appLang, transcript, setTranscript, addToast, activeHistoryId]);
 
-  const { scrollContainerRef, transcriptEndRef, localScrollPercent, handleScroll, handleUserInteraction, scrollToTop, scrollToBottom } = useTranscriptScroll(matchCount, searchTerm, currentMatchIndex, isSynced, isKaraokeEnabled, status, transcript, audioCurrentTime);
+  const { scrollContainerRef, transcriptEndRef, localScrollPercent, handleScroll, scrollToTop, scrollToBottom } = useTranscriptScroll(matchCount, searchTerm, currentMatchIndex);
   const { sensitiveMatches, sensitiveWordCounts, isSensitive } = useSensitiveKeywords(transcript);
 
   const { isBgbAnalysisEnabled, setIsBgbAnalysisEnabled, bgbAnalysisResult, isAnalyzing, triggerAnalysis } = useBgbAnalysis(transcript, sensitiveMatches);
@@ -143,10 +131,6 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = ({
       <TranscriptToolbar
         t={t}
         status={status}
-        isSynced={isSynced}
-        transcriptSegments={transcriptSegments}
-        isKaraokeEnabled={isKaraokeEnabled}
-        setIsKaraokeEnabled={handleToggleKaraoke}
         appLang={appLang}
         handleSummaryClick={handleSummaryClick}
         setIsReportOpen={setIsReportOpen}
@@ -228,10 +212,6 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = ({
             <div 
               ref={scrollContainerRef} 
               onScroll={handleScroll} 
-              onWheel={isKaraokeEnabled ? handleUserInteraction : undefined}
-              onTouchMove={isKaraokeEnabled ? handleUserInteraction : undefined}
-              onMouseDown={isKaraokeEnabled ? handleUserInteraction : undefined}
-              onKeyDown={isKaraokeEnabled ? handleUserInteraction : undefined}
               className={`flex-1 w-full overflow-y-auto transcript-scrollbar p-6 md:p-8 lg:p-16 xl:p-24 relative z-10 ${isSensitive ? (isDark ? 'bg-red-950/10' : 'bg-red-50/30') : ''}`}
             >
               <div className="max-w-6xl mx-auto relative">
@@ -262,12 +242,8 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = ({
                     t={t}
                     activeTranscriptSourceMeta={activeTranscriptSourceMeta}
                     appLang={appLang}
-                    transcriptSegments={transcriptSegments}
-                    audioCurrentTime={audioCurrentTime}
                     searchTerm={searchTerm}
                     currentMatchIndex={currentMatchIndex}
-                    isSynced={isSynced}
-                    isKaraokeEnabled={isKaraokeEnabled}
                     transcript={transcript}
                     sensitiveMatches={sensitiveMatches}
                     onSeek={onSeek}

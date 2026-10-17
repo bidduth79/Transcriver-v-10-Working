@@ -1,28 +1,10 @@
-import { useState, useRef, useCallback } from 'react';
+import { useCallback } from 'react';
 
-export const useSidebarHistory = (history: any[], historyLimit: number, setHistoryLimit: (val: any) => void) => {
-  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
-  const observer = useRef<IntersectionObserver | null>(null);
+export const useSidebarHistory = (_history: any[], _historyLimit: number, _setHistoryLimit: (val: any) => void) => {
+  // SidebarHistory is fully virtualized via @tanstack/react-virtual,
+  // so no IntersectionObserver pagination or skeleton loading state is needed.
+  const bottomRef = useCallback((_node: HTMLDivElement | null) => {}, []);
 
-  const bottomRef = useCallback((node: HTMLDivElement | null) => {
-    if (observer.current) observer.current.disconnect();
-    if (node) {
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          if (history.length < historyLimit) return;
-          
-          setIsHistoryLoading(true);
-          setTimeout(() => {
-            setHistoryLimit((prev: number) => {
-              return prev + 20;
-            });
-            setIsHistoryLoading(false);
-          }, 800);
-        }
-      });
-      observer.current.observe(node);
-    }
-  }, [setHistoryLimit, history.length, historyLimit]);
-
-  return { isHistoryLoading, bottomRef };
+  return { isHistoryLoading: false, bottomRef };
 };
+

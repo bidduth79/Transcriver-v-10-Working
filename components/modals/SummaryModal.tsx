@@ -84,6 +84,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   };
 
   useEffect(() => {
+    let saveTimer: number | null = null;
     const loadHistory = async () => {
       const data = await getSearchAnalysisHistory();
       setHistory(data);
@@ -95,9 +96,14 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
         setViewMode('history');
       } else {
         setAiAnalysis(null);
-        setTimeout(() => handleSave(false), 500);
+        saveTimer = window.setTimeout(() => handleSave(false), 500);
       }
     }
+    return () => {
+      if (saveTimer !== null) {
+        clearTimeout(saveTimer);
+      }
+    };
   }, [isOpen, searchTerm]);
 
   const analysisUpdates = useAppStore(state => state.storeUpdates['studio_analysis']);

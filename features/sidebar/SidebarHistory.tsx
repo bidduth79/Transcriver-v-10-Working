@@ -124,11 +124,27 @@ export const SidebarHistory = ({
     return arr;
   }, [processedGroupedHistory, duplicateFileCounts]);
 
+  const flatItemsRef = React.useRef(flatItems);
+  flatItemsRef.current = flatItems;
+
+  const getScrollElement = React.useCallback(() => scrollContainerEl, [scrollContainerEl]);
+  const estimateSize = React.useCallback(
+    (index: number) => (flatItemsRef.current[index]?.type === 'header' ? 44 : 126),
+    []
+  );
+  const getItemKey = React.useCallback((index: number) => {
+    const flatItem = flatItemsRef.current[index];
+    if (!flatItem) return index;
+    return flatItem.type === 'header' ? `header-${flatItem.group}` : `item-${flatItem.item?.id ?? index}`;
+  }, []);
+
   const rowVirtualizer = useVirtualizer({
     count: flatItems.length,
-    getScrollElement: () => scrollContainerEl,
-    estimateSize: (index) => flatItems[index].type === 'header' ? 50 : 120,
-    overscan: 10,
+    getScrollElement,
+    estimateSize,
+    getItemKey,
+    overscan: 8,
+    useFlushSync: false,
   });
 
   const availableDateStrings = useMemo(() => {
@@ -181,23 +197,27 @@ export const SidebarHistory = ({
   }, [viewDate, isDatePickerOpen]);
 
   // Smoothly scroll to active item to prevent layout jump when FileInfoSection mounts
-  const [prevActiveId, setPrevActiveId] = useState(activeHistoryId);
+  const prevActiveIdRef = React.useRef(activeHistoryId);
   useEffect(() => {
-    if (activeHistoryId && activeHistoryId !== prevActiveId) {
-      setPrevActiveId(activeHistoryId);
-      const index = flatItems.findIndex((i: any) => i.type === 'item' && i.item.id === activeHistoryId);
+    if (!activeHistoryId) {
+      prevActiveIdRef.current = null;
+      return;
+    }
+    if (activeHistoryId !== prevActiveIdRef.current) {
+      prevActiveIdRef.current = activeHistoryId;
+      const index = flatItems.findIndex((i: any) => i.type === 'item' && i.item?.id === activeHistoryId);
       if (index !== -1) {
-        // Small delay to allow FileInfoSection to render and update DOM heights
-        setTimeout(() => {
+        const timer = setTimeout(() => {
           try {
             rowVirtualizer.scrollToIndex(index, { align: 'auto', behavior: 'smooth' });
           } catch (e) {
             // ignore
           }
         }, 150);
+        return () => clearTimeout(timer);
       }
     }
-  }, [activeHistoryId, prevActiveId, flatItems, rowVirtualizer]);
+  }, [activeHistoryId]);
 
   return (
     <div className="flex flex-col">
@@ -458,18 +478,18 @@ export const SidebarHistory = ({
              >
                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                  const flatItem = flatItems[virtualRow.index];
+                 if (!flatItem) return null;
                  if (flatItem.type === 'header') {
                    return (
                      <div
                        key={virtualRow.key}
                        id={`history-group-${flatItem.group.replace(/[\s\/,]+/g, '-')}`}
-                       data-index={virtualRow.index}
-                       ref={rowVirtualizer.measureElement}
                        className="w-full flex justify-center py-2 z-30 pointer-events-none"
                        style={{
                          position: 'absolute',
                          top: 0,
                          left: 0,
+                         height: '44px',
                          transform: `translateY(${virtualRow.start}px)`
                        }}
                      >
@@ -488,8 +508,6 @@ export const SidebarHistory = ({
                    return (
                      <div
                        key={virtualRow.key}
-                       data-index={virtualRow.index}
-                       ref={rowVirtualizer.measureElement}
                        style={{
                          position: 'absolute',
                          top: 0,

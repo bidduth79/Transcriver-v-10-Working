@@ -53,9 +53,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ core, children, modals }) 
             appLang={core.appLang}
             setAppLang={(v: any) => core.setAppLang(typeof v === 'function' ? v(core.appLang) : v)}
             activeColors={core.activeColors}
-            setActiveTool={(tool: any) => {
-              core.setActiveTool((prev: any) => prev === tool ? null : tool);
-            }}
             setIsReportOpen={core.setIsReportOpen}
             setIsSettingsOpen={core.setIsSettingsOpen}
             transcriptionMode={core.transcriptionMode}

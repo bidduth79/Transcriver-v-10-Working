@@ -1,23 +1,49 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getSensitiveKeywords } from '../../../utils/sensitiveKeywords';
+
+const EMPTY_MATCHES: string[] = [];
 
 export const useSidebar = (appLang: string, handleFileChange: any, audioRef: any) => {
   const [activeTab, setActiveTab] = useState('upload');
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [sensitiveKeywords, setSensitiveKeywordsList] = useState<string[]>([]);
+  const [sensitiveKeywords, setSensitiveKeywordsList] = useState<string[]>(EMPTY_MATCHES);
+  const matchCacheRef = useRef<Map<string, string[]>>(new Map());
 
   const sensitiveKeywordsUpdated = useAppStore(state => state.sensitiveKeywordsUpdated);
 
   useEffect(() => {
+    matchCacheRef.current.clear();
     setSensitiveKeywordsList(getSensitiveKeywords());
   }, [sensitiveKeywordsUpdated]);
 
-  const getSensitiveMatches = useCallback((text: string) => {
-    if (!text) return [];
-    const lower = text.toLowerCase();
-    return sensitiveKeywords.filter(kw => kw && kw.trim().length > 0 && lower.includes(kw.toLowerCase())).sort((a, b) => b.length - a.length);
+  const preparedKeywords = useMemo(() => {
+    return sensitiveKeywords
+      .filter(kw => kw && kw.trim().length > 0)
+      .sort((a, b) => b.length - a.length)
+      .map(kw => ({ original: kw, lower: kw.toLowerCase() }));
   }, [sensitiveKeywords]);
+
+  const getSensitiveMatches = useCallback((text: string) => {
+    if (!text || preparedKeywords.length === 0) return EMPTY_MATCHES;
+    const cached = matchCacheRef.current.get(text);
+    if (cached) return cached;
+
+    const lower = text.toLowerCase();
+    const matches: string[] = [];
+    for (let i = 0; i < preparedKeywords.length; i++) {
+      const kw = preparedKeywords[i];
+      if (lower.includes(kw.lower)) {
+        matches.push(kw.original);
+      }
+    }
+    const result = matches.length > 0 ? matches : EMPTY_MATCHES;
+    if (matchCacheRef.current.size > 2000) {
+      matchCacheRef.current.clear();
+    }
+    matchCacheRef.current.set(text, result);
+    return result;
+  }, [preparedKeywords]);
 
 
   const formatTime = (s: number) => {

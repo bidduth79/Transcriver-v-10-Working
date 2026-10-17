@@ -10,22 +10,26 @@ export const useFFmpeg = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const ffmpegRef = useRef(new FFmpeg());
+  const ffmpegRef = useRef<FFmpeg | null>(null);
   const isLoadingRef = useRef(false);
 
+  if (!ffmpegRef.current) {
+    ffmpegRef.current = new FFmpeg();
+  }
+
   const load = useCallback(async () => {
-    if (isLoaded || isLoadingRef.current) return;
+    if (isLoaded || isLoadingRef.current || !ffmpegRef.current) return;
     isLoadingRef.current = true;
     setLoadProgress(0);
     setLoadError(null);
     const ffmpeg = ffmpegRef.current;
 
+    const handleProgress = ({ progress }: { progress: number }) => {
+      setLoadProgress(Math.min(99, Math.round(progress * 100)));
+    };
+
     try {
-      // Listen to progress events directly from ffmpeg if possible
-      ffmpeg.on('progress', ({ progress }) => {
-        // progress is a ratio from 0 to 1
-        setLoadProgress(Math.min(99, Math.round(progress * 100)));
-      });
+      ffmpeg.on('progress', handleProgress);
 
       // Since we are loading local assets, it will be very fast.
       // We set an initial progress to show it's working.
@@ -47,6 +51,7 @@ export const useFFmpeg = () => {
       console.error("Failed to load FFmpeg:", error);
       setLoadError(error.message || "Failed to load engine");
     } finally {
+      ffmpeg.off('progress', handleProgress);
       isLoadingRef.current = false;
     }
   }, [isLoaded]);

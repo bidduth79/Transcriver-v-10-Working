@@ -15,12 +15,6 @@ interface ModalState {
   
   isSettingsOpen: boolean;
   setIsSettingsOpen: (isOpen: boolean | ((prev: boolean) => boolean)) => void;
-  
-  activeTool: string | null;
-  setActiveTool: (tool: string | null | ((prev: string | null) => string | null)) => void;
-  
-  isToolsMinimized: boolean;
-  setIsToolsMinimized: (isMinimized: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 export const useModalStore = create<ModalState>((set) => ({
@@ -47,15 +41,5 @@ export const useModalStore = create<ModalState>((set) => ({
   isSettingsOpen: false,
   setIsSettingsOpen: (isOpen) => set((state) => ({ 
     isSettingsOpen: typeof isOpen === 'function' ? isOpen(state.isSettingsOpen) : isOpen 
-  })),
-  
-  activeTool: null,
-  setActiveTool: (tool) => set((state) => ({ 
-    activeTool: typeof tool === 'function' ? tool(state.activeTool) : tool 
-  })),
-  
-  isToolsMinimized: false,
-  setIsToolsMinimized: (isMinimized) => set((state) => ({ 
-    isToolsMinimized: typeof isMinimized === 'function' ? isMinimized(state.isToolsMinimized) : isMinimized 
   }))
 }));

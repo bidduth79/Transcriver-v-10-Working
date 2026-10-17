@@ -6,10 +6,6 @@ import { unicodeToBijoy, bijoyToUnicode, isUnicode } from '@abdalgolabs/ansi-uni
 export const TranscriptToolbar = ({
   t,
   status,
-  isSynced,
-  transcriptSegments,
-  isKaraokeEnabled,
-  setIsKaraokeEnabled,
   appLang,
   handleSummaryClick,
   setIsReportOpen,
@@ -49,21 +45,6 @@ export const TranscriptToolbar = ({
       <div className="flex items-center space-x-3 group cursor-default shrink-0 mr-auto">
         <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${status === 'completed' ? 'bg-slate-500' : 'bg-white/20'}`}></div>
         <h2 className="text-sm md:text-base font-black text-white tracking-tight text-white/90 font-stylish-bn">{t.outputTranscript}</h2>
-        
-        {isSynced && status === 'completed' && transcriptSegments && transcriptSegments.length > 0 && (
-            <button
-                onClick={() => setIsKaraokeEnabled(!isKaraokeEnabled)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shadow-lg border active:scale-95 cursor-pointer ${
-                    isKaraokeEnabled 
-                    ? 'bg-indigo-600 text-white border-indigo-500 hover:bg-indigo-500 ring-2 ring-indigo-500/20' 
-                    : 'bg-white/5 text-white/40 border-white/10 hover:bg-white/10 hover:text-white'
-                }`}
-                title={isKaraokeEnabled ? "Disable Karaoke Mode" : "Enable Karaoke Mode"}
-            >
-                <div className={`w-2 h-2 rounded-full ${isKaraokeEnabled ? 'bg-white animate-pulse' : 'bg-slate-500'}`}></div>
-                {appLang === 'bn' ? 'কারাওকে মুড' : 'KARAOKE MODE'}
-            </button>
-        )}
       </div>
       
       <div className="flex items-center gap-2 md:gap-3 shrink-0">

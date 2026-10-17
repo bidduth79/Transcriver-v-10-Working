@@ -3,6 +3,7 @@ import { useAppStore } from '@/hooks/useAppStore';
 import { logSystemActivity } from '../../services/SystemLogger';
 import { useReportAnalysis } from './hooks/useReportAnalysis';
 import { useReportActions, ReportItem } from './hooks/useReportActions';
+import { useModalResize } from './hooks/useModalResize';
 import { copyToClipboard } from '../../utils/clipboard';
 
 
@@ -35,36 +36,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     handleDeleteReport: deleteReportAction 
   } = useReportActions(searchTerm, fileMeta, appLang, addToast, onModelUpdate, setIsAiLoading);
 
-  // Resizing states
-  const [size, setSize] = useState({ width: 900, height: 750 });
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
-  const isResizing = useRef(false);
-
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizing.current = true;
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', stopResizing);
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isResizing.current) return;
-    const modalElement = document.getElementById('report-modal-container');
-    if (modalElement) {
-      const rect = modalElement.getBoundingClientRect();
-      setSize({
-        width: Math.max(500, e.clientX - rect.left),
-        height: Math.max(400, e.clientY - rect.top)
-      });
-    }
-  };
-
-  const stopResizing = () => {
-    isResizing.current = false;
-    window.removeEventListener('mousemove', handleMouseMove);
-    window.removeEventListener('mouseup', stopResizing);
-  };
+  // Resizing states with automatic cleanup on unmount
+  const { size, isMinimized, setIsMinimized, isMaximized, setIsMaximized, startResizing } = useModalResize(900, 750, 'report-modal-container', 500, 400);
 
   // ... (Existing Logic: analysisData, loadReportsFromDB, generateReport etc. - Unchanged)
   const analysisData = useReportAnalysis(transcript, searchTerm, fileMeta);

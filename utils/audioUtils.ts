@@ -33,12 +33,11 @@ export const loadAudioFromStore = async (
       else if (ext === 'mp4') mimeType = 'video/mp4';
       else if (ext === 'aac') mimeType = 'audio/aac';
 
-      const dataUrl = `data:${mimeType};base64,${audioData.base64}`;
+      let dataUrl: string | null = `data:${mimeType};base64,${audioData.base64}`;
+      audioData.base64 = undefined; // Free memory immediately
       const res = await fetch(dataUrl);
+      dataUrl = null;
       const blob = await res.blob();
-      
-      // Free memory early
-      audioData.base64 = undefined;
       
       const fileName = item.fileName || item.title || 'audio';
       const fileObj = new File([blob], fileName, { type: mimeType });
@@ -93,6 +92,12 @@ export const playSuccessSound = () => {
         gain.gain.setValueAtTime(0, startTime);
         gain.gain.linearRampToValueAtTime(0.08, startTime + 0.05);
         gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.6);
+        osc.onended = () => {
+          try {
+            osc.disconnect();
+            gain.disconnect();
+          } catch {}
+        };
         osc.start(startTime);
         osc.stop(startTime + 0.6);
     });

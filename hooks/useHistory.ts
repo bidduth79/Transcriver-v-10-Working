@@ -37,15 +37,10 @@ export const useHistory = (
     return () => clearTimeout(timer);
   }, [histSearch]);
 
-  const loadHistory = useCallback(async () => {
-    setIsLoadingHistory(prev => history.length === 0 ? true : prev);
-    try {
-      const allHistory = (await getAllFromStore(STORES.HISTORY)) as HistoryItem[];
-      const sorted = allHistory.sort((a: HistoryItem, b: HistoryItem) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setHistory(sorted);
+  const updateSessionCache = useCallback((items: HistoryItem[]) => {
+    setTimeout(() => {
       try {
-        // Cache light metadata to avoid main thread freeze or sessionStorage 5MB quota exhaustion
-        const lightHistory = sorted.slice(0, 30).map(h => ({
+        const lightHistory = items.slice(0, 30).map(h => ({
           id: h.id,
           fileName: h.fileName,
           date: h.date,
@@ -56,37 +51,73 @@ export const useHistory = (
       } catch (e) {
         // Ignore quota exceeded
       }
+    }, 0);
+  }, []);
+
+  const loadHistory = useCallback(async () => {
+    const currentLen = useHistoryStore.getState().history.length;
+    if (currentLen === 0) {
+      setIsLoadingHistory(true);
+    }
+    try {
+      const allHistory = (await getAllFromStore(STORES.HISTORY)) as HistoryItem[];
+      const sorted = allHistory.sort((a: HistoryItem, b: HistoryItem) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setHistory(sorted);
+      updateSessionCache(sorted);
     } catch (e) {
       console.error("Failed to load history", e);
     } finally {
       setIsLoadingHistory(false);
     }
-  }, []);  // Stable identity — does not depend on history.length
+  }, [setHistory, setIsLoadingHistory, updateSessionCache]);
 
   useBroadcastSync(loadHistory);
 
-  const handleDeleteHistoryItem = async (id: string) => {
-    await deleteFromStore(STORES.HISTORY, id);
-    onHistoryItemDeleted(id);
-    broadcastHistoryUpdate();
-    loadHistory();
-    addToast(appLang === 'bn' ? 'ডিলিট করা হয়েছে' : 'Deleted', 'warning');
-  };
+  const handleDeleteHistoryItem = useCallback(async (id: string) => {
+    const wasActive = useHistoryStore.getState().activeHistoryId === id;
 
-  const toggleFavorite = async (id: string) => {
-    const item = history.find(h => h.id === id);
+    // 1. Optimistically remove only the deleted item in-memory so remaining items keep their exact object references
+    const current = useHistoryStore.getState().history;
+    const next = current.filter(item => item.id !== id);
+    setHistory(next);
+    updateSessionCache(next);
+
+    if (wasActive) {
+      setActiveHistoryId(null);
+      onHistoryItemDeleted(id);
+    }
+    addToast(appLang === 'bn' ? 'ডিলিট করা হয়েছে' : 'Deleted', 'warning');
+
+    // 2. Perform IndexedDB & background sync deletion asynchronously off the critical UI path
+    setTimeout(async () => {
+      try {
+        await deleteFromStore(STORES.HISTORY, id);
+        deleteFromStore(STORES.YOUTUBE_AUDIO, id).catch(() => {});
+        broadcastHistoryUpdate();
+      } catch (e) {
+        console.error("Failed to delete history item from store", e);
+      }
+    }, 0);
+  }, [appLang, addToast, onHistoryItemDeleted, setActiveHistoryId, setHistory, updateSessionCache]);
+
+  const toggleFavorite = useCallback(async (id: string) => {
+    const currentHistory = useHistoryStore.getState().history;
+    const item = currentHistory.find(h => h.id === id);
     if (item) {
       const updatedItem = { ...item, isFavorite: !item.isFavorite };
-      await addToStore(STORES.HISTORY, updatedItem);
-      loadHistory();
+      const next = currentHistory.map(h => h.id === id ? updatedItem : h);
+      setHistory(next);
+      updateSessionCache(next);
       addToast(
         updatedItem.isFavorite 
           ? (appLang === 'bn' ? 'বুকমার্কে যোগ করা হয়েছে' : 'Added to favorites') 
           : (appLang === 'bn' ? 'বুকমার্ক থেকে সরানো হয়েছে' : 'Removed from favorites'), 
         'success'
       );
+      await addToStore(STORES.HISTORY, updatedItem);
+      broadcastHistoryUpdate();
     }
-  };
+  }, [appLang, addToast, setHistory, updateSessionCache]);
 
   const backupHistory = () => {
     const jsonStr = JSON.stringify(history);

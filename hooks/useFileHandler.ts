@@ -155,9 +155,26 @@ export const useFileHandler = ({
 
 
       let resolved = false;
+      const cleanupMedia = () => {
+        try {
+          media.onloadedmetadata = null;
+          media.onerror = null;
+          media.src = '';
+          media.load();
+        } catch {}
+      };
+
+      const timeoutId = window.setTimeout(() => {
+        if (resolved) return;
+        resolved = true;
+        cleanupMedia();
+        finishMetadata("Unknown");
+      }, 3000);
+
       media.onloadedmetadata = () => {
         if (resolved) return;
         resolved = true;
+        clearTimeout(timeoutId);
         const duration = media.duration;
         let durationStr = "Unknown";
         if (isFinite(duration) && !isNaN(duration) && duration > 0) {
@@ -172,14 +189,14 @@ export const useFileHandler = ({
           const secs = Math.floor(estimatedSecs % 60);
           durationStr = `${mins}:${secs.toString().padStart(2, '0')}`;
         }
+        cleanupMedia();
         finishMetadata(durationStr);
-        media.src = ''; // Release media resource
-        media.load();
       };
 
       media.onerror = () => {
         if (resolved) return;
         resolved = true;
+        clearTimeout(timeoutId);
         let durationStr = "Unknown";
         if (lowerName.endsWith('.opus') || selectedFile.type.includes('ogg') || selectedFile.type.includes('opus')) {
           const estimatedSecs = Math.max(10, Math.round(selectedFile.size / 4000));
@@ -187,16 +204,9 @@ export const useFileHandler = ({
           const secs = Math.floor(estimatedSecs % 60);
           durationStr = `${mins}:${secs.toString().padStart(2, '0')}`;
         }
+        cleanupMedia();
         finishMetadata(durationStr);
-        media.src = ''; // Release media resource
-        media.load();
       };
-
-      setTimeout(() => {
-        if (resolved) return;
-        resolved = true;
-        finishMetadata("Unknown");
-      }, 3000);
     };
 
     const existingHistoryItem = history.find(h => h.fileName === selectedFile.name);
@@ -246,30 +256,61 @@ export const useFileHandler = ({
                       });
                   });
               } else {
-                  const audio = new Audio(url);
+                  const audio = new Audio();
+                  audio.preload = 'metadata';
+                  let audioResolved = false;
+                  const cleanupHistoryAudio = () => {
+                    try {
+                      audio.onloadedmetadata = null;
+                      audio.onerror = null;
+                      audio.src = '';
+                      audio.load();
+                    } catch {}
+                  };
+                  const historyTimeoutId = window.setTimeout(() => {
+                    if (audioResolved) return;
+                    audioResolved = true;
+                    cleanupHistoryAudio();
+                    setFileMeta({
+                      name: selectedFile.name,
+                      size: (selectedFile.size / 1024 / 1024).toFixed(2) + ' MB',
+                      duration: existingHistoryItem.duration || 'Unknown',
+                      type: selectedFile.type,
+                      date: new Date().toISOString()
+                    });
+                  }, 3000);
+
                   audio.onloadedmetadata = () => {
+                    if (audioResolved) return;
+                    audioResolved = true;
+                    clearTimeout(historyTimeoutId);
                     const duration = audio.duration;
                     const mins = Math.floor(duration / 60);
                     const secs = Math.floor(duration % 60);
                     const metadata = {
                       name: selectedFile.name,
                       size: (selectedFile.size / 1024 / 1024).toFixed(2) + ' MB',
-                      duration: `${mins}:${secs.toString().padStart(2, '0')}`,
+                      duration: isFinite(duration) && duration > 0 ? `${mins}:${secs.toString().padStart(2, '0')}` : (existingHistoryItem.duration || 'Unknown'),
                       type: selectedFile.type,
                       date: new Date().toISOString()
                     };
                     setFileMeta(metadata);
-                    audio.src = ''; // Release media resource
+                    cleanupHistoryAudio();
                   };
                   audio.onerror = () => {
+                    if (audioResolved) return;
+                    audioResolved = true;
+                    clearTimeout(historyTimeoutId);
                     setFileMeta({
                       name: selectedFile.name,
                       size: (selectedFile.size / 1024 / 1024).toFixed(2) + ' MB',
-                      duration: 'Unknown',
+                      duration: existingHistoryItem.duration || 'Unknown',
                       type: selectedFile.type,
                       date: new Date().toISOString()
                     });
+                    cleanupHistoryAudio();
                   };
+                  audio.src = url;
               }
 
               setTranscript(existingHistoryItem.transcript);

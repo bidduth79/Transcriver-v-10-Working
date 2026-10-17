@@ -3,29 +3,11 @@ import React, { lazy, Suspense } from 'react';
 import { TranscriptOutput } from './features/transcript/TranscriptOutput';
 import { AppLayout } from './components/layout/AppLayout';
 const AppModalsContainer = lazy(() => import('./AppModalsContainer').then(module => ({ default: module.AppModalsContainer })));
-const YouTubeMonitor = lazy(() => import('./features/youtube-monitor/components/YouTubeMonitor').then(module => ({ default: module.YouTubeMonitor })));
-import { getActiveProvider, incrementTotalCalls, getTotalCalls } from './services/ApiKeyManager';
-import { useTranscription } from './hooks/useTranscription';
-import { useAudioRecorder } from './hooks/useAudioRecorder';
-import { useHistory } from './hooks/useHistory';
-import { useTranscriptSearch } from './hooks/useTranscriptSearch';
-import { useTransformTranscript } from './hooks/useTransformTranscript';
-import { useApiStats } from './hooks/useApiStats';
-import { useAppTheme } from './hooks/useAppTheme';
-import { useAppModals } from './hooks/useAppModals';
-import { useBatchProcessor } from './hooks/useBatchProcessor';
-import { translations } from './translations';
-import { useToast } from './hooks/useToast';
-import { loadAudioFromStore, playSuccessSound } from './utils/audioUtils';
-import { useFileHandler } from './hooks/useFileHandler';
-import { useAudioPlayback } from './hooks/useAudioPlayback';
-import { useAppEventListeners } from './hooks/useAppEventListeners';
 import { useAppCore } from './hooks/useAppCore';
 import { 
   getSidebarProps, 
   getAppModalsProps, 
   getExpandedHistoryProps, 
-  getYouTubeMonitorProps, 
   getTranscriptOutputProps 
 } from './hooks/useAppProps';
 
@@ -51,10 +33,6 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
-      
-      <Suspense fallback={null}>
-        <YouTubeMonitor {...getYouTubeMonitorProps(core)} />
-      </Suspense>
       
       <TranscriptOutput {...getTranscriptOutputProps(core)} />
     </AppLayout>

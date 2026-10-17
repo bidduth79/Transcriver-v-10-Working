@@ -15,7 +15,6 @@ interface HeaderProps {
   appLang: string;
   setAppLang: (f: (p: any) => any) => void;
   activeColors: any;
-  setActiveTool?: (tool: string) => void;
   setIsReportOpen?: (v: boolean) => void;
   setIsSettingsOpen?: (v: boolean) => void;
   transcriptionMode: 'normal' | 'pro';
@@ -27,11 +26,10 @@ export const Header: React.FC<HeaderProps> = ({
   isInformationOpen, setIsInformationOpen,
   isActivityLogOpen, setIsActivityLogOpen,
   isDark, setTheme,
-  appLang, setAppLang, activeColors, setActiveTool, setIsReportOpen, setIsSettingsOpen,
+  appLang, setAppLang, activeColors, setIsReportOpen, setIsSettingsOpen,
   transcriptionMode, setTranscriptionMode
 }) => {
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -50,11 +48,6 @@ export const Header: React.FC<HeaderProps> = ({
         document.exitFullscreen();
       }
     }
-  };
-
-  const handleToolClick = (toolId: string) => {
-    if (setActiveTool) setActiveTool(toolId);
-    setShowToolsMenu(false);
   };
 
   return (
@@ -128,52 +121,6 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </button>
 
-          {/* Tools Menu Button */}
-          <div className="relative flex justify-center items-center">
-            <button 
-              type="button"
-              onClick={() => setShowToolsMenu(!showToolsMenu)}
-              className={`p-2 md:p-2.5 rounded-xl transition-all border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white group cursor-pointer ${showToolsMenu ? 'bg-white/20 text-white ring-2 ring-indigo-500/50' : ''}`}
-              title={t.tools}
-            >
-              <svg className="w-5 h-5 md:w-6 md:h-6 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.121 14.121L19 19m-7-7l7-7m-7 7l-2.879 2.879M12 12L9.121 9.121m0 5.758a3 3 0 10-4.243 4.243 3 3 0 004.243-4.243zm0-5.758a3 3 0 10-4.243-4.243 3 3 0 004.243 4.243z" />
-              </svg>
-            </button>
-
-            {/* Tools Dropdown - Dynamic Theme */}
-            {showToolsMenu && (
-              <div className={`absolute top-full right-0 mt-2 w-56 border rounded-2xl shadow-2xl overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 bg-slate-900 border-white/10`}>
-                <div className="p-1 space-y-1">
-                  <button onClick={() => handleToolClick('downloader')} className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl transition-all group text-white/90 hover:bg-white/10 hover:text-white`}>
-                    <div className="w-6 h-6 bg-red-600/20 text-red-500 rounded-lg flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-all">
-                      <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-wide">{t.youtubeFb}</span>
-                  </button>
-                  <button onClick={() => handleToolClick('converter')} className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl transition-all group text-white/90 hover:bg-white/10 hover:text-white`}>
-                    <div className="w-6 h-6 bg-amber-500/20 text-amber-400 rounded-lg flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-all">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-wide">{t.converter}</span>
-                  </button>
-                  <button onClick={() => handleToolClick('video_cut')} className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl transition-all group text-white/90 hover:bg-white/10 hover:text-white`}>
-                    <div className="w-6 h-6 bg-indigo-500/20 text-indigo-400 rounded-lg flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-wide">{t.videoEditor}</span>
-                  </button>
-                  <button onClick={() => handleToolClick('audio_cut')} className={`w-full flex items-center gap-3 px-4 py-3 text-left rounded-xl transition-all group text-white/90 hover:bg-white/10 hover:text-white`}>
-                    <div className="w-6 h-6 bg-emerald-500/20 text-emerald-400 rounded-lg flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-wide">{t.audioEditor}</span>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Activity Log Button */}
           <button 
             type="button"
@@ -183,18 +130,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <svg className="w-5 h-5 md:w-6 md:h-6 transition-transform duration-500 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-          </button>
-
-          {/* YouTube Monitor Button (New) */}
-          <button 
-            type="button"
-            onClick={() => setActiveTool && setActiveTool('youtube_monitor')}
-            className="p-2 md:p-2.5 rounded-xl transition-all border border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white group cursor-pointer flex justify-center items-center"
-            title={t.youtubeMonitor}
-          >
-            <svg className="w-5 h-5 md:w-6 md:h-6 transition-transform duration-500 group-hover:scale-110 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
             </svg>
           </button>
 

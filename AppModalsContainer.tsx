@@ -1,7 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 
 const InformationModal = lazy(() => import('./components/modals/InformationModal').then(m => ({ default: m.InformationModal })));
-const ToolsModal = lazy(() => import('./components/modals/ToolsModal').then(m => ({ default: m.ToolsModal })));
 const SettingsModal = lazy(() => import('./components/modals/SettingsModal').then(m => ({ default: m.SettingsModal })));
 const ActivityLogsModal = lazy(() => import('./components/modals/ActivityLogsModal').then(m => ({ default: m.ActivityLogsModal })));
 const TranscriberReportModal = lazy(() => import('./components/reports/TranscriberReportModal').then(m => ({ default: m.TranscriberReportModal })));
@@ -11,10 +10,6 @@ const BatchSummaryModal = lazy(() => import('./components/modals/BatchSummaryMod
 interface AppModalsContainerProps {
   isInformationOpen: boolean;
   setIsInformationOpen: (v: boolean) => void;
-  activeTool: string | null;
-  setActiveTool: (tool: string | null) => void;
-  isToolsMinimized: boolean;
-  setIsToolsMinimized: (v: boolean) => void;
   isSettingsOpen: boolean;
   setIsSettingsOpen: (v: boolean) => void;
   isActivityLogOpen: boolean;
@@ -38,8 +33,6 @@ interface AppModalsContainerProps {
 
 export const AppModalsContainer: React.FC<AppModalsContainerProps> = ({
   isInformationOpen, setIsInformationOpen,
-  activeTool, setActiveTool,
-  isToolsMinimized, setIsToolsMinimized,
   isSettingsOpen, setIsSettingsOpen,
   isActivityLogOpen, setIsActivityLogOpen,
   isReportOpen, setIsReportOpen,
@@ -60,20 +53,6 @@ export const AppModalsContainer: React.FC<AppModalsContainerProps> = ({
           activeColors={activeColors}
           appLang={appLang}
           addToast={addToast}
-        />
-      )}
-
-      {activeTool && activeTool !== 'youtube_monitor' && (
-        <ToolsModal 
-          activeTool={activeTool}
-          onClose={() => setActiveTool(null)}
-          isMinimized={isToolsMinimized}
-          setIsMinimized={setIsToolsMinimized}
-          isDark={isDark}
-          activeColors={activeColors}
-          appLang={appLang}
-          addToast={addToast}
-          onFileSelect={(f) => handleFileChange({ target: { files: [f] } }, true)}
         />
       )}
 

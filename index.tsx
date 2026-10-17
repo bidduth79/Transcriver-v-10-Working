@@ -1,4 +1,5 @@
 
+import './setupDevPerformance';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
@@ -6,21 +7,6 @@ import './index.css';
 import './i18n.ts';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Toaster } from 'sonner';
-
-// Safe polyfill for browser performance.measure against DataCloneError in Dev/StrictMode
-if (typeof window !== 'undefined' && window.performance && window.performance.measure) {
-  const originalMeasure = window.performance.measure.bind(window.performance);
-  window.performance.measure = function (...args: any[]) {
-    try {
-      return (originalMeasure as any)(...args);
-    } catch (e: any) {
-      if (e?.name === 'DataCloneError' || e?.message?.includes('Data cannot be cloned')) {
-        return; // Silently ignore browser profiling clone limitations on large fibers
-      }
-      throw e;
-    }
-  };
-}
 
 window.addEventListener('error', (event) => {
   if (event.message === 'Script error.') {
@@ -74,11 +60,10 @@ const rootElement = document.getElementById('root');
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
-    <React.StrictMode>
-      <ErrorBoundary FallbackComponent={FallbackComponent} onReset={() => window.location.reload()}>
-        <App />
-        <Toaster position="top-center" richColors theme="system" />
-      </ErrorBoundary>
-    </React.StrictMode>
+    <ErrorBoundary FallbackComponent={FallbackComponent} onReset={() => window.location.reload()}>
+      <App />
+      <Toaster position="top-center" richColors theme="system" />
+    </ErrorBoundary>
   );
 }
+

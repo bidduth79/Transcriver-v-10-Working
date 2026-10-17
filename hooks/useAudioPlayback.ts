@@ -2,12 +2,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 
 export const useAudioPlayback = () => {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+  const [audioCurrentTime] = useState(0);
 
   const handleTimeUpdate = useCallback(() => {
-    if (audioRef.current) {
-      setAudioCurrentTime(audioRef.current.currentTime);
-    }
+    // No-op: native <audio controls> manages its own playhead UI without full-app React re-renders
   }, []);
 
   const handleSeek = useCallback((time: string) => {

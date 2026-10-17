@@ -85,14 +85,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
   }, [filterCategory, filterStatus, dateFrom, dateTo, logs]);
 
   // --- Resizing Logic ---
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizing.current = true;
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', stopResizing);
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = React.useCallback((e: MouseEvent) => {
     if (!isResizing.current) return;
     const modalElement = document.getElementById('logs-modal-container');
     if (modalElement) {
@@ -102,13 +95,28 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
         height: Math.max(500, e.clientY - rect.top)
       });
     }
-  };
+  }, []);
 
-  const stopResizing = () => {
+  const stopResizing = React.useCallback(() => {
     isResizing.current = false;
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', stopResizing);
-  };
+  }, [handleMouseMove]);
+
+  const startResizing = React.useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizing.current = true;
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', stopResizing);
+  }, [handleMouseMove, stopResizing]);
+
+  useEffect(() => {
+    return () => {
+      isResizing.current = false;
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [handleMouseMove, stopResizing]);
 
   const getStatusColor = (status: string) => {
       switch(status) {

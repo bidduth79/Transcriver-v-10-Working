@@ -16,19 +16,11 @@ export const useAppModals = () => {
   const isSettingsOpen = useModalStore(state => state.isSettingsOpen);
   const setIsSettingsOpen = useModalStore(state => state.setIsSettingsOpen);
   
-  const activeTool = useModalStore(state => state.activeTool);
-  const setActiveTool = useModalStore(state => state.setActiveTool);
-  
-  const isToolsMinimized = useModalStore(state => state.isToolsMinimized);
-  const setIsToolsMinimized = useModalStore(state => state.setIsToolsMinimized);
-
   return {
     isSidebarOpen, setIsSidebarOpen,
     isInformationOpen, setIsInformationOpen,
     isActivityLogOpen, setIsActivityLogOpen,
     isReportOpen, setIsReportOpen,
-    isSettingsOpen, setIsSettingsOpen,
-    activeTool, setActiveTool,
-    isToolsMinimized, setIsToolsMinimized
+    isSettingsOpen, setIsSettingsOpen
   };
 };

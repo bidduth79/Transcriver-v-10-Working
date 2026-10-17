@@ -29,7 +29,9 @@ export const HistoryItemCard = memo(({
   }, [item.date, appLang]);
   
   const {
+    isPressing,
     handleStart,
+    handleMove,
     handleEnd,
     handleClick,
     handleTouchEnd,
@@ -39,7 +41,11 @@ export const HistoryItemCard = memo(({
   // Determine classes based on state
   let itemClass = "";
   
-  if (isActive) {
+  if (isPressing) {
+      itemClass = isDark
+          ? 'bg-red-950/40 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.25)] scale-[0.98]'
+          : 'bg-red-50 border-red-400 shadow-md scale-[0.98]';
+  } else if (isActive) {
       // ACTIVE STATE: Light Green as requested
       itemClass = isDark 
           ? 'bg-green-900/20 border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.1)]' 
@@ -64,18 +70,45 @@ export const HistoryItemCard = memo(({
   return (
     <div 
       onMouseDown={handleStart}
+      onMouseMove={handleMove}
       onMouseUp={handleEnd}
       onMouseLeave={handleEnd}
       onTouchStart={handleStart}
+      onTouchMove={handleMove}
+      onTouchCancel={handleEnd}
       onTouchEnd={handleTouchEnd}
       onClick={handleClick}
-      className={`p-4 border rounded-2xl transition-all group relative active:scale-[0.98] cursor-pointer shadow-sm hover:shadow-xl select-none ${itemClass}`}
+      onContextMenu={(e) => e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+      className={`p-4 border rounded-2xl transition-colors duration-200 group relative cursor-pointer shadow-sm hover:shadow-xl select-none overflow-hidden ${itemClass}`}
     >
-      <div className="mb-2 flex justify-between items-start gap-2">
-          <p className={`text-[11px] font-bold ${isActive ? (isDark ? 'text-green-400' : 'text-green-800') : (isDark ? 'text-white/90' : 'text-slate-700')} truncate font-stylish-bn transition-colors group-hover:text-indigo-500`}>
+      {/* Smooth GPU-accelerated 3-second hold-to-delete progress bar */}
+      {isPressing && (
+        <>
+          <style>{`
+            @keyframes holdDeleteProgress {
+              0% { transform: scaleX(0); }
+              100% { transform: scaleX(1); }
+            }
+          `}</style>
+          <div
+            className="absolute inset-0 bg-red-500/10 pointer-events-none origin-left"
+            style={{ animation: 'holdDeleteProgress 2.88s linear forwards' }}
+          />
+          <div
+            className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-rose-600 pointer-events-none origin-left z-20"
+            style={{ animation: 'holdDeleteProgress 2.88s linear forwards' }}
+          />
+        </>
+      )}
+
+      <div className="mb-2 flex justify-between items-start gap-2 relative z-10">
+          <p className={`text-[11px] font-bold ${isPressing ? 'text-red-400' : isActive ? (isDark ? 'text-green-400' : 'text-green-800') : (isDark ? 'text-white/90' : 'text-slate-700')} truncate font-stylish-bn transition-colors group-hover:text-indigo-500`}>
             {item.fileName?.replace(/_/g, ' ').replace(/#/g, '').replace(/\s+/g, ' ').trim()}
           </p>
           <button 
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.stopPropagation();
               if (toggleFavorite) toggleFavorite(item.id);
@@ -88,7 +121,7 @@ export const HistoryItemCard = memo(({
           </button>
       </div>
       
-      <div className={`flex flex-col gap-2 text-[9px] ${isActive ? (isDark ? 'text-green-200/60' : 'text-green-700/60') : (isDark ? 'text-white/40' : 'text-slate-400')} font-black uppercase tracking-wider`}>
+      <div className={`flex flex-col gap-2 text-[9px] relative z-10 ${isActive ? (isDark ? 'text-green-200/60' : 'text-green-700/60') : (isDark ? 'text-white/40' : 'text-slate-400')} font-black uppercase tracking-wider`}>
         {/* Date & Time Row */}
         <div className="flex items-center justify-between w-full" title="Creation Date">
             <div className="flex items-center gap-1.5">
@@ -104,21 +137,28 @@ export const HistoryItemCard = memo(({
                 )}
             </div>
             <div className="flex items-center gap-1.5">
-                {isDuplicate && (
+                {isPressing && (
+                    <span className="shrink-0 px-1.5 py-0.5 text-[8px] font-black rounded uppercase tracking-wider bg-red-500 text-white animate-pulse">
+                        {appLang === 'bn' ? 'ডিলিট হচ্ছে...' : 'DELETING...'}
+                    </span>
+                )}
+                {!isPressing && isDuplicate && (
                     <span className={`shrink-0 px-1.5 py-0.5 text-[8px] font-black rounded uppercase tracking-wider ${isDark ? 'bg-yellow-500/20 text-yellow-400' : 'bg-yellow-100 text-yellow-700'}`}>
                         DUPLICATE
                     </span>
                 )}
-                {isActive && (
+                {!isPressing && isActive && (
                    <span className={`shrink-0 px-1.5 py-0.5 text-[8px] font-black rounded uppercase tracking-wider ${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'}`}>
                        LOADED
                    </span>
                 )}
-                {isSensitive && !isActive && (
+                {!isPressing && isSensitive && !isActive && (
                     <div className="relative group/badge flex flex-col items-end z-10">
                       {/* Default View: Shows only the first match or a summary */}
                       <div className="flex gap-1 justify-end transition-opacity duration-300 group-hover/badge:opacity-0 group-hover/badge:invisible">
                         <span 
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onTouchStart={(e) => e.stopPropagation()}
                           onClick={(e) => {
                             e.stopPropagation();
                             loadHistoryItem(item, sensitiveMatches[0]);
@@ -139,6 +179,8 @@ export const HistoryItemCard = memo(({
                         {sensitiveMatches.map((match: string, idx: number) => (
                           <span 
                             key={idx} 
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 loadHistoryItem(item, match);

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useAppTheme } from './useAppTheme';
 import { useAppModals } from './useAppModals';
 import { useApiStats } from './useApiStats';
@@ -26,9 +26,7 @@ export function useAppCore() {
     isInformationOpen, setIsInformationOpen,
     isActivityLogOpen, setIsActivityLogOpen,
     isReportOpen, setIsReportOpen,
-    isSettingsOpen, setIsSettingsOpen,
-    activeTool, setActiveTool,
-    isToolsMinimized, setIsToolsMinimized
+    isSettingsOpen, setIsSettingsOpen
   } = useAppModals();
 
   const {
@@ -37,6 +35,8 @@ export function useAppCore() {
   } = useApiStats();
 
   const { addToast } = useToast(appLang);
+
+  const onHistoryItemDeletedRef = useRef<(id: string) => void>(() => {});
 
   const {
     history, historyLimit, setHistoryLimit,
@@ -48,13 +48,9 @@ export function useAppCore() {
     showFavoritesOnly, setShowFavoritesOnly,
     toggleFavorite, backupHistory, restoreHistory,
     loadHistory, handleDeleteHistoryItem, groupHistory, filteredHistory, isLoadingHistory
-  } = useHistory(appLang, addToast, (id) => {
-    if (activeHistoryId === id) {
-      setActiveHistoryId(null);
-      setTranscript('');
-      setStatus('idle');
-    }
-  });
+  } = useHistory(appLang, addToast, useCallback((id: string) => {
+    onHistoryItemDeletedRef.current(id);
+  }, []));
 
   const {
     status, setStatus,
@@ -73,6 +69,12 @@ export function useAppCore() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [transcriptMeta, setTranscriptMeta] = useState<any>(null);
+
+  onHistoryItemDeletedRef.current = () => {
+    setTranscript('');
+    setStatus('idle');
+    setTranscriptMeta(null);
+  };
 
   const handleResetAll = () => {
     resetTranscription();
@@ -155,8 +157,6 @@ export function useAppCore() {
     isActivityLogOpen, setIsActivityLogOpen,
     isReportOpen, setIsReportOpen,
     isSettingsOpen, setIsSettingsOpen,
-    activeTool, setActiveTool,
-    isToolsMinimized, setIsToolsMinimized,
     totalApiCalls, activeApiKeySource, activeModelName,
     isAiLoading, setIsAiLoading, updateApiStats,
     addToast,

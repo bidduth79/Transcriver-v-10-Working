@@ -9,12 +9,8 @@ export interface TranscriptContentProps {
   t: any; // translation object
   activeTranscriptSourceMeta: TranscriptMeta | null;
   appLang: 'bn' | 'en';
-  transcriptSegments: any[];
-  audioCurrentTime: number;
   searchTerm: string;
   currentMatchIndex: number;
-  isSynced: boolean;
-  isKaraokeEnabled: boolean;
   transcript: string;
   sensitiveMatches: any[];
   onSeek: (time: number) => void;
@@ -30,12 +26,8 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = React.memo(({
   t,
   activeTranscriptSourceMeta,
   appLang,
-  transcriptSegments,
-  audioCurrentTime,
   searchTerm,
   currentMatchIndex,
-  isSynced,
-  isKaraokeEnabled,
   transcript,
   sensitiveMatches,
   onSeek,
@@ -73,21 +65,11 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = React.memo(({
           </div>
         </div>
 
-        {/* 
-           CRITICAL FIX: 
-           Check if transcriptSegments has items. If not (meaning timestamps missing or parsing failed),
-           fallback to renderFormattedTranscriptInternal instead of showing a blank synced view.
-        */}
         <TranscriptViewer
-          transcriptSegments={transcriptSegments}
-          audioCurrentTime={audioCurrentTime}
-          fontSize={fontSize}
-          isDark={isDark}
-          searchTerm={searchTerm}
-          currentMatchIndex={currentMatchIndex}
-          isSynced={isSynced}
-          isKaraokeEnabled={isKaraokeEnabled}
           transcript={transcript}
+          searchTerm={searchTerm}
+          isDark={isDark}
+          currentMatchIndex={currentMatchIndex}
           sensitiveMatches={sensitiveMatches}
           onSeek={onSeek}
           onSpeakerClick={openProfile}

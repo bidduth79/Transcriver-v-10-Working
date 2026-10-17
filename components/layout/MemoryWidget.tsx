@@ -9,10 +9,15 @@ export const MemoryWidget: React.FC<{ isDark: boolean }> = ({ isDark }) => {
     if (!perf.memory) return;
 
     const updateMemory = () => {
-      setMemory({
-        used: Math.round(perf.memory.usedJSHeapSize / (1024 * 1024)),
-        total: Math.round(perf.memory.totalJSHeapSize / (1024 * 1024)),
-        limit: Math.round(perf.memory.jsHeapSizeLimit / (1024 * 1024))
+      if (typeof document !== 'undefined' && document.hidden) return;
+      const used = Math.round(perf.memory.usedJSHeapSize / (1024 * 1024));
+      const total = Math.round(perf.memory.totalJSHeapSize / (1024 * 1024));
+      const limit = Math.round(perf.memory.jsHeapSizeLimit / (1024 * 1024));
+      setMemory(prev => {
+        if (prev && prev.used === used && prev.total === total && prev.limit === limit) {
+          return prev;
+        }
+        return { used, total, limit };
       });
     };
 

@@ -1,4 +1,5 @@
 import { loadAudioFromStore } from '../utils/audioUtils';
+import { useHistoryStore } from './useHistoryStore';
 
 export function getSidebarProps(core: any) {
   return {
@@ -63,13 +64,16 @@ export function getSidebarProps(core: any) {
       core.setTranscript(item.transcript);
       core.setStatus('completed');
       core.setTranscriptMeta({ name: item.fileName, duration: item.duration, channelName: item.channelName, date: item.publishedDate });
+      core.setActiveHistoryId(item.id);
       
-      await loadAudioFromStore(item, core.setFile, core.setFileMeta, core.setFileUrl, core.setTranscriptMeta, core.fileUrl || undefined);
       if (!item.hasBeenOpened) {
-        core.loadHistory();
+        useHistoryStore.getState().setHistory(prev =>
+          prev.map(h => h.id === item.id ? { ...h, hasBeenOpened: true } : h)
+        );
       }
 
-      core.setActiveHistoryId(item.id);
+      await loadAudioFromStore(item, core.setFile, core.setFileMeta, core.setFileUrl, core.setTranscriptMeta, core.fileUrl || undefined);
+
       if (searchKeyword) {
         setTimeout(() => {
           core.setSearchTerm(searchKeyword);
@@ -109,10 +113,6 @@ export function getAppModalsProps(core: any) {
   return {
     isInformationOpen: core.isInformationOpen,
     setIsInformationOpen: core.setIsInformationOpen,
-    activeTool: core.activeTool,
-    setActiveTool: core.setActiveTool,
-    isToolsMinimized: core.isToolsMinimized,
-    setIsToolsMinimized: core.setIsToolsMinimized,
     isSettingsOpen: core.isSettingsOpen,
     setIsSettingsOpen: core.setIsSettingsOpen,
     isActivityLogOpen: core.isActivityLogOpen,
@@ -153,14 +153,17 @@ export function getExpandedHistoryProps(core: any) {
       core.setTranscript(item.transcript);
       core.setStatus('completed');
       core.setTranscriptMeta({ name: item.fileName, duration: item.duration, channelName: item.channelName, date: item.publishedDate });
-      
-      await loadAudioFromStore(item, core.setFile, core.setFileMeta, core.setFileUrl, core.setTranscriptMeta, core.fileUrl || undefined);
-      if (!item.hasBeenOpened) {
-        core.loadHistory();
-      }
-
       core.setActiveHistoryId(item.id);
       core.setIsHistoryFullscreen(false);
+
+      if (!item.hasBeenOpened) {
+        useHistoryStore.getState().setHistory(prev =>
+          prev.map(h => h.id === item.id ? { ...h, hasBeenOpened: true } : h)
+        );
+      }
+      
+      await loadAudioFromStore(item, core.setFile, core.setFileMeta, core.setFileUrl, core.setTranscriptMeta, core.fileUrl || undefined);
+
       if (searchKeyword) {
         setTimeout(() => {
           core.setSearchTerm(searchKeyword);
@@ -168,43 +171,6 @@ export function getExpandedHistoryProps(core: any) {
       }
     },
     activeColors: core.activeColors
-  };
-}
-
-export function getYouTubeMonitorProps(core: any) {
-  return {
-    isOpen: core.activeTool === 'youtube_monitor',
-    onClose: () => core.setActiveTool(null),
-    isDark: core.isDark,
-    activeColors: core.activeColors,
-    appLang: core.appLang,
-    addToast: core.addToast,
-    onStartTranscription: core.processTranscription,
-    isAppProcessing: core.status === 'processing',
-    onLoadTranscript: async (transcript: string, title: string, duration: string | number, historyId?: string, channelName?: string, date?: string, videoId?: string) => {
-      core.setTranscript(transcript);
-      core.setStatus('completed');
-      core.setTranscriptMeta({ name: title, duration, channelName, date });
-      
-      if (videoId) {
-        try {
-          const { getFromStore, STORES } = await import('../services/db');
-          const localAudio = await getFromStore(STORES.YOUTUBE_AUDIO, videoId) as { blob: Blob } | undefined;
-          if (localAudio && localAudio.blob) {
-            const url = URL.createObjectURL(localAudio.blob);
-            core.setFileUrl(url);
-            core.setFile(new File([localAudio.blob], `${title}.m4a`, { type: 'audio/mp4' }));
-          } else {
-            core.setFileUrl('');
-            core.setFile(null);
-          }
-        } catch (err) {
-          console.error("Failed to load local audio:", err);
-        }
-      }
-      
-      core.setActiveHistoryId(historyId);
-    }
   };
 }
 

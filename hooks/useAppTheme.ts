@@ -1,6 +1,22 @@
 import { useThemeStore } from './useThemeStore';
 import { translations } from '../translations';
 
+const DARK_ACTIVE_COLORS = {
+  primary: 'bg-indigo-600',
+  text: 'text-indigo-400',
+  border: 'border-indigo-500/50',
+  soft: 'bg-indigo-900/20',
+  ring: 'ring-indigo-500'
+};
+
+const LIGHT_ACTIVE_COLORS = {
+  primary: 'bg-indigo-600',
+  text: 'text-indigo-600',
+  border: 'border-indigo-200',
+  soft: 'bg-indigo-50',
+  ring: 'ring-indigo-200'
+};
+
 export const useAppTheme = () => {
   const theme = useThemeStore(state => state.theme);
   const setTheme = useThemeStore(state => state.setTheme);
@@ -14,19 +30,7 @@ export const useAppTheme = () => {
   const isDark = theme === 'soft-dark';
   const t = translations[appLang];
 
-  const activeColors = isDark ? {
-    primary: 'bg-indigo-600',
-    text: 'text-indigo-400',
-    border: 'border-indigo-500/50',
-    soft: 'bg-indigo-900/20',
-    ring: 'ring-indigo-500'
-  } : {
-    primary: 'bg-indigo-600',
-    text: 'text-indigo-600',
-    border: 'border-indigo-200',
-    soft: 'bg-indigo-50',
-    ring: 'ring-indigo-200'
-  };
+  const activeColors = isDark ? DARK_ACTIVE_COLORS : LIGHT_ACTIVE_COLORS;
 
   const mainBgColor = isDark ? 'bg-slate-900' : 'bg-slate-50';
   const textColor = isDark ? 'text-white' : 'text-slate-800';

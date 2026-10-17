@@ -27,7 +27,15 @@ export const initDB = () => {
     };
 
     request.onsuccess = () => {
-        resolve(request.result);
+        const db = request.result;
+        db.onversionchange = () => {
+          db.close();
+          dbPromise = null;
+        };
+        db.onclose = () => {
+          dbPromise = null;
+        };
+        resolve(db);
     };
 
     request.onupgradeneeded = (event) => {
@@ -44,6 +52,28 @@ export const initDB = () => {
   return dbPromise;
 };
 
+export const pruneYoutubeAudioStore = async (maxEntries = 15) => {
+  try {
+    const db = await initDB();
+    await new Promise((resolve) => {
+      const tx = db.transaction([STORES.YOUTUBE_AUDIO], 'readwrite');
+      const store = tx.objectStore(STORES.YOUTUBE_AUDIO);
+      const req = store.getAllKeys();
+      req.onsuccess = () => {
+        const keys = req.result || [];
+        if (keys.length > maxEntries) {
+          const toDelete = keys.slice(0, keys.length - maxEntries);
+          toDelete.forEach((key) => store.delete(key));
+        }
+        resolve(true);
+      };
+      req.onerror = () => resolve(false);
+    });
+  } catch (e) {
+    // Ignore non-critical cache pruning errors
+  }
+};
+
 export const addToStore = async (storeName: string, data: any) => {
   const db = await initDB();
   await new Promise((resolve, reject) => {
@@ -53,6 +83,10 @@ export const addToStore = async (storeName: string, data: any) => {
     request.onsuccess = () => resolve(true);
     request.onerror = () => reject(request.error);
   });
+
+  if (storeName === STORES.YOUTUBE_AUDIO) {
+    pruneYoutubeAudioStore(15);
+  }
 
   const isAutoSyncActive = AUTO_SYNC_XAMPP_ENABLED || AUTO_SYNC_SUPABASE_ENABLED || AUTO_SYNC_FIREBASE_ENABLED;
   if (storeName !== STORES.YOUTUBE_AUDIO && isAutoSyncActive) {

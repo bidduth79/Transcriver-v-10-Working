@@ -26,10 +26,28 @@ export const useBatchProcessor = (
   const [isBatchPaused, setIsBatchPaused] = useState(false);
   const isBatchPausedRef = useRef(false);
   const prevBatchUrlRef = useRef<string | null>(null);
+  const retryTimeoutRef = useRef<number | null>(null);
+
+  const clearRetryTimeout = () => {
+    if (retryTimeoutRef.current !== null) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  };
 
   useEffect(() => {
     isBatchPausedRef.current = isBatchPaused;
   }, [isBatchPaused]);
+
+  useEffect(() => {
+    return () => {
+      clearRetryTimeout();
+      if (prevBatchUrlRef.current) {
+        URL.revokeObjectURL(prevBatchUrlRef.current);
+        prevBatchUrlRef.current = null;
+      }
+    };
+  }, []);
   
   const [failedFiles, setFailedFiles] = useState<FailedFile[]>([]);
   const [processedCount, setProcessedCount] = useState(0);
@@ -51,6 +69,7 @@ export const useBatchProcessor = (
   } = useBatchTimer(isBatchPausedRef);
 
   const finishProcessing = () => {
+    clearRetryTimeout();
     setIsBatchProcessing(false);
     setHasBatchStarted(false);
     
@@ -85,6 +104,7 @@ export const useBatchProcessor = (
   };
 
   const processNextBatchFile = async (queue: File[], index: number, retryCount = 0) => {
+    clearRetryTimeout();
     if (index >= queue.length) {
       startCountdownForNextFile(queue, index);
       return;
@@ -122,7 +142,9 @@ export const useBatchProcessor = (
       
       if (retryCount < 1) {
         addToast(appLang === 'bn' ? `${currentFile.name} ব্যর্থ হয়েছে, আবার চেষ্টা করা হচ্ছে...` : `${currentFile.name} failed, retrying...`, 'warning');
-        setTimeout(() => {
+        clearRetryTimeout();
+        retryTimeoutRef.current = window.setTimeout(() => {
+          retryTimeoutRef.current = null;
           if (!isBatchPausedRef.current) {
             processNextBatchFile(queue, index, retryCount + 1);
           } else {
@@ -138,6 +160,7 @@ export const useBatchProcessor = (
   };
 
   const startBatch = () => {
+    clearRetryTimeout();
     setHasBatchStarted(true);
     setIsBatchProcessing(true);
     setIsBatchPaused(false);
@@ -150,6 +173,7 @@ export const useBatchProcessor = (
   const pauseBatch = () => {
     setIsBatchPaused(true);
     clearTimer();
+    clearRetryTimeout();
   };
 
   const resumeBatch = () => {
@@ -158,6 +182,8 @@ export const useBatchProcessor = (
   };
 
   const cancelBatch = () => {
+    clearTimer();
+    clearRetryTimeout();
     setBatchQueue([]);
     setCurrentBatchIndex(0);
     setIsBatchProcessing(false);
@@ -166,16 +192,17 @@ export const useBatchProcessor = (
     setFailedFiles([]);
     setProcessedCount(0);
     resetMetrics();
-    clearTimer();
   };
 
   const skipNextBatchFile = () => {
     clearTimer();
+    clearRetryTimeout();
     processNextBatchFile(batchQueue, currentBatchIndex + 1);
   };
 
   const jumpToBatchFile = (index: number) => {
     clearTimer();
+    clearRetryTimeout();
     setHasBatchStarted(true);
     setIsBatchPaused(false);
     processNextBatchFile(batchQueue, index);

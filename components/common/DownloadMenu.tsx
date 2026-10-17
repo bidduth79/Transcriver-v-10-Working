@@ -1,7 +1,5 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-
-// declare var html2pdf: any; // Removed TS declaration
+import { toast } from 'sonner';
 
 export const DownloadMenu = ({ transcript, fileName, activeColors, t, searchTerm, sensitiveMatches = [], addToast, customTrigger }: any) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -87,14 +85,18 @@ export const DownloadMenu = ({ transcript, fileName, activeColors, t, searchTerm
   };
 
   const exportPDF = () => {
+    const toastId = 'pdf-export-toast';
     try {
       setIsOpen(false);
       
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
-        addToast('পপ-আপ ব্লক করা আছে। দয়া করে পপ-আপ অ্যালাউ করুন।', 'error');
+        if (addToast) addToast('পপ-আপ ব্লক করা আছে। দয়া করে পপ-আপ অ্যালাউ করুন।', 'error');
         return;
       }
+
+      // Show brief notification that disappears quickly
+      toast.info('PDF প্রস্তুত করা হচ্ছে...', { id: toastId, duration: 1500 });
 
       let finalFileName = 'transcript';
       if (fileName && typeof fileName === 'string') {
@@ -148,6 +150,14 @@ export const DownloadMenu = ({ transcript, fileName, activeColors, t, searchTerm
 
       const safeTranscript = ((typeof transcript === 'string' ? transcript : '') || '').replace(/([\[\(](?:[0-9০-৯]{1,2}:)?[0-9০-৯]{1,2}:[0-9০-৯]{2}[\]\)])/g, '\n$1').trim();
       const lines = safeTranscript.split('\n').filter((l: string) => l && typeof l === 'string');
+      
+      // Render lines immediately in one pass without chunking delay
+      const contentHtml = lines.map((line: string) => {
+        let processedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #4338ca; font-weight: 700;">$1</strong>');
+        const finalLine = highlightText(processedLine);
+        return `<p style="margin-bottom: 15px; line-height: 1.6; font-size: 13px;">${finalLine}</p>`;
+      }).join('');
+
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -156,7 +166,7 @@ export const DownloadMenu = ({ transcript, fileName, activeColors, t, searchTerm
             <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
             <style>
               body { 
-                font-family: 'Hind Siliguri', 'Inter', sans-serif; 
+                font-family: 'Hind Siliguri', 'Kalpurush', 'SolaimanLipi', 'Inter', -apple-system, sans-serif; 
                 padding: 40px; 
                 color: #1e293b; 
                 background-color: #ffffff;
@@ -174,70 +184,44 @@ export const DownloadMenu = ({ transcript, fileName, activeColors, t, searchTerm
           <body>
             ${headerHtml}
             <div id="transcript-content">
-              <div id="loading" style="text-align: center; padding: 50px; color: #64748b;">
-                <h2>PDF প্রস্তুত করা হচ্ছে...</h2>
-                <p>দয়া করে অপেক্ষা করুন</p>
-              </div>
+              ${contentHtml}
             </div>
-            <script>
-              // Function will be injected below
-            </script>
           </body>
         </html>
       `);
-      
-      const CHUNK_SIZE = 500;
-      let currentIndex = 0;
-      
-      const processChunk = () => {
+      printWindow.document.close();
+
+      const triggerPrint = () => {
         if (!printWindow || printWindow.closed) return;
-        
-        const chunk = lines.slice(currentIndex, currentIndex + CHUNK_SIZE);
-        
-        if (chunk.length === 0) {
-          // Done processing
-          const loadingEl = printWindow.document.getElementById('loading');
-          if (loadingEl) loadingEl.remove();
-          
-          printWindow.document.close();
-          
-          printWindow.document.fonts.ready.then(() => {
-            setTimeout(() => {
-              printWindow.print();
-            }, 500);
-          });
-          
-          printWindow.onafterprint = () => {
-            printWindow.close();
-          };
-          return;
+        toast.success('PDF প্রস্তুত হয়েছে!', { id: toastId, duration: 1200 });
+        try {
+          printWindow.focus();
+          printWindow.print();
+        } catch (e) {
+          console.error(e);
         }
-        
-        const html = chunk.map((line: string) => {
-          let processedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #4338ca; font-weight: 700;">$1</strong>');
-          const finalLine = highlightText(processedLine);
-          return `<p style="margin-bottom: 15px; line-height: 1.6; font-size: 13px;">${finalLine}</p>`;
-        }).join('');
-        
-        const contentDiv = printWindow.document.getElementById('transcript-content');
-        if (contentDiv) {
-          const wrapper = printWindow.document.createElement('div');
-          wrapper.innerHTML = html;
-          contentDiv.appendChild(wrapper);
-        }
-        
-        currentIndex += CHUNK_SIZE;
-        // Yield to browser to prevent freezing
-        setTimeout(processChunk, 10);
       };
-      
-      // Start chunk processing
-      processChunk();
-      
-      addToast('PDF প্রস্তুত করা হচ্ছে, দয়া করে অপেক্ষা করুন...', 'success');
+
+      printWindow.onafterprint = () => {
+        try {
+          printWindow.close();
+        } catch (e) {}
+      };
+
+      // Fast font load fallback (max 300ms) to prevent long freezes
+      if (printWindow.document.fonts) {
+        Promise.race([
+          printWindow.document.fonts.ready,
+          new Promise(resolve => setTimeout(resolve, 300))
+        ]).then(() => {
+          setTimeout(triggerPrint, 50);
+        });
+      } else {
+        setTimeout(triggerPrint, 50);
+      }
     } catch (error: any) {
       console.error('PDF Export Error:', error);
-      addToast(`PDF এরর: ${error.message}`, 'error');
+      toast.error(`PDF এরর: ${error.message}`, { id: toastId, duration: 2500 });
     }
   };
 

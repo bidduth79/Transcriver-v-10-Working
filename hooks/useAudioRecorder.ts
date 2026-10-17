@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // ============================================================================
 // 🎙️ মাইক্রোফোন অপশন নিয়ন্ত্রণ (Microphone Feature Toggle)
@@ -22,7 +22,26 @@ export const useAudioRecorder = (
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const recordIntervalRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (recordIntervalRef.current) {
+        clearInterval(recordIntervalRef.current);
+        recordIntervalRef.current = null;
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch {}
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+    };
+  }, []);
 
   const startRecording = async () => {
     // মাইক্রোফোন ব্যাকএন্ড স্থগিত থাকলে নোটিফিকেশন প্রদর্শন ও প্রসেস বন্ধ
@@ -45,6 +64,7 @@ export const useAudioRecorder = (
           noiseSuppression: true
         } 
       });
+      streamRef.current = stream;
       
       let options: MediaRecorderOptions = { audioBitsPerSecond: 16000 };
       let ext = 'webm';
@@ -63,20 +83,29 @@ export const useAudioRecorder = (
       mediaRecorderRef.current = mediaRecorder;
       const chunks: BlobPart[] = [];
 
-      mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunks.push(e.data);
+      };
       mediaRecorder.onstop = () => {
+        if (recordIntervalRef.current) {
+          clearInterval(recordIntervalRef.current);
+          recordIntervalRef.current = null;
+        }
         const blob = new Blob(chunks, { type: mime });
+        chunks.length = 0; // Release chunk references from memory immediately
         const file = new File([blob], `Recording_${new Date().toLocaleTimeString().replace(/:/g, '-')}.${ext}`, { type: mime });
         onRecordingComplete(file);
         setIsRecording(false);
         
         // Stop all tracks to release microphone
         stream.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       };
 
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingTime(0);
+      if (recordIntervalRef.current) clearInterval(recordIntervalRef.current);
       recordIntervalRef.current = window.setInterval(() => {
         setRecordingTime(prev => prev + 1);
       }, 1000);
@@ -89,7 +118,10 @@ export const useAudioRecorder = (
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
-      if (recordIntervalRef.current) clearInterval(recordIntervalRef.current);
+      if (recordIntervalRef.current) {
+        clearInterval(recordIntervalRef.current);
+        recordIntervalRef.current = null;
+      }
     }
   };
 

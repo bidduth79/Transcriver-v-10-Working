@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getApiCallLogs, getActiveModel, ApiCallLog } from '../../services/ApiKeyManager';
 
@@ -11,41 +11,48 @@ interface QuotaMonitorProps {
 export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang, activeColors }) => {
   const [logs, setLogs] = useState<ApiCallLog[]>([]);
   const [activeModel, setActiveModel] = useState<string>('');
-  
+  const [tick, setTick] = useState(0);
+
+  const fetchLogs = useCallback(async () => {
+    if (typeof document !== 'undefined' && document.hidden) return;
+    const allLogs = await getApiCallLogs();
+    const currentModel = getActiveModel();
+    setLogs(prev => {
+      if (
+        prev.length === allLogs.length &&
+        prev[prev.length - 1]?.id === allLogs[allLogs.length - 1]?.id
+      ) {
+        return prev;
+      }
+      return allLogs;
+    });
+    setActiveModel(prev => (prev === currentModel ? prev : currentModel));
+    setTick(t => t + 1);
+  }, []);
+
   useEffect(() => {
-    let mounted = true;
-    
-    const fetchLogs = async () => {
-      const allLogs = await getApiCallLogs();
-      const currentModel = getActiveModel();
-      if (mounted) {
-        setLogs(allLogs);
-        setActiveModel(currentModel);
+    fetchLogs();
+
+    const interval = setInterval(fetchLogs, 5000);
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        fetchLogs();
       }
     };
+    document.addEventListener('visibilitychange', handleVisibility);
 
-    fetchLogs();
-    
-    const interval = setInterval(fetchLogs, 5000);
-    
     return () => {
-      mounted = false;
       clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, []);
+  }, [fetchLogs]);
 
   const apiCallLogged = useAppStore(state => state.apiCallLogged);
   const activeApiKeyChanged = useAppStore(state => state.activeApiKeyChanged);
 
   useEffect(() => {
-    const fetchLogs = async () => {
-      const allLogs = await getApiCallLogs();
-      const currentModel = getActiveModel();
-      setLogs(allLogs);
-      setActiveModel(currentModel);
-    };
     fetchLogs();
-  }, [apiCallLogged, activeApiKeyChanged]);
+  }, [apiCallLogged, activeApiKeyChanged, fetchLogs]);
 
   const getModelLimits = (modelId: string) => {
     if (modelId.includes('pro')) {
@@ -61,15 +68,15 @@ export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang, act
   const rpdLogs = logs.filter(l => now - new Date(l.timestamp).getTime() < 86400000);
   
   const rpmCount = rpmLogs.length;
-  const tpmCount = rpmLogs.reduce((acc, l) => acc + (l.tokens || Math.floor(Math.random() * 500)), 0); 
+  const tpmCount = rpmLogs.reduce((acc, l) => acc + (l.tokens || 500), 0); 
   const rpdCount = rpdLogs.length;
 
   const rpmPercent = Math.min((rpmCount / limits.rpm) * 100, 100);
   const tpmPercent = Math.min((tpmCount / limits.tpm) * 100, 100);
   const rpdPercent = Math.min((rpdCount / limits.rpd) * 100, 100);
 
-  // Calculate actual peaks from logs
-  const calculatePeaks = () => {
+  // Calculate actual peaks from logs (memoized)
+  const { peakRpm, peakTpm, peakRpd, rpmHistory, tpmHistory, rpdHistory } = useMemo(() => {
     if (logs.length === 0) return { peakRpm: 0, peakTpm: 0, peakRpd: 0, rpmHistory: Array(30).fill(0), tpmHistory: Array(30).fill(0), rpdHistory: Array(7).fill(0) };
     
     const minuteGroups: Record<number, { requests: number, tokens: number }> = {};
@@ -121,9 +128,7 @@ export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang, act
     }
 
     return { peakRpm, peakTpm, peakRpd, rpmHistory, tpmHistory, rpdHistory };
-  };
-
-  const { peakRpm, peakTpm, peakRpd, rpmHistory, tpmHistory, rpdHistory } = calculatePeaks();
+  }, [logs, tick]);
 
   const MiniProgress = ({ percent, value, limit, label }: { percent: number, value: number, limit: number, label: string }) => {
     const isDanger = percent >= 100;

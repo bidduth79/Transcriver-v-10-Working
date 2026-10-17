@@ -130,169 +130,27 @@ export const FormattedTranscript = React.memo(({
 });
 
 export const TranscriptViewer = React.memo(({
-  transcriptSegments,
-  audioCurrentTime,
-  fontSize,
-  isDark,
-  searchTerm,
-  currentMatchIndex,
-  isSynced,
-  isKaraokeEnabled,
   transcript,
+  searchTerm,
+  isDark,
+  currentMatchIndex,
   sensitiveMatches = [],
   onSeek,
   onSpeakerClick,
   onRenameSpeaker,
   scrollElementRef
 }: any) => {
-  const matchIndexRef = useRef(0);
-  const { formatText } = useTranscriptFormatter(searchTerm, isDark, currentMatchIndex, sensitiveMatches);
-
-  // Pre-parse karaoke segments ONLY when karaoke mode is enabled
-  const parsedSegments = useMemo(() => {
-    if (!isKaraokeEnabled || !isSynced || !transcriptSegments || transcriptSegments.length === 0) return [];
-    return transcriptSegments.map((seg: any) => {
-      const timeLabel = `[${Math.floor(seg.start / 60).toString().padStart(2, '0')}:${(seg.start % 60).toString().padStart(2, '0')}]`;
-      const parts = (seg.text || '').split(/(\*\*.*?\*\*)/g).map((part: string) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const textInside = part.slice(2, -2);
-          const hasColon = textInside.trim().endsWith(':');
-          const cleanName = textInside.replace(/:$/, '').trim();
-          const isGeneric = !isProperName(cleanName);
-          const isProper = cleanName.split(/\s+/).length <= 4 && (!isGeneric || hasColon);
-          return { isSpeaker: true, isProper, textInside, cleanName };
-        }
-        return { isSpeaker: false, isProper: false, textInside: part, cleanName: '' };
-      });
-      return {
-        ...seg,
-        lowerText: (seg.text || '').toLowerCase(),
-        timeLabel,
-        parts
-      };
-    });
-  }, [transcriptSegments, isKaraokeEnabled, isSynced]);
-
-  const lowerSearchTerm = searchTerm ? searchTerm.trim().toLowerCase() : '';
-  const lowerSensitiveList = useMemo(
-    () => sensitiveMatches.map((m: string) => m.toLowerCase()),
-    [sensitiveMatches]
-  );
-
-  const renderSyncedTranscript = () => {
-    matchIndexRef.current = 0;
-
-    return (
-      <div className="space-y-4">
-        {parsedSegments.map((seg: any, idx: number) => {
-          const isActive = audioCurrentTime >= seg.start && audioCurrentTime < seg.end;
-          const hasSearchMatch = lowerSearchTerm.length > 0 && seg.lowerText.includes(lowerSearchTerm);
-          const hasSensitiveMatch = lowerSensitiveList.some((m: string) => seg.lowerText.includes(m));
-          
-          const progress = isActive 
-            ? Math.min(100, Math.max(0, ((audioCurrentTime - seg.start) / (seg.end - seg.start)) * 100))
-            : 0;
-
-          return (
-            <div
-              key={idx}
-              id={isActive ? 'active-transcript-segment' : undefined}
-              onClick={() => onSeek && onSeek(seg.timeLabel)}
-              className={`transition-colors duration-300 rounded-xl p-4 border-l-4 cursor-pointer group/seg relative overflow-hidden ${
-                isActive
-                  ? (isDark ? 'bg-indigo-500/25 border-indigo-400 shadow-2xl z-10 ring-1 ring-indigo-500/40' : 'bg-yellow-100/90 border-yellow-500 shadow-xl z-10 ring-1 ring-yellow-400/40')
-                  : hasSearchMatch
-                    ? (isDark ? 'bg-red-500/10 border-red-500/50 opacity-100' : 'bg-red-50 border-red-400 opacity-100')
-                    : `border-transparent ${isKaraokeEnabled ? 'opacity-70' : 'opacity-100'} hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5`
-              } ${hasSensitiveMatch && !isActive ? 'ring-1 ring-red-500/20' : ''}`}
-            >
-              {/* Match Indicator */}
-              {hasSearchMatch && !isActive && (
-                <div className="absolute top-2 right-2">
-                  <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-                </div>
-              )}
-
-              {/* Progress Bar Background */}
-              {isActive && (
-                <div className="absolute bottom-0 left-0 w-full h-1 bg-black/5 dark:bg-white/5">
-                  <div 
-                    className={`h-full transition-all duration-100 ease-linear ${isDark ? 'bg-indigo-400' : 'bg-yellow-500'}`}
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
-              )}
-
-              <div style={{ fontSize: `${fontSize}px` }} className="leading-relaxed whitespace-pre-wrap relative">
-                <div className={`absolute -left-12 top-0 opacity-0 group-hover/seg:opacity-100 transition-opacity hidden lg:block ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-                </div>
-                <span className={`text-[0.7em] font-mono mr-3 select-none px-2 py-0.5 rounded-md transition-colors ${
-                  isActive 
-                    ? (isDark ? 'bg-indigo-500 text-white' : 'bg-yellow-500 text-white') 
-                    : (isDark ? 'bg-white/5 text-white/40' : 'bg-black/5 text-black/40')
-                }`}>
-                  {seg.timeLabel}
-                </span>
-                {seg.parts.map((part: any, j: number) => {
-                  if (part.isSpeaker) {
-                    if (part.isProper && onSpeakerClick) {
-                      return (
-                        <span key={j} className="inline-flex items-center gap-1 group/speaker">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); onSpeakerClick(part.cleanName); }}
-                            className={`hover:underline cursor-pointer transition-colors font-bold ${isDark ? 'text-indigo-300 hover:text-indigo-200' : 'text-indigo-800 hover:text-indigo-600'}`}
-                            title={`View profile: ${part.cleanName}`}
-                          >
-                            {part.textInside}
-                          </button>
-                          {onRenameSpeaker && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); onRenameSpeaker(part.cleanName); }}
-                              className="opacity-0 group-hover/speaker:opacity-100 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition-opacity"
-                              title="Rename Speaker Globally"
-                            >
-                              <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                            </button>
-                          )}
-                        </span>
-                      );
-                    }
-                    return <strong key={j} className={isDark ? 'text-indigo-300' : 'text-indigo-800'}>{part.textInside}</strong>;
-                  }
-
-                  const elements = formatText(part.textInside, matchIndexRef);
-
-                  return (
-                    <span key={j} className={isActive ? (isDark ? 'text-white font-medium' : 'text-black font-medium') : ''}>
-                      {elements}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
   return (
-    <>
-      {isSynced && isKaraokeEnabled && parsedSegments.length > 0
-        ? renderSyncedTranscript()
-        : <FormattedTranscript 
-            text={transcript} 
-            searchTerm={searchTerm} 
-            isDark={isDark} 
-            currentMatchIndex={currentMatchIndex} 
-            sensitiveMatches={sensitiveMatches} 
-            onSeek={onSeek} 
-            onSpeakerClick={onSpeakerClick} 
-            onRenameSpeaker={onRenameSpeaker} 
-            scrollElementRef={scrollElementRef}
-          />
-      }
-    </>
+    <FormattedTranscript 
+      text={transcript} 
+      searchTerm={searchTerm} 
+      isDark={isDark} 
+      currentMatchIndex={currentMatchIndex} 
+      sensitiveMatches={sensitiveMatches} 
+      onSeek={onSeek} 
+      onSpeakerClick={onSpeakerClick} 
+      onRenameSpeaker={onRenameSpeaker} 
+      scrollElementRef={scrollElementRef}
+    />
   );
 });

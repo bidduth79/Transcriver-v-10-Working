@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import { getActiveProvider, incrementTotalCalls } from '../services/ApiKeyManager';
 
@@ -95,6 +96,21 @@ export const useTranscription = (
     resetAll
   } = state;
 
+  const timerRef = useRef<number | null>(null);
+
+  const clearTranscriptionTimer = () => {
+    if (timerRef.current !== null) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      clearTranscriptionTimer();
+    };
+  }, []);
+
   const processTranscription = async (providedFile?: any, providedMetadata?: any, providedAutoProcess?: any) => {
     const inputFile = (providedFile instanceof Blob) ? providedFile : file;
     const inputMetadata = (providedMetadata && !(providedMetadata instanceof Event) && typeof providedMetadata === 'object') ? providedMetadata : fileMeta;
@@ -110,6 +126,7 @@ export const useTranscription = (
       return;
     }
 
+    clearTranscriptionTimer();
     setStatus('processing');
     setTranscript('');
     setProgress(0);
@@ -124,7 +141,7 @@ export const useTranscription = (
     
     const startTime = Date.now();
     
-    const timer = setInterval(() => {
+    timerRef.current = window.setInterval(() => {
       setElapsedSeconds(s => s + 1);
       setProgress(p => {
         const newP = Math.min(p + (100 / estimated), 98);
@@ -353,7 +370,7 @@ export const useTranscription = (
         }
       }
 
-      clearInterval(timer);
+      clearTranscriptionTimer();
 
       fullText = removeRepetitiveBlocks(fullText);
 
@@ -498,7 +515,7 @@ export const useTranscription = (
       logSystemActivity('TRANSCRIPTION', 'ERROR', 'Failed', safeMsg);
       return { success: false, error: safeMsg };
     } finally {
-      clearInterval(timer);
+      clearTranscriptionTimer();
       setProgress(100);
     }
   };

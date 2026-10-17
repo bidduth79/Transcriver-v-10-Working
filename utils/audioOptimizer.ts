@@ -111,42 +111,42 @@ export const optimizeMediaForSpeech = async (
     const cleanInputName = `input_${Date.now()}_` + fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
     const cleanOutputName = `optimized_${Date.now()}.mp3`;
 
-    // Write input into FFmpeg virtual file system
-    await ffmpeg.writeFile(cleanInputName, await fetchFile(inputBlob));
-
-    onStageUpdate?.(
-      lang === 'bn' 
-        ? 'স্পিচ চ্যানেল এক্সট্র্যাক্ট ও ১৬kHz মনো কম্প্রেশন চলছে...' 
-        : 'Extracting speech channel & 16kHz mono compression...'
-    );
-
-    // Modern speech optimization parameters:
-    // -vn: Strip all video tracks (saves 90%+ size immediately)
-    // -ac 1: Downmix to mono (speech is 100% voice clarity in mono)
-    // -ar 16000: Optimal speech recognition sample rate
-    // -b:a 32k: 32kbps mono MP3 (1 hour of audio = only ~14.4MB!)
-    await ffmpeg.exec([
-      '-i', cleanInputName,
-      '-vn',
-      '-ac', '1',
-      '-ar', '16000',
-      '-b:a', '32k',
-      cleanOutputName
-    ]);
-
-    const data = await ffmpeg.readFile(cleanOutputName);
-
-    // Clean up temporary files in virtual memory
+    let data: Uint8Array | string | null = null;
     try {
-      await ffmpeg.deleteFile(cleanInputName);
-      await ffmpeg.deleteFile(cleanOutputName);
-    } catch (cleanupErr) {
-      // Ignore cleanup error
+      // Write input into FFmpeg virtual file system
+      await ffmpeg.writeFile(cleanInputName, await fetchFile(inputBlob));
+
+      onStageUpdate?.(
+        lang === 'bn' 
+          ? 'স্পিচ চ্যানেল এক্সট্র্যাক্ট ও ১৬kHz মনো কম্প্রেশন চলছে...' 
+          : 'Extracting speech channel & 16kHz mono compression...'
+      );
+
+      // Modern speech optimization parameters:
+      // -vn: Strip all video tracks (saves 90%+ size immediately)
+      // -ac 1: Downmix to mono (speech is 100% voice clarity in mono)
+      // -ar 16000: Optimal speech recognition sample rate
+      // -b:a 32k: 32kbps mono MP3 (1 hour of audio = only ~14.4MB!)
+      await ffmpeg.exec([
+        '-i', cleanInputName,
+        '-vn',
+        '-ac', '1',
+        '-ar', '16000',
+        '-b:a', '32k',
+        cleanOutputName
+      ]);
+
+      data = await ffmpeg.readFile(cleanOutputName);
+    } finally {
+      // Always clean up temporary files in virtual WASM memory even if exec fails
+      try { await ffmpeg.deleteFile(cleanInputName); } catch {}
+      try { await ffmpeg.deleteFile(cleanOutputName); } catch {}
     }
 
     const rawBuffer = (data as Uint8Array).buffer;
     const arrayBuffer = rawBuffer instanceof ArrayBuffer ? rawBuffer : (rawBuffer as any).slice(0);
     const optimizedBlob = new Blob([arrayBuffer], { type: 'audio/mp3' });
+    data = null;
 
     if (optimizedBlob.size > 100) {
       console.log(`Media optimized from ${(inputBlob.size / 1024 / 1024).toFixed(2)} MB to ${(optimizedBlob.size / 1024 / 1024).toFixed(2)} MB`);
