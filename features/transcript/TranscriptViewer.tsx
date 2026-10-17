@@ -1,5 +1,4 @@
 import React, { useRef, useMemo } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranscriptFormatter } from './hooks/useTranscriptFormatter.tsx';
 
 // Robust Regex Escaping
@@ -27,8 +26,7 @@ export const FormattedTranscript = React.memo(({
   sensitiveMatches = [],
   onSeek,
   onSpeakerClick,
-  onRenameSpeaker,
-  scrollElementRef
+  onRenameSpeaker
 }: any) => {
   const matchIndexRef = useRef(0);
   
@@ -50,67 +48,38 @@ export const FormattedTranscript = React.memo(({
       .map((line: string) => line.trim())
       .filter((line: string) => line.length > 0)
       .map((line: string) => {
-      const timestampMatch = line.match(TIMESTAMP_REGEX);
-      let timestamp = '';
-      let content = line;
-      if (timestampMatch) {
-        timestamp = `[${timestampMatch[1]}]`;
-        content = timestampMatch[2];
-      }
-      const parts = content.split(/(\*\*.*?\*\*)/g);
-      const parsedParts = parts.map((part: string) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          const textInside = part.slice(2, -2);
-          const hasColon = textInside.trim().endsWith(':');
-          const cleanName = textInside.replace(/:$/, '').trim();
-          const isGeneric = !isProperName(cleanName);
-          const isSpeaker = cleanName.split(/\s+/).length <= 4 && (!isGeneric || hasColon);
-          return { isSpeaker, textInside, cleanName };
+        const timestampMatch = line.match(TIMESTAMP_REGEX);
+        let timestamp = '';
+        let content = line;
+        if (timestampMatch) {
+          timestamp = `[${timestampMatch[1]}]`;
+          content = timestampMatch[2];
         }
-        return { isSpeaker: false, textInside: part, cleanName: '' };
+        const parts = content.split(/(\*\*.*?\*\*)/g);
+        const parsedParts = parts.map((part: string) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            const textInside = part.slice(2, -2);
+            const hasColon = textInside.trim().endsWith(':');
+            const cleanName = textInside.replace(/:$/, '').trim();
+            const isGeneric = !isProperName(cleanName);
+            const isSpeaker = cleanName.split(/\s+/).length <= 4 && (!isGeneric || hasColon);
+            return { isSpeaker, textInside, cleanName };
+          }
+          return { isSpeaker: false, textInside: part, cleanName: '' };
+        });
+        return { timestamp, parsedParts };
       });
-      return { timestamp, parsedParts };
-    });
   }, [text]);
-
-  const virtualizer = useVirtualizer({
-    count: parsedLines.length,
-    getScrollElement: () => scrollElementRef?.current,
-    estimateSize: () => 36,
-    overscan: 20,
-  });
 
   if (!text) return null;
 
-  const isSearchActive = !!(searchTerm && searchTerm.trim());
-
-  const itemsToRender = isSearchActive
-    ? parsedLines.map((line: any, idx: number) => ({ index: idx, line }))
-    : virtualizer.getVirtualItems().map((v: any) => ({ index: v.index, line: parsedLines[v.index], virtualRow: v }));
-
   return (
-    <div 
-      className={`selection:bg-indigo-500/30 ${isSearchActive ? 'space-y-1.5' : ''}`}
-      style={!isSearchActive ? {
-        height: `${virtualizer.getTotalSize()}px`,
-        width: '100%',
-        position: 'relative'
-      } : undefined}
-    >
-      {itemsToRender.map(({ index: i, line: { timestamp, parsedParts }, virtualRow }: any) => (
+    <div className="space-y-2 selection:bg-indigo-500/30">
+      {parsedLines.map(({ timestamp, parsedParts }: any, i: number) => (
         <div 
           key={i}
-          ref={virtualRow ? virtualizer.measureElement : undefined}
-          data-index={i}
-          style={virtualRow ? {
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            transform: `translateY(${virtualRow.start}px)`,
-            paddingBottom: '6px'
-          } : { contentVisibility: 'auto', containIntrinsicSize: '36px' }}
-          className={`leading-relaxed flex items-start group ${!virtualRow && !isSearchActive ? 'mb-1.5 min-h-[1.5em]' : ''}`}
+          style={!searchTerm ? { contentVisibility: 'auto', containIntrinsicSize: '0 36px' } : undefined}
+          className="mb-1.5 min-h-[1.5em] leading-relaxed flex items-start group"
         >
           {timestamp && (
             <span 
@@ -160,7 +129,7 @@ export const FormattedTranscript = React.memo(({
   );
 });
 
-export const TranscriptViewer = ({
+export const TranscriptViewer = React.memo(({
   transcriptSegments,
   audioCurrentTime,
   fontSize,
@@ -178,46 +147,47 @@ export const TranscriptViewer = ({
 }: any) => {
   const matchIndexRef = useRef(0);
   const { formatText } = useTranscriptFormatter(searchTerm, isDark, currentMatchIndex, sensitiveMatches);
-  
-  const isSearchActive = !!(searchTerm && searchTerm.trim());
 
-  const virtualizer = useVirtualizer({
-    count: transcriptSegments?.length || 0,
-    getScrollElement: () => scrollElementRef?.current,
-    estimateSize: () => 120,
-    overscan: 10,
-  });
+  // Pre-parse karaoke segments ONLY when karaoke mode is enabled
+  const parsedSegments = useMemo(() => {
+    if (!isKaraokeEnabled || !isSynced || !transcriptSegments || transcriptSegments.length === 0) return [];
+    return transcriptSegments.map((seg: any) => {
+      const timeLabel = `[${Math.floor(seg.start / 60).toString().padStart(2, '0')}:${(seg.start % 60).toString().padStart(2, '0')}]`;
+      const parts = (seg.text || '').split(/(\*\*.*?\*\*)/g).map((part: string) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          const textInside = part.slice(2, -2);
+          const hasColon = textInside.trim().endsWith(':');
+          const cleanName = textInside.replace(/:$/, '').trim();
+          const isGeneric = !isProperName(cleanName);
+          const isProper = cleanName.split(/\s+/).length <= 4 && (!isGeneric || hasColon);
+          return { isSpeaker: true, isProper, textInside, cleanName };
+        }
+        return { isSpeaker: false, isProper: false, textInside: part, cleanName: '' };
+      });
+      return {
+        ...seg,
+        lowerText: (seg.text || '').toLowerCase(),
+        timeLabel,
+        parts
+      };
+    });
+  }, [transcriptSegments, isKaraokeEnabled, isSynced]);
+
+  const lowerSearchTerm = searchTerm ? searchTerm.trim().toLowerCase() : '';
+  const lowerSensitiveList = useMemo(
+    () => sensitiveMatches.map((m: string) => m.toLowerCase()),
+    [sensitiveMatches]
+  );
 
   const renderSyncedTranscript = () => {
     matchIndexRef.current = 0;
 
-    const isProperName = (name: string) => {
-      const genericNames = ['speaker', 'male', 'female', 'unknown', 'host', 'guest', 'interviewer', 'interviewee', 'announcer', 'voice', 'person'];
-      const lowerName = name.toLowerCase().replace(/[^a-z]/g, '');
-      for (const generic of genericNames) {
-        if (lowerName.includes(generic)) return false;
-      }
-      if (/^\d+$/.test(lowerName)) return false;
-      return true;
-    };
-
-    const itemsToRender = isSearchActive
-      ? transcriptSegments.map((seg: any, idx: number) => ({ index: idx, seg }))
-      : virtualizer.getVirtualItems().map((v: any) => ({ index: v.index, seg: transcriptSegments[v.index], virtualRow: v }));
-
     return (
-      <div 
-        className={isSearchActive ? "space-y-4" : ""}
-        style={!isSearchActive ? {
-          height: `${virtualizer.getTotalSize()}px`,
-          width: '100%',
-          position: 'relative'
-        } : undefined}
-      >
-        {itemsToRender.map(({ index: idx, seg, virtualRow }: any) => {
+      <div className="space-y-4">
+        {parsedSegments.map((seg: any, idx: number) => {
           const isActive = audioCurrentTime >= seg.start && audioCurrentTime < seg.end;
-          const hasSearchMatch = searchTerm && searchTerm.trim() && seg.text.toLowerCase().includes(searchTerm.toLowerCase());
-          const hasSensitiveMatch = sensitiveMatches.some((m: string) => seg.text.toLowerCase().includes(m.toLowerCase()));
+          const hasSearchMatch = lowerSearchTerm.length > 0 && seg.lowerText.includes(lowerSearchTerm);
+          const hasSensitiveMatch = lowerSensitiveList.some((m: string) => seg.lowerText.includes(m));
           
           const progress = isActive 
             ? Math.min(100, Math.max(0, ((audioCurrentTime - seg.start) / (seg.end - seg.start)) * 100))
@@ -227,24 +197,14 @@ export const TranscriptViewer = ({
             <div
               key={idx}
               id={isActive ? 'active-transcript-segment' : undefined}
-              ref={virtualRow ? virtualizer.measureElement : undefined}
-              data-index={idx}
-              style={virtualRow ? {
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                transform: `translateY(${virtualRow.start}px)`,
-                paddingBottom: '16px' // replace space-y-4
-              } : { contentVisibility: 'auto', containIntrinsicSize: '100px' }}
-              onClick={() => onSeek && onSeek(`[${Math.floor(seg.start / 60).toString().padStart(2, '0')}:${(seg.start % 60).toString().padStart(2, '0')}]`)}
-              className={`transition-all duration-500 rounded-xl p-4 border-l-4 cursor-pointer group/seg relative overflow-hidden ${
+              onClick={() => onSeek && onSeek(seg.timeLabel)}
+              className={`transition-colors duration-300 rounded-xl p-4 border-l-4 cursor-pointer group/seg relative overflow-hidden ${
                 isActive
-                  ? (isDark ? 'bg-indigo-500/25 border-indigo-400 shadow-2xl scale-[1.02] z-10 ring-1 ring-indigo-500/40' : 'bg-yellow-100/90 border-yellow-500 shadow-xl scale-[1.02] z-10 ring-1 ring-yellow-400/40')
+                  ? (isDark ? 'bg-indigo-500/25 border-indigo-400 shadow-2xl z-10 ring-1 ring-indigo-500/40' : 'bg-yellow-100/90 border-yellow-500 shadow-xl z-10 ring-1 ring-yellow-400/40')
                   : hasSearchMatch
                     ? (isDark ? 'bg-red-500/10 border-red-500/50 opacity-100' : 'bg-red-50 border-red-400 opacity-100')
                     : `border-transparent ${isKaraokeEnabled ? 'opacity-70' : 'opacity-100'} hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5`
-              } ${hasSensitiveMatch && !isActive ? 'ring-1 ring-red-500/20' : ''} ${!virtualRow && !isSearchActive ? 'mb-4' : ''}`}
+              } ${hasSensitiveMatch && !isActive ? 'ring-1 ring-red-500/20' : ''}`}
             >
               {/* Match Indicator */}
               {hasSearchMatch && !isActive && (
@@ -272,29 +232,23 @@ export const TranscriptViewer = ({
                     ? (isDark ? 'bg-indigo-500 text-white' : 'bg-yellow-500 text-white') 
                     : (isDark ? 'bg-white/5 text-white/40' : 'bg-black/5 text-black/40')
                 }`}>
-                  {`[${Math.floor(seg.start / 60).toString().padStart(2, '0')}:${(seg.start % 60).toString().padStart(2, '0')}]`}
+                  {seg.timeLabel}
                 </span>
-                {seg.text.split(/(\*\*.*?\*\*)/g).map((part: string, j: number) => {
-                  if (part.startsWith('**') && part.endsWith('**')) {
-                    const textInside = part.slice(2, -2);
-                    const hasColon = textInside.trim().endsWith(':');
-                    const cleanName = textInside.replace(/:$/, '').trim();
-                    const isGeneric = !isProperName(cleanName);
-                    const isProper = cleanName.split(/\s+/).length <= 4 && (!isGeneric || hasColon);
-                    
-                    if (isProper && onSpeakerClick) {
+                {seg.parts.map((part: any, j: number) => {
+                  if (part.isSpeaker) {
+                    if (part.isProper && onSpeakerClick) {
                       return (
                         <span key={j} className="inline-flex items-center gap-1 group/speaker">
                           <button 
-                            onClick={(e) => { e.stopPropagation(); onSpeakerClick(cleanName); }}
+                            onClick={(e) => { e.stopPropagation(); onSpeakerClick(part.cleanName); }}
                             className={`hover:underline cursor-pointer transition-colors font-bold ${isDark ? 'text-indigo-300 hover:text-indigo-200' : 'text-indigo-800 hover:text-indigo-600'}`}
-                            title={`View profile: ${cleanName}`}
+                            title={`View profile: ${part.cleanName}`}
                           >
-                            {textInside}
+                            {part.textInside}
                           </button>
                           {onRenameSpeaker && (
                             <button
-                              onClick={(e) => { e.stopPropagation(); onRenameSpeaker(cleanName); }}
+                              onClick={(e) => { e.stopPropagation(); onRenameSpeaker(part.cleanName); }}
                               className="opacity-0 group-hover/speaker:opacity-100 p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition-opacity"
                               title="Rename Speaker Globally"
                             >
@@ -304,10 +258,10 @@ export const TranscriptViewer = ({
                         </span>
                       );
                     }
-                    return <strong key={j} className={isDark ? 'text-indigo-300' : 'text-indigo-800'}>{textInside}</strong>;
+                    return <strong key={j} className={isDark ? 'text-indigo-300' : 'text-indigo-800'}>{part.textInside}</strong>;
                   }
 
-                  const elements = formatText(part, matchIndexRef);
+                  const elements = formatText(part.textInside, matchIndexRef);
 
                   return (
                     <span key={j} className={isActive ? (isDark ? 'text-white font-medium' : 'text-black font-medium') : ''}>
@@ -325,7 +279,7 @@ export const TranscriptViewer = ({
 
   return (
     <>
-      {isSynced && isKaraokeEnabled && transcriptSegments.length > 0
+      {isSynced && isKaraokeEnabled && parsedSegments.length > 0
         ? renderSyncedTranscript()
         : <FormattedTranscript 
             text={transcript} 
@@ -341,4 +295,4 @@ export const TranscriptViewer = ({
       }
     </>
   );
-};
+});

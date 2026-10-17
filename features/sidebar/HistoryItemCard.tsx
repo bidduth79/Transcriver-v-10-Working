@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { useHistoryItemCard } from './hooks/useHistoryItemCard';
 
 export const HistoryItemCard = memo(({ 
@@ -13,9 +13,20 @@ export const HistoryItemCard = memo(({
   isDuplicate,
   toggleFavorite
 }: any) => {
-  const sensitiveMatches = getSensitiveMatches(item.transcript);
+  const sensitiveMatches = useMemo(
+    () => (getSensitiveMatches ? getSensitiveMatches(item.transcript) : []),
+    [item.transcript, getSensitiveMatches]
+  );
   const isSensitive = sensitiveMatches && sensitiveMatches.length > 0;
   const isActive = activeHistoryId === item.id;
+
+  const formattedTime = useMemo(() => {
+    try {
+      return new Date(item.date).toLocaleTimeString(appLang === 'bn' ? 'bn-BD' : 'en-US', { timeStyle: 'short' });
+    } catch {
+      return '';
+    }
+  }, [item.date, appLang]);
   
   const {
     handleStart,
@@ -82,7 +93,7 @@ export const HistoryItemCard = memo(({
         <div className="flex items-center justify-between w-full" title="Creation Date">
             <div className="flex items-center gap-1.5">
                 <svg className="w-3 h-3 transition-transform group-hover:scale-125" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                <span>{new Date(item.date).toLocaleTimeString(appLang === 'bn' ? 'bn-BD' : 'en-US', { timeStyle: 'short' })}</span>
+                <span>{formattedTime}</span>
                 {item.hasBeenOpened && (
                   <span title={appLang === 'bn' ? "ইতিপূর্বে খোলা হয়েছে" : "Previously Opened"}>
                     <svg className={`w-3 h-3 ml-0.5 ${isActive ? (isDark ? 'text-green-400' : 'text-green-600') : 'text-indigo-400/70 group-hover:text-indigo-500'} transition-colors`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,5 +178,15 @@ export const HistoryItemCard = memo(({
         </div>
       </div>
     </div>
+  );
+}, (prev, next) => {
+  return (
+    prev.item === next.item &&
+    (prev.activeHistoryId === prev.item?.id) === (next.activeHistoryId === next.item?.id) &&
+    prev.isDuplicate === next.isDuplicate &&
+    prev.isDark === next.isDark &&
+    prev.appLang === next.appLang &&
+    prev.getSensitiveMatches === next.getSensitiveMatches &&
+    prev.activeColors === next.activeColors
   );
 });

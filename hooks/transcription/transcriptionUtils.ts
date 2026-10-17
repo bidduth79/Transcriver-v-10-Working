@@ -39,7 +39,7 @@ export const removeRepetitiveBlocks = (text: string): string => {
     
     let cleaned = text;
 
-    // 1. Paragraph-level deduplication across the entire text
+    // 1. Paragraph-level O(N) deduplication across the entire text
     const paragraphs = cleaned.split(/\n+/);
     const deduplicatedParagraphs: string[] = [];
     const seenParagraphs = new Map<string, number>();
@@ -57,7 +57,6 @@ export const removeRepetitiveBlocks = (text: string): string => {
         if (normalized.length > 20) {
             const count = seenParagraphs.get(normalized) || 0;
             if (count >= 2) {
-                // Skip repetitive paragraph
                 continue;
             }
             seenParagraphs.set(normalized, count + 1);
@@ -66,7 +65,7 @@ export const removeRepetitiveBlocks = (text: string): string => {
     }
     cleaned = deduplicatedParagraphs.join('\n\n');
 
-    // 2. Sentence-level deduplication (catches repeating sentences within unformatted blocks)
+    // 2. Sentence-level O(N) deduplication (catches repeating sentences within unformatted blocks)
     const sentenceTokens = cleaned.split(/([।?!]|\n+)/);
     const sentenceUnits: string[] = [];
     for (let i = 0; i < sentenceTokens.length; i += 2) {
@@ -76,29 +75,48 @@ export const removeRepetitiveBlocks = (text: string): string => {
 
     const finalSentences: string[] = [];
     const recentSentences: string[] = [];
-    for (const unit of sentenceUnits) {
-        const norm = unit.replace(/[।,?!.\s]/g, '').trim();
+    const globalSentenceCounts = new Map<string, number>();
+
+    for (let unit of sentenceUnits) {
+        // 3. Fast O(N) clause deduplication inside very long run-on sentences (>250 chars without punctuation)
+        if (unit.length > 250 && unit.includes(',')) {
+            const clauses = unit.split(',');
+            const dedupClauses: string[] = [];
+            const recentClauses: string[] = [];
+            for (const clause of clauses) {
+                const cNorm = clause.replace(/\s+/g, '').trim();
+                if (cNorm.length > 18 && recentClauses.includes(cNorm)) {
+                    continue;
+                }
+                if (cNorm.length > 18) {
+                    recentClauses.push(cNorm);
+                    if (recentClauses.length > 5) recentClauses.shift();
+                }
+                dedupClauses.push(clause);
+            }
+            unit = dedupClauses.join(',');
+        }
+
+        const norm = unit
+            .replace(/^[\s\n]*\[[0-9০-৯]{1,2}:[0-9০-৯]{2}(:[0-9০-৯]{2})?\]\s*(\*\*.*?\*\*\s*)?/, '')
+            .replace(/[।,?!.\s]/g, '')
+            .trim();
+
         if (norm.length > 15) {
-            const isRepeat = recentSentences.some(prev => prev === norm);
-            if (isRepeat) {
+            if (recentSentences.includes(norm)) {
                 continue; // Skip consecutive or near-consecutive repeating sentence
             }
+            const totalSeen = globalSentenceCounts.get(norm) || 0;
+            if (norm.length > 30 && totalSeen >= 2) {
+                continue; // Skip long sentence repeated multiple times across the transcript
+            }
+            globalSentenceCounts.set(norm, totalSeen + 1);
             recentSentences.push(norm);
-            if (recentSentences.length > 6) recentSentences.shift();
+            if (recentSentences.length > 15) recentSentences.shift();
         }
         finalSentences.push(unit);
     }
     cleaned = finalSentences.join('');
-
-    // 3. Regex-based loop detector for degenerative autoregressive model loops
-    // Handled natively in C++ engine, taking ~10ms instead of 4-5 seconds
-    let prev = cleaned;
-    let regexGuard = 0;
-    do {
-        prev = cleaned;
-        cleaned = cleaned.replace(/([\s\S]{40,300}?)\1+/g, '$1');
-        regexGuard++;
-    } while (prev !== cleaned && regexGuard < 10);
 
     return cleaned.trim();
 };

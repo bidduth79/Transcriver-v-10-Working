@@ -133,6 +133,7 @@ export const SidebarHistory = ({
 
   const availableDateStrings = useMemo(() => {
     const dates = new Set<string>();
+    if (!isDatePickerOpen) return dates;
     (fullHistory || history || []).forEach((item: any) => {
       if (item?.date) {
         try {
@@ -152,9 +153,10 @@ export const SidebarHistory = ({
       }
     });
     return dates;
-  }, [fullHistory, history]);
+  }, [fullHistory, history, isDatePickerOpen]);
 
   const calendarDays = useMemo(() => {
+    if (!isDatePickerOpen) return [];
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -163,17 +165,20 @@ export const SidebarHistory = ({
 
     const days = [];
     for (let i = firstDay - 1; i >= 0; i--) {
-      days.push({ day: prevMonthDays - i, isCurrentMonth: false, date: new Date(year, month - 1, prevMonthDays - i) });
+      const d = new Date(year, month - 1, prevMonthDays - i);
+      days.push({ day: prevMonthDays - i, isCurrentMonth: false, date: d, dateStr: `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}` });
     }
     for (let i = 1; i <= daysInMonth; i++) {
-      days.push({ day: i, isCurrentMonth: true, date: new Date(year, month, i) });
+      const d = new Date(year, month, i);
+      days.push({ day: i, isCurrentMonth: true, date: d, dateStr: `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}` });
     }
     const remainingCells = 42 - days.length;
     for (let i = 1; i <= remainingCells; i++) {
-      days.push({ day: i, isCurrentMonth: false, date: new Date(year, month + 1, i) });
+      const d = new Date(year, month + 1, i);
+      days.push({ day: i, isCurrentMonth: false, date: d, dateStr: `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}` });
     }
     return days;
-  }, [viewDate]);
+  }, [viewDate, isDatePickerOpen]);
 
   // Smoothly scroll to active item to prevent layout jump when FileInfoSection mounts
   const [prevActiveId, setPrevActiveId] = useState(activeHistoryId);
@@ -341,13 +346,15 @@ export const SidebarHistory = ({
               
               {/* Days Grid */}
               <div className="grid grid-cols-7 gap-1 gap-y-1.5 text-center">
-                {calendarDays.map((calDay, i) => {
-                  const isTodayStr = new Date().toLocaleDateString('en-US');
-                  const calDayStr = calDay.date.toLocaleDateString('en-US');
-                  const hasHistory = availableDateStrings.has(calDayStr);
-                  const isToday = calDayStr === isTodayStr;
-                  
-                  return (
+                {(() => {
+                  const now = new Date();
+                  const isTodayStr = `${now.getMonth() + 1}/${now.getDate()}/${now.getFullYear()}`;
+                  return calendarDays.map((calDay: any, i: number) => {
+                    const calDayStr = calDay.dateStr;
+                    const hasHistory = availableDateStrings.has(calDayStr);
+                    const isToday = calDayStr === isTodayStr;
+                    
+                    return (
                     <button
                       key={i}
                       disabled={isLoadingDate}
@@ -379,7 +386,8 @@ export const SidebarHistory = ({
                       )}
                     </button>
                   );
-                })}
+                });
+                })()}
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback, useDeferredValue } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getSensitiveKeywords } from '../../../utils/sensitiveKeywords';
 
@@ -16,58 +16,63 @@ export const useTranscriptScroll = (
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const [localScrollPercent, setLocalScrollPercent] = useState(0);
   
-  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const isUserScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const programmaticScrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const rafScrollRef = useRef<number | null>(null);
 
-  const handleUserInteraction = () => {
-    setIsUserScrolling(true);
+  const handleUserInteraction = useCallback(() => {
+    if (!isKaraokeEnabled) return;
+    isUserScrollingRef.current = true;
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
     scrollTimeoutRef.current = setTimeout(() => {
-      setIsUserScrolling(false);
+      isUserScrollingRef.current = false;
     }, 3000);
-  };
+  }, [isKaraokeEnabled]);
 
-  const setProgrammaticScroll = () => {
+  const setProgrammaticScroll = useCallback(() => {
     if (programmaticScrollTimeoutRef.current) {
       clearTimeout(programmaticScrollTimeoutRef.current);
     }
-    // Smooth scrolling takes some time, ignore scroll events for 1 second
     programmaticScrollTimeoutRef.current = setTimeout(() => {
       programmaticScrollTimeoutRef.current = null;
     }, 1000);
-  };
+  }, []);
 
-  const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-      const percent = Math.round((scrollTop / (scrollHeight - clientHeight)) * 100);
-      // Only update state if it changed significantly to avoid too many re-renders
-      setLocalScrollPercent(prev => Math.abs(prev - percent) > 1 ? percent : prev);
-      
-      if (!programmaticScrollTimeoutRef.current) {
-        // This was a user scroll
-        handleUserInteraction();
+  const handleScroll = useCallback(() => {
+    if (rafScrollRef.current !== null) return;
+    rafScrollRef.current = requestAnimationFrame(() => {
+      rafScrollRef.current = null;
+      if (scrollContainerRef.current) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+        const maxScroll = scrollHeight - clientHeight;
+        const percent = maxScroll > 0 ? Math.round((scrollTop / maxScroll) * 100) : 0;
+        setLocalScrollPercent(prev => (Math.abs(prev - percent) >= 4 || percent === 0 || percent === 100) ? percent : prev);
+        
+        if (isKaraokeEnabled && !programmaticScrollTimeoutRef.current) {
+          handleUserInteraction();
+        }
       }
-    }
-  };
+    });
+  }, [isKaraokeEnabled, handleUserInteraction]);
 
-  const scrollToTop = () => {
+  const scrollToTop = useCallback(() => {
     setProgrammaticScroll();
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-  const scrollToBottom = () => {
+  }, [setProgrammaticScroll]);
+
+  const scrollToBottom = useCallback(() => {
     setProgrammaticScroll();
     scrollContainerRef.current?.scrollTo({ top: scrollContainerRef.current.scrollHeight, behavior: 'smooth' });
-  };
+  }, [setProgrammaticScroll]);
 
   // Sync scroll with active segment
   const flooredAudioTime = Math.floor(audioCurrentTime);
   
   useEffect(() => {
-    if (!isUserScrolling && isSynced && isKaraokeEnabled && (status === 'completed' || status === 'processing')) {
+    if (!isUserScrollingRef.current && isSynced && isKaraokeEnabled && (status === 'completed' || status === 'processing')) {
       const activeEl = document.getElementById('active-transcript-segment');
       if (activeEl && scrollContainerRef.current) {
         setProgrammaticScroll();
@@ -78,7 +83,7 @@ export const useTranscriptScroll = (
         container.scrollTo({ top: offset, behavior: 'smooth' });
       }
     }
-  }, [flooredAudioTime, isSynced, status, isKaraokeEnabled, transcript, isUserScrolling]);
+  }, [flooredAudioTime, isSynced, status, isKaraokeEnabled, transcript, setProgrammaticScroll]);
 
   useEffect(() => {
     return () => {
@@ -87,6 +92,9 @@ export const useTranscriptScroll = (
       }
       if (programmaticScrollTimeoutRef.current) {
         clearTimeout(programmaticScrollTimeoutRef.current);
+      }
+      if (rafScrollRef.current !== null) {
+        cancelAnimationFrame(rafScrollRef.current);
       }
     };
   }, []);
@@ -105,7 +113,7 @@ export const useTranscriptScroll = (
         container.scrollTo({ top: offset, behavior: 'smooth' });
       }
     }
-  }, [currentMatchIndex, matchCount, searchTerm]);
+  }, [currentMatchIndex, matchCount, searchTerm, setProgrammaticScroll]);
 
   return {
     scrollContainerRef,
@@ -117,6 +125,9 @@ export const useTranscriptScroll = (
     scrollToBottom
   };
 };
+
+const EMPTY_ARRAY: any[] = [];
+const KARAOKE_AVAILABLE_MARKER = [{ start: 0, end: 0, text: '' }];
 
 export const useTranscriptSync = (
   fileUrl: string | null,
@@ -138,8 +149,17 @@ export const useTranscriptSync = (
     }
   }, [isSynced, status]);
 
+  const hasTimestamps = useMemo(() => {
+    if (!transcript || !isSynced) return false;
+    return /(?:\[|\b)(?:[0-9০-৯]{1,2}:)?[0-9০-৯]{1,2}:[0-9০-৯]{2}(?:\]|\b)/.test(transcript.slice(0, 2000));
+  }, [transcript, isSynced]);
+
   const transcriptSegments = useMemo(() => {
-    if (!transcript || !isSynced) return [];
+    if (!transcript || !isSynced) return EMPTY_ARRAY;
+    // Do not split and parse the entire transcript unless Karaoke Mode is actually enabled!
+    if (!isKaraokeEnabled) {
+      return hasTimestamps ? KARAOKE_AVAILABLE_MARKER : EMPTY_ARRAY;
+    }
 
     const toSeconds = (h: string | undefined, m: string, s: string) => {
       const parseBengali = (str: string) => str ? parseInt(str.replace(/[০-৯]/g, match => '0123456789'['০১২৩৪৫৬৭৮৯'.indexOf(match)]), 10) : 0;
@@ -190,8 +210,8 @@ export const useTranscriptSync = (
         finalSegments[i].end = (next && next.start > finalSegments[i].start) ? next.start : Infinity;
     }
     
-    return finalSegments;
-  }, [transcript, isSynced]);
+    return finalSegments.length > 0 ? finalSegments : EMPTY_ARRAY;
+  }, [transcript, isSynced, isKaraokeEnabled, hasTimestamps]);
 
   return { isSynced, isKaraokeEnabled, setIsKaraokeEnabled, transcriptSegments };
 };
@@ -231,7 +251,9 @@ export const useLogoAnimation = () => {
 };
 
 export const useSensitiveKeywords = (transcript: string) => {
-  const [sensitiveKeywords, setSensitiveKeywordsList] = useState<string[]>([]);
+  const [sensitiveKeywords, setSensitiveKeywordsList] = useState<string[]>(EMPTY_ARRAY);
+  const deferredTranscript = useDeferredValue(transcript);
+  const prevMatchesRef = useRef<string[]>(EMPTY_ARRAY);
 
   const sensitiveKeywordsUpdated = useAppStore(state => state.sensitiveKeywordsUpdated);
 
@@ -240,43 +262,59 @@ export const useSensitiveKeywords = (transcript: string) => {
   }, [sensitiveKeywordsUpdated]);
 
   const sensitiveMatches = useMemo(() => {
-    if (!transcript || sensitiveKeywords.length === 0) return [];
-    const lower = transcript.toLowerCase();
-    return sensitiveKeywords
+    if (!deferredTranscript || sensitiveKeywords.length === 0) {
+      prevMatchesRef.current = EMPTY_ARRAY;
+      return EMPTY_ARRAY;
+    }
+    const lower = deferredTranscript.toLowerCase();
+    const matched = sensitiveKeywords
       .filter(kw => typeof kw === 'string' && kw.trim().length >= 2 && lower.includes(kw.trim().toLowerCase()))
       .sort((a, b) => b.length - a.length);
-  }, [transcript, sensitiveKeywords]);
+
+    if (matched.length === 0) {
+      prevMatchesRef.current = EMPTY_ARRAY;
+      return EMPTY_ARRAY;
+    }
+
+    const prev = prevMatchesRef.current;
+    if (prev.length === matched.length && prev.every((val, idx) => val === matched[idx])) {
+      return prev;
+    }
+    prevMatchesRef.current = matched;
+    return matched;
+  }, [deferredTranscript, sensitiveKeywords]);
 
   const sensitiveWordCounts = useMemo(() => {
-    if (!transcript || sensitiveMatches.length === 0) return [];
+    if (!deferredTranscript || sensitiveMatches.length === 0) return EMPTY_ARRAY;
     
     const counts: Record<string, number> = {};
-    sensitiveMatches.forEach(kw => { counts[kw] = 0; });
+    const lowerToOriginal: Record<string, string> = {};
+    sensitiveMatches.forEach(kw => {
+      counts[kw] = 0;
+      lowerToOriginal[kw.toLowerCase()] = kw;
+    });
 
     const cleanMatches = sensitiveMatches
       .filter(kw => typeof kw === 'string' && kw.trim().length >= 2)
       .map(kw => kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
 
-    if (cleanMatches.length === 0) return [];
+    if (cleanMatches.length === 0) return EMPTY_ARRAY;
 
     try {
       const combinedRegex = new RegExp(cleanMatches.join('|'), 'gi');
-      const allMatches = transcript.match(combinedRegex) || [];
-      allMatches.forEach(m => {
-        const lower = m.toLowerCase();
-        for (const kw of sensitiveMatches) {
-          if (kw.toLowerCase() === lower) {
-            counts[kw] = (counts[kw] || 0) + 1;
-            break;
-          }
+      const allMatches = deferredTranscript.match(combinedRegex) || [];
+      for (let i = 0; i < allMatches.length; i++) {
+        const origKey = lowerToOriginal[allMatches[i].toLowerCase()];
+        if (origKey !== undefined) {
+          counts[origKey] = (counts[origKey] || 0) + 1;
         }
-      });
+      }
     } catch (e) {
       console.warn("Sensitive word count notice:", e);
     }
     
     return sensitiveMatches.map(kw => ({ word: kw, count: counts[kw] || 0 }));
-  }, [transcript, sensitiveMatches]);
+  }, [deferredTranscript, sensitiveMatches]);
 
   const isSensitive = sensitiveMatches.length > 0;
 

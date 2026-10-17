@@ -36,12 +36,20 @@ export const enqueueFirebaseWrite = (storeName: string, id: string, payload: any
   if (!isFirebaseConfigured || !db) return;
 
   const key = `${storeName}::${id}`;
+  const cleanPayload: Record<string, any> = {};
+  if (payload && typeof payload === 'object') {
+    for (const k of Object.keys(payload)) {
+      if (payload[k] !== undefined) {
+        cleanPayload[k] = payload[k];
+      }
+    }
+  }
   queueMap.set(key, {
     key,
     storeName,
     id,
     action: 'set',
-    payload: JSON.parse(JSON.stringify(payload))
+    payload: cleanPayload
   });
 
   scheduleWorker();

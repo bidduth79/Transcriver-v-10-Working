@@ -77,71 +77,79 @@ export const TranscriptModals: React.FC<TranscriptModalsProps> = ({
 }) => {
   return (
     <>
-      <SummaryModal 
-        isOpen={isSummaryOpen} 
-        onClose={() => setIsSummaryOpen(false)} 
-        transcript={transcript} 
-        activeColors={activeColors} 
-        isDark={isDark} 
-        appLang={appLang}
-        searchTerm={searchTerm}
-        matchCount={matchCount}
-        fileMeta={fileMeta}
-        addToast={addToast}
-        onSeek={onSeek}
-        onModelUpdate={onModelUpdate}
-        setIsAiLoading={setIsAiLoading}
-      />
-      <ReportModal 
-        isOpen={isReportOpen} 
-        onClose={() => setIsReportOpen(false)} 
-        transcript={transcript} 
-        activeColors={activeColors} 
-        isDark={isDark} 
-        appLang={appLang} 
-        fileMeta={fileMeta}
-        searchTerm={searchTerm}
-        addToast={addToast}
-        onModelUpdate={onModelUpdate}
-        setIsAiLoading={setIsAiLoading}
-      />
-      <FullscreenAnalysis 
-        isOpen={isAnalysisOpen}
-        onClose={() => setIsAnalysisOpen(false)}
-        history={history}
-        transcript={transcript}
-        isDark={isDark}
-        activeColors={activeColors}
-        appLang={appLang}
-        renderFormattedTranscript={(text: string) => (
-          <FormattedTranscript 
-            text={text} 
-            searchTerm={searchTerm} 
-            isDark={isDark} 
-            currentMatchIndex={currentMatchIndex} 
-            sensitiveMatches={sensitiveMatches} 
-            onSeek={onSeek} 
-            onSpeakerClick={openProfile} 
-          />
-        )}
-        loadHistoryItem={(h) => {
-          setTranscript(h.transcript);
-          setStatus('completed');
-          setIsAnalysisOpen(false);
-          addToast(appLang === 'bn' ? "হিস্টোরি লোড হয়েছে" : "History loaded", 'info');
-        }}
-      />
-      <SpeakerProfileSidebar 
-        isOpen={isSpeakerProfileOpen}
-        onClose={closeProfile}
-        speakerName={speakerName}
-        profile={speakerProfile}
-        isLoading={isSpeakerLoading}
-        error={speakerError || ''}
-        onRefresh={() => refreshProfile(speakerName)}
-        onUpdateCustomNote={updateCustomNote}
-        onSeek={onSeek}
-      />
+      {isSummaryOpen && (
+        <SummaryModal 
+          isOpen={isSummaryOpen} 
+          onClose={() => setIsSummaryOpen(false)} 
+          transcript={transcript} 
+          activeColors={activeColors} 
+          isDark={isDark} 
+          appLang={appLang}
+          searchTerm={searchTerm}
+          matchCount={matchCount}
+          fileMeta={fileMeta}
+          addToast={addToast}
+          onSeek={onSeek}
+          onModelUpdate={onModelUpdate}
+          setIsAiLoading={setIsAiLoading}
+        />
+      )}
+      {isReportOpen && (
+        <ReportModal 
+          isOpen={isReportOpen} 
+          onClose={() => setIsReportOpen(false)} 
+          transcript={transcript} 
+          activeColors={activeColors} 
+          isDark={isDark} 
+          appLang={appLang} 
+          fileMeta={fileMeta}
+          searchTerm={searchTerm}
+          addToast={addToast}
+          onModelUpdate={onModelUpdate}
+          setIsAiLoading={setIsAiLoading}
+        />
+      )}
+      {isAnalysisOpen && (
+        <FullscreenAnalysis 
+          isOpen={isAnalysisOpen}
+          onClose={() => setIsAnalysisOpen(false)}
+          history={history}
+          transcript={transcript}
+          isDark={isDark}
+          activeColors={activeColors}
+          appLang={appLang}
+          renderFormattedTranscript={(text: string) => (
+            <FormattedTranscript 
+              text={text} 
+              searchTerm={searchTerm} 
+              isDark={isDark} 
+              currentMatchIndex={currentMatchIndex} 
+              sensitiveMatches={sensitiveMatches} 
+              onSeek={onSeek} 
+              onSpeakerClick={openProfile} 
+            />
+          )}
+          loadHistoryItem={(h) => {
+            setTranscript(h.transcript);
+            setStatus('completed');
+            setIsAnalysisOpen(false);
+            addToast(appLang === 'bn' ? "হিস্টোরি লোড হয়েছে" : "History loaded", 'info');
+          }}
+        />
+      )}
+      {isSpeakerProfileOpen && (
+        <SpeakerProfileSidebar 
+          isOpen={isSpeakerProfileOpen}
+          onClose={closeProfile}
+          speakerName={speakerName}
+          profile={speakerProfile}
+          isLoading={isSpeakerLoading}
+          error={speakerError || ''}
+          onRefresh={() => refreshProfile(speakerName)}
+          onUpdateCustomNote={updateCustomNote}
+          onSeek={onSeek}
+        />
+      )}
     </>
   );
 };

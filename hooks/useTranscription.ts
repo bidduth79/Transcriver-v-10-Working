@@ -161,32 +161,26 @@ export const useTranscription = (
       const currentFileName = inputMetadata?.name || (inputFile as File).name || 'audio_file';
       const lowerName = currentFileName.toLowerCase();
       
-      // Determine the accurate MIME type for Gemini
-      let effectiveMimeType = inputFile.type;
-      if (!effectiveMimeType || effectiveMimeType === 'application/octet-stream') {
-        if (lowerName.endsWith('.opus') || lowerName.endsWith('.ogg')) {
-          effectiveMimeType = 'audio/ogg';
-        } else if (lowerName.endsWith('.mp3')) {
-          effectiveMimeType = 'audio/mp3';
-        } else if (lowerName.endsWith('.wav')) {
-          effectiveMimeType = 'audio/wav';
-        } else if (lowerName.endsWith('.m4a')) {
-          effectiveMimeType = 'audio/mp4';
-        } else if (lowerName.endsWith('.webm')) {
-          effectiveMimeType = 'audio/webm';
-        } else {
-          effectiveMimeType = 'audio/ogg';
-        }
-      } else if (lowerName.endsWith('.opus') && effectiveMimeType.includes('webm')) {
+      // Sniff accurate MIME type from magic bytes and filename (fixes audio/opus and WhatsApp voice notes)
+      const sniffed = await detectAudioMimeType(inputFile, currentFileName);
+      let effectiveMimeType = sniffed.mimeType || inputFile.type || 'audio/mp3';
+      if (effectiveMimeType.includes('opus') || lowerName.endsWith('.opus') || lowerName.endsWith('.ogg')) {
         effectiveMimeType = 'audio/ogg';
       }
       
-      const effectiveFile: Blob = inputFile;
+      let effectiveFile: Blob = inputFile;
+
+      // For small voice notes / clips (<= 1MB), normalize quiet audio into 16kHz mono PCM WAV
+      if (inputFile.size <= 1 * 1024 * 1024 && (sniffed.isOggOpus || sniffed.isWhatsApp || lowerName.endsWith('.opus') || lowerName.endsWith('.ogg'))) {
+        const wavConverted = await convertAudioToWav(inputFile, 16000);
+        if (wavConverted && wavConverted.wavBlob) {
+          effectiveFile = wavConverted.wavBlob;
+          effectiveMimeType = 'audio/wav';
+        }
+      }
 
       let audioPart: any;
       let uploadedFile: any = null;
-
-      const isOpusFile = lowerName.endsWith('.opus') || effectiveMimeType.includes('ogg') || effectiveMimeType.includes('opus');
 
       // Use Base64 inlineData
       setCurrentStage(appLang === 'bn' ? 'অডিও ডেটা প্রস্তুত করা হচ্ছে...' : 'Preparing audio for AI...');
@@ -202,9 +196,6 @@ export const useTranscription = (
         ? TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL 
         : TRANSCRIPTION_SYSTEM_INSTRUCTION;
 
-      let durationInMinutes = audioDurationSeconds / 60;
-      const isLongAudio = durationInMinutes > 15 || inputFile.size > 15 * 1024 * 1024;
-
       const modelName = checkProvider.model || 'gemini-2.5-flash';
       let promptText = transcriptionMode === 'normal' 
         ? TRANSCRIPTION_PROMPT_TEXT_NORMAL 
@@ -214,7 +205,6 @@ export const useTranscription = (
           promptText += "\n\nCRITICAL FOR THIS MODEL: Ensure every timestamp like [MM:SS] starts on a NEW LINE. Do NOT put timestamps in the middle of text. Each speaker's dialogue MUST be on a separate line. Example:\n[00:00] **Speaker 1:** Hello.\n[00:05] **Speaker 2:** Hi there.";
       }
 
-      // Reverting to sending system instruction properly in config for better adherence
       const requestOptions = {
           model: modelName, 
           contents: [
@@ -279,7 +269,6 @@ export const useTranscription = (
           fullText = extractText(response);
       } catch (err: any) {
           console.error("Transcription generation failed:", err);
-          // If error was caused by recitation getter, try to salvage
           if (err?.message?.includes('RECITATION') || err?.message?.includes('Recitation')) {
             console.warn("Caught recitation in generateContent error");
           } else {
@@ -287,9 +276,6 @@ export const useTranscription = (
           }
       } finally {
           // CRITICAL: Release the massive base64 audio data from memory immediately
-          // A 10MB opus file creates ~13MB of base64 string that stays in RAM
-          // until this function ends. Without this cleanup, post-transcription 
-          // processing (history save, BGB analysis, loadHistory) causes OOM crash.
           if (audioPart?.inlineData) {
               audioPart.inlineData.data = '';
               audioPart.inlineData = null;
@@ -299,67 +285,83 @@ export const useTranscription = (
           base64Data = '';
       }
 
-      // Auto-recovery if recitation filter was triggered and no text was produced
-      if (!fullText.trim() && lastResultObj?.candidates?.[0]?.finishReason === 'RECITATION') {
-        console.warn("Recitation filter triggered on first attempt. Retrying with adaptive accessibility prompt...");
+      const firstFinishReason = lastResultObj?.candidates?.[0]?.finishReason;
+
+      // Auto-recovery if no text was produced on first attempt (due to RECITATION, intro music, low volume, or decoder quirk)
+      if (!fullText.trim() && firstFinishReason !== 'SAFETY' && firstFinishReason !== 'MAX_TOKENS') {
+        console.warn(`Empty transcript on first attempt (finishReason: ${firstFinishReason}). Retrying with enhanced sensitivity...`);
         setCurrentStage(appLang === 'bn' 
-          ? 'কপিরাইট ফিল্টার এড়াতে বিকল্প মোডে পুনরায় চেষ্টা করা হচ্ছে...' 
-          : 'Retrying in adaptive accessibility mode...');
+          ? 'কণ্ঠস্বর গভীরভাবে শনাক্ত করতে বিকল্প মোডে পুনরায় চেষ্টা করা হচ্ছে...' 
+          : 'Retrying with high-sensitivity speech detection...');
         try {
-          const retryBase64 = await blobToBase64(effectiveFile);
-          const retryAudioPart = {
+          let retryBlob = effectiveFile;
+          let retryMime = effectiveMimeType;
+          // If small file wasn't converted to WAV yet, convert and normalize gain now
+          if (inputFile.size <= 1 * 1024 * 1024 && retryMime !== 'audio/wav') {
+            const wavRetry = await convertAudioToWav(inputFile, 16000);
+            if (wavRetry?.wavBlob) {
+              retryBlob = wavRetry.wavBlob;
+              retryMime = 'audio/wav';
+            }
+          }
+          let retryBase64 = await blobToBase64(retryBlob);
+          const retryAudioPart: any = {
             inlineData: {
-              mimeType: effectiveMimeType,
+              mimeType: retryMime,
               data: retryBase64
             }
           };
-          const retryResp = await ai.models.generateContent({
-            model: modelName,
-            contents: [
-              {
-                role: 'user',
-                parts: [
-                  retryAudioPart,
-                  { 
-                    text: "You are an assistive speech-to-text accessibility tool. Please transcribe the spoken words and dialogue in this user recording into Bengali (Bangla). Transcribe human speech accurately as spoken." 
-                  }
+          try {
+            const retryResp = await ai.models.generateContent({
+              model: modelName,
+              contents: [
+                {
+                  role: 'user',
+                  parts: [
+                    retryAudioPart,
+                    { 
+                      text: "You are an assistive speech-to-text accessibility tool. Listen carefully through any intro music, background noise, or low-volume sections, and transcribe all spoken words and dialogue in this recording into Bengali (Bangla). Format with [MM:SS] **Speaker 1:** when speech occurs." 
+                    }
+                  ]
+                }
+              ],
+              config: {
+                systemInstruction: "You are a high-sensitivity speech-to-text transcriber for user audio accessibility. Faithfully write down everything spoken in the audio in Bengali script without summarizing or stopping early.",
+                temperature: 0.25,
+                safetySettings: [
+                  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
+                  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
+                  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
                 ]
               }
-            ],
-            config: {
-              systemInstruction: "You are a speech-to-text transcriber for user audio accessibility. Faithfully write down what is spoken in the audio in Bengali script without summarizing.",
-              temperature: 0.3,
-              safetySettings: [
-                { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-                { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-                { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-              ]
+            });
+            const retryText = extractText(retryResp);
+            if (retryText.trim()) {
+              fullText = retryText;
+              lastResultObj = retryResp;
             }
-          });
-          const retryText = extractText(retryResp);
-          if (retryText.trim()) {
-            fullText = retryText;
-            lastResultObj = retryResp;
+          } finally {
+            if (retryAudioPart?.inlineData) {
+              retryAudioPart.inlineData.data = '';
+              retryAudioPart.inlineData = null;
+            }
+            retryBase64 = '';
           }
         } catch (retryErr) {
-          console.warn("Adaptive retry after recitation failed:", retryErr);
+          console.warn("Adaptive retry failed:", retryErr);
         }
       }
 
       clearInterval(timer);
-      setProgress(100);
-      setCurrentStage(appLang === 'bn' ? 'সম্পন্ন হয়েছে!' : 'Completed!');
 
       fullText = removeRepetitiveBlocks(fullText);
-      
-      setTranscript(fullText);
-      setStatus('completed');
 
+      const finishReason = lastResultObj?.candidates?.[0]?.finishReason;
+      lastResultObj = null; // Release SDK response object from memory immediately
+
+      let isNoSpeechDetected = false;
       if (!fullText.trim()) {
-        const candidate = lastResultObj?.candidates?.[0];
-        const finishReason = candidate?.finishReason;
-
         if (finishReason === 'SAFETY') {
           throw new Error(appLang === 'bn' 
             ? 'এআই নিরাপত্তা নীতিমালার কারণে এই অডিওটির ট্রান্সক্রিপশন সম্পন্ন করা সম্ভব হয়নি।' 
@@ -373,32 +375,17 @@ export const useTranscription = (
             ? 'টোকেন লিমিট পূর্ণ হয়ে গেছে। অনুগ্রহ করে অডিও ফাইলটি ছোট করে পুনরায় চেষ্টা করুন।'
             : 'Token limit reached. Please use a shorter audio clip.');
         } else {
-          // If no speech was spoken in the audio file
+          isNoSpeechDetected = true;
           fullText = appLang === 'bn' 
             ? '[কোনো কথা বা কণ্ঠস্বর সনাক্ত করা যায়নি / No audible speech detected]' 
             : '[No audible speech detected in audio file]';
-          setTranscript(fullText);
         }
       }
 
-      // 1. Instantly trigger sound and toast on the next animation frame (after DOM paints)
-      setTimeout(() => {
-        playSuccessSound(); 
-        if (!isAutoProcess) {
-          addToast(
-            appLang === 'bn' ? 'ট্রান্সক্রিপশন সফলভাবে সম্পন্ন হয়েছে!' : 'Transcription completed successfully!',
-            'success'
-          );
-        }
-      }, 16);
-      
+      const actualElapsedSeconds = Math.round((Date.now() - startTime) / 1000);
       const fileName = (inputFile as File).name || inputMetadata.name || "audio_file";
       const fileExtension = fileName.includes('.') ? fileName.split('.').pop() : 'mp3';
-
       const historyId = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-
-      const actualElapsedSeconds = Math.round((Date.now() - startTime) / 1000);
-      setElapsedSeconds(actualElapsedSeconds);
 
       const historyItem = {
         id: historyId,
@@ -414,8 +401,39 @@ export const useTranscription = (
         bgbRemark: undefined
       };
 
-      // 2. Slow, gentle background staging (ধীরে ধীরে ব্যাকগ্রাউন্ডে এক এক করে করবে)
-      // Helper to run tasks during browser idle time without freezing the UI
+      // Update all in-memory UI states TOGETHER in one batch at completion
+      // so there is ZERO surprise full-app re-render wave 5-6.5 seconds later while reading/scrolling!
+      if (!isNoSpeechDetected) {
+        try {
+          const { useHistoryStore } = await import('./useHistoryStore');
+          const currentHistory = useHistoryStore.getState().history;
+          useHistoryStore.getState().setHistory([historyItem, ...currentHistory]);
+        } catch (e) {
+          console.warn("In-memory history update notice:", e);
+        }
+      }
+
+      await incrementTotalCalls('Transcription', modelName, checkProvider.source);
+      updateApiStats();
+
+      setElapsedSeconds(actualElapsedSeconds);
+      setProgress(100);
+      setCurrentStage(appLang === 'bn' ? 'সম্পন্ন হয়েছে!' : 'Completed!');
+      setTranscript(fullText);
+      setStatus('completed');
+
+      // 1. Trigger sound and toast after first paint completes
+      setTimeout(() => {
+        playSuccessSound(); 
+        if (!isAutoProcess) {
+          addToast(
+            appLang === 'bn' ? 'ট্রান্সক্রিপশন সফলভাবে সম্পন্ন হয়েছে!' : 'Transcription completed successfully!',
+            'success'
+          );
+        }
+      }, 50);
+
+      // 2. Non-UI disk persistence only (does NOT mutate React state or trigger component re-renders)
       const runOnIdle = (task: () => Promise<void> | void, delayMs: number) => {
         setTimeout(() => {
           if ('requestIdleCallback' in window) {
@@ -426,34 +444,21 @@ export const useTranscription = (
         }, delayMs);
       };
 
-      // Step 1 (৫.০ সেকেন্ড পর - টোস্ট চলে যাওয়ার পর): শুধুমাত্র ইন-মেমোরি হিস্ট্রি ও IndexedDB-তে ব্যাকগ্রাউন্ড সেভ
       runOnIdle(async () => {
         try {
-          const { useHistoryStore } = await import('./useHistoryStore');
-          const currentHistory = useHistoryStore.getState().history;
-          useHistoryStore.getState().setHistory([historyItem, ...currentHistory]);
-          await addToStore(STORES.HISTORY, historyItem);
-        } catch (e) {
-          console.warn("Background history save notice:", e);
-        }
-      }, 5000);
-
-      // Step 2 (৬.৫ সেকেন্ড পর): এপিআই স্ট্যাটস ও সিস্টেম লগ
-      runOnIdle(async () => {
-        try {
-          await incrementTotalCalls('Transcription', modelName, checkProvider.source);
-          updateApiStats();
-          try {
-            const { broadcastHistoryUpdate } = await import('./useBroadcastSync');
-            broadcastHistoryUpdate();
-          } catch (e) {}
+          if (!isNoSpeechDetected) {
+            await addToStore(STORES.HISTORY, historyItem);
+            try {
+              const { broadcastHistoryUpdate } = await import('./useBroadcastSync');
+              broadcastHistoryUpdate();
+            } catch (e) {}
+          }
           logSystemActivity('TRANSCRIPTION', 'SUCCESS', 'File Transcribed', `File: ${fileName}`);
         } catch (e) {
-          console.warn("Background stats logging notice:", e);
+          console.warn("Background history persistence notice:", e);
         }
-      }, 6500);
+      }, 1500);
 
-      // Step 3 (৮.০ সেকেন্ড পর): ফাইল ক্লিনআপ ও অপশনাল বিজিবি অ্যানালাইসিস
       runOnIdle(async () => {
         try {
           if (uploadedFile?.name) {
@@ -465,7 +470,7 @@ export const useTranscription = (
           }
 
           const isBgbAnalysisEnabled = localStorage.getItem('bgbAnalysisEnabled') === 'true';
-          if (isBgbAnalysisEnabled) {
+          if (isBgbAnalysisEnabled && !isNoSpeechDetected) {
             const { getSensitiveKeywords } = await import('../utils/sensitiveKeywords');
             const { analyzeTranscriptForBgb } = await import('../services/bgbAnalysisService');
             const keywords = getSensitiveKeywords();
@@ -482,7 +487,7 @@ export const useTranscription = (
         } catch (e) {
           console.warn("Background cleanup & analysis notice:", e);
         }
-      }, 8000);
+      }, 4000);
 
       return { success: true, text: fullText };
     } catch (error: any) {

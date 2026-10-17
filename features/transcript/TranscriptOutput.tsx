@@ -113,17 +113,6 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = ({
   const { scrollContainerRef, transcriptEndRef, localScrollPercent, handleScroll, handleUserInteraction, scrollToTop, scrollToBottom } = useTranscriptScroll(matchCount, searchTerm, currentMatchIndex, isSynced, isKaraokeEnabled, status, transcript, audioCurrentTime);
   const { sensitiveMatches, sensitiveWordCounts, isSensitive } = useSensitiveKeywords(transcript);
 
-  // CRITICAL FIX: Force a re-render when the scroll container mounts so useVirtualizer doesn't render 0 items and freeze for 4-5s.
-  const [isScrollReady, setIsScrollReady] = useState(false);
-  
-  React.useEffect(() => {
-    if (status === 'completed' && scrollContainerRef.current && !isScrollReady) {
-      setIsScrollReady(true);
-    } else if (status !== 'completed' && isScrollReady) {
-      setIsScrollReady(false);
-    }
-  }, [status, isScrollReady, scrollContainerRef.current]);
-
   const { isBgbAnalysisEnabled, setIsBgbAnalysisEnabled, bgbAnalysisResult, isAnalyzing, triggerAnalysis } = useBgbAnalysis(transcript, sensitiveMatches);
   const { isOpen: isSpeakerProfileOpen, speakerName, profile: speakerProfile, isLoading: isSpeakerLoading, error: speakerError, openProfile, closeProfile, refreshProfile, updateCustomNote } = useSpeakerProfile(transcript || '');
 
@@ -239,11 +228,11 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = ({
             <div 
               ref={scrollContainerRef} 
               onScroll={handleScroll} 
-              onWheel={handleUserInteraction}
-              onTouchMove={handleUserInteraction}
-              onMouseDown={handleUserInteraction}
-              onKeyDown={handleUserInteraction}
-              className={`flex-1 w-full overflow-y-auto transcript-scrollbar p-6 md:p-8 lg:p-16 xl:p-24 relative z-10 animate-in slide-in-from-bottom-8 duration-700 ${isSensitive ? (isDark ? 'bg-red-950/10' : 'bg-red-50/30') : ''}`}
+              onWheel={isKaraokeEnabled ? handleUserInteraction : undefined}
+              onTouchMove={isKaraokeEnabled ? handleUserInteraction : undefined}
+              onMouseDown={isKaraokeEnabled ? handleUserInteraction : undefined}
+              onKeyDown={isKaraokeEnabled ? handleUserInteraction : undefined}
+              className={`flex-1 w-full overflow-y-auto transcript-scrollbar p-6 md:p-8 lg:p-16 xl:p-24 relative z-10 ${isSensitive ? (isDark ? 'bg-red-950/10' : 'bg-red-50/30') : ''}`}
             >
               <div className="max-w-6xl mx-auto relative">
                 {/* FLOATING SENSITIVE WORDS BOX */}
@@ -262,12 +251,11 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = ({
                   triggerAnalysis={triggerAnalysis}
                 />
 
-                <div className={`p-6 md:p-10 lg:p-20 rounded-[2rem] md:rounded-[3rem] border shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] transition-all duration-700 group/content ${
+                <div className={`p-6 md:p-10 lg:p-20 rounded-[2rem] md:rounded-[3rem] border shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] transition-colors duration-300 group/content ${
                   isSensitive 
                     ? (isDark ? 'bg-red-950/30 border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'bg-red-50/80 border-red-200 shadow-[0_0_30px_rgba(239,68,68,0.1)]')
                     : (isDark ? 'bg-slate-900/60 border-white/10' : 'bg-white/80 border-white/40')
                 }`}>
-                {isScrollReady ? (
                   <TranscriptContent
                     fontSize={fontSize}
                     isDark={isDark}
@@ -288,11 +276,6 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = ({
                     transcriptEndRef={transcriptEndRef as any}
                     scrollElementRef={scrollContainerRef}
                   />
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-20 opacity-0">
-                    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                )}
               </div>
               {status === 'completed' && (
                 <div className="h-32 md:h-40 flex items-center justify-center">

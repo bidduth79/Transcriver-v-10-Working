@@ -157,7 +157,7 @@ export const fetchDataDual = async (storeName: string, forceAll = false) => {
 // TRIPLE-SYNC WRITE
 export const saveDataDual = async (storeName: string, data: any, forceAll = false) => {
   const id = String(data.id || Date.now());
-  const payload = JSON.parse(JSON.stringify({ ...data, id }));
+  const payload = { ...data, id };
   
   // Non-blocking secondary cache write
   set(`${storeName}_${id}`, payload).catch(e => {
