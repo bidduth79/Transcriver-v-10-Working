@@ -35,7 +35,8 @@ export const removeRepetitiveBlocks = (text: string): string => {
     const sentenceUnits: string[] = [];
     for (let i = 0; i < sentenceTokens.length; i += 2) {
         const unit = (sentenceTokens[i] || '') + (sentenceTokens[i + 1] || '');
-        if (unit.trim()) sentenceUnits.push(unit);
+        // Keep newline-only units so paragraph breaks after "।", "?" or "!" are preserved
+        if (unit.trim() || unit.includes('\n')) sentenceUnits.push(unit);
     }
 
     const finalSentences: string[] = [];

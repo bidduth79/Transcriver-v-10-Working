@@ -58,6 +58,15 @@ describe('removeRepetitiveBlocks', () => {
   it.each(Object.keys(cases))('cleans %s', (name) => {
     expect(removeRepetitiveBlocks(cases[name])).toMatchSnapshot();
   });
+
+  it('keeps speaker lines separate when a paragraph ends with punctuation', () => {
+    const text = [
+      para('00:00', 'আজ আমরা সীমান্ত পরিস্থিতি নিয়ে বিস্তারিত আলোচনা করব।'),
+      para('00:10', 'আপনি কি এ বিষয়ে আমাদের কিছু বলবেন?'),
+      para('00:20', 'অবশ্যই, পরিস্থিতি এখন অনেকটা স্বাভাবিক!'),
+    ].join('\n\n');
+    expect(removeRepetitiveBlocks(text)).toBe(text);
+  });
 });
 
 describe('detectAudioMimeType', () => {

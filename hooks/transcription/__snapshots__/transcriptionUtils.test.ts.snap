@@ -21,7 +21,11 @@ exports[`removeRepetitiveBlocks > cleans banglaDigits 1`] = `
 [০০:০৪] **Speaker 1:** নতুন কথা এখানে শুরু হলো এবং শেষ হলো"
 `;
 
-exports[`removeRepetitiveBlocks > cleans englishMixed 1`] = `"Hello world this is a test sentence that repeats. Hello world this is a test sentence that repeats. Then something different happens here!New paragraph text."`;
+exports[`removeRepetitiveBlocks > cleans englishMixed 1`] = `
+"Hello world this is a test sentence that repeats. Hello world this is a test sentence that repeats. Then something different happens here!
+
+New paragraph text."
+`;
 
 exports[`removeRepetitiveBlocks > cleans farApartParagraphs 1`] = `
 "এইবাক্যটিপঁচিশঅক্ষরেরপরীক্ষা
