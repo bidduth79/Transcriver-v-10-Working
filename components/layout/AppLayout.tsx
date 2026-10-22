@@ -68,12 +68,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ core, children, modals }) 
             appLang={core.appLang} 
             t={core.t} 
             activeColors={core.activeColors}
-            activeApiKeySource={core.activeApiKeySource}
             activeModelName={core.activeModelName}
-            totalApiCalls={core.totalApiCalls}
             isAiLoading={core.isAiLoading}
             onKeyUpdate={core.updateApiStats}
-            onOpenSettings={() => core.setIsSettingsOpen(true)}
           />
         </div>
       </div>

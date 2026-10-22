@@ -112,7 +112,7 @@ export const useTranscription = (
       if (!fullText.trim() && firstFinishReason !== 'SAFETY' && firstFinishReason !== 'MAX_TOKENS') {
         console.warn(`Empty transcript on first attempt (finishReason: ${firstFinishReason}). Retrying with enhanced sensitivity...`);
         setCurrentStage(appLang === 'bn'
-          ? 'কণ্ঠস্বর গভীরভাবে শনাক্ত করতে বিকল্প মোডে পুনরায় চেষ্টা করা হচ্ছে...'
+          ? 'কণ্ঠস্বর গভীরভাবে শনাক্ত করতে বিকল্প মোডে পুনরায় চেষ্টা করা হচ্ছে...'
           : 'Retrying with high-sensitivity speech detection...');
         const retryResp = await retryHighSensitivity({ ai, modelName, inputFile, effectiveFile, effectiveMimeType });
         const retryText = extractResponseText(retryResp);
@@ -147,7 +147,7 @@ export const useTranscription = (
 
       setElapsedSeconds(actualElapsedSeconds);
       setProgress(100);
-      setCurrentStage(appLang === 'bn' ? 'সম্পন্ন হয়েছে!' : 'Completed!');
+      setCurrentStage(appLang === 'bn' ? 'সম্পন্ন হয়েছে!' : 'Completed!');
       setTranscript(fullText);
       setStatus('completed');
 

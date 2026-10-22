@@ -61,7 +61,7 @@ export const generateWithRecovery = async ({ provider, request, lang, setStage, 
       for (const fb of fallbacks) {
         try {
           setStage(lang === 'bn'
-            ? `বিকল্প এপিআই কি (${fb.source}) দিয়ে পুনরায় চেষ্টা করা হচ্ছে...`
+            ? `বিকল্প এপিআই কি (${fb.source}) দিয়ে পুনরায় চেষ্টা করা হচ্ছে...`
             : `Retrying with alternate API Key (${fb.source})...`);
           const fbAi = new GoogleGenAI({ apiKey: fb.key });
           response = await fbAi.models.generateContent(request);
@@ -73,7 +73,7 @@ export const generateWithRecovery = async ({ provider, request, lang, setStage, 
           }
           addToast(
             lang === 'bn'
-              ? `পূর্বের কি-তে সমস্যা থাকায় স্বয়ংক্রিয়ভাবে "${fb.source}" কি ব্যবহার করা হয়েছে`
+              ? `পূর্বের কি-তে সমস্যা থাকায় স্বয়ংক্রিয়ভাবে "${fb.source}" কি ব্যবহার করা হয়েছে`
               : `Automatically switched to working key: ${fb.source}`,
             'info'
           );

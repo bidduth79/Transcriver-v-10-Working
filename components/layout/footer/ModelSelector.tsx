@@ -1,0 +1,105 @@
+import React from 'react';
+import { getModelDefinition } from '../../../services/ApiKeyManager.ts';
+import { useModelSelector } from './useModelSelector';
+import { ModelCategoryList } from './ModelCategoryList';
+import { ModelInfoTooltip } from './ModelInfoTooltip';
+
+interface Props {
+  activeModelName: string;
+  isAiLoading: boolean;
+  onKeyUpdate?: () => void;
+}
+
+// Footer model badge with categorized dropdown, Speed Boost toggle and reset bar
+export const ModelSelector = ({ activeModelName, isAiLoading, onKeyUpdate }: Props) => {
+  const selector = useModelSelector(onKeyUpdate);
+  const {
+    modelSelectRef, showModelSelect, setShowModelSelect, hoveredModel, setHoveredModel,
+    speedOpt, resetNotice, handleToggleSpeedOpt, handleResetToDefault,
+  } = selector;
+  const currentModelDef = getModelDefinition(activeModelName);
+
+  return (
+        <div
+          ref={modelSelectRef}
+          className="flex items-center gap-3 group relative px-3 py-1.5 rounded-full transition-all duration-300 cursor-pointer hover:bg-white/5"
+          onClick={() => setShowModelSelect(!showModelSelect)}
+        >
+           <div className="relative">
+             <div className={`w-2 h-2 rounded-full transition-all duration-500 ${isAiLoading ? 'bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,1)]' : 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]'}`}></div>
+             {isAiLoading && (
+               <>
+                 <div className="absolute inset-0 w-2 h-2 rounded-full bg-rose-500 animate-ping opacity-75"></div>
+                 <div className="absolute -inset-1 border border-rose-500/50 rounded-full animate-[spin_3s_linear_infinite]"></div>
+               </>
+             )}
+           </div>
+
+           <div className="flex flex-col">
+              <span className={`text-[8px] font-black tracking-widest transition-all duration-300 ${isAiLoading ? 'text-rose-400' : 'text-amber-400/50'}`}>
+                {isAiLoading ? 'NEURAL ENGINE PROCESSING...' : `${currentModelDef.categoryLabelBn} • ${speedOpt ? 'FAST OPT' : 'CLASSIC'}`}
+              </span>
+              <span className={`text-[10px] font-black uppercase transition-all duration-500 flex items-center gap-1.5 ${isAiLoading ? 'text-white translate-x-1' : 'text-amber-400/90'}`}>
+                {isAiLoading ? 'ANALYZING:' : 'MODEL:'} <span className={isAiLoading ? 'text-rose-400' : ''}>{currentModelDef.label}</span>
+              </span>
+           </div>
+
+           {/* Categorized Model Dropdown + Bengali Info Tooltip Panel */}
+           <div
+             onClick={(e) => e.stopPropagation()}
+             className={`absolute bottom-[130%] left-0 mb-2 w-[380px] md:w-[430px] bg-slate-900/98 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.85)] overflow-visible transition-all duration-200 origin-bottom-left cursor-default ${showModelSelect ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}
+           >
+             {/* Header */}
+             <div className="p-3.5 border-b border-white/10 bg-slate-950/70 rounded-t-2xl flex items-center justify-between gap-2">
+               <div>
+                 <span className="block text-[11px] text-white font-black tracking-wider">
+                   এআই মডেল ও স্পিড ক্যাটাগরি নির্বাচন করুন
+                 </span>
+                 <span className="block text-[9px] text-slate-400 font-medium normal-case tracking-normal mt-0.5">
+                   যেকোনো মডেলের ডানপাশের <b className="text-indigo-400">(i)</b> বাটনে মাউস রাখলে বাংলায় পূর্ণ নির্দেশনা দেখবেন
+                 </span>
+               </div>
+               <button
+                 type="button"
+                 onClick={handleToggleSpeedOpt}
+                 title="ফাস্ট থিংকিং অপ্টিমাইজেশন চালু/বন্ধ করুন"
+                 className={`px-2.5 py-1 rounded-lg text-[9px] font-black tracking-wider uppercase border transition-all cursor-pointer shrink-0 ${
+                   speedOpt
+                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
+                     : 'bg-slate-800 text-slate-400 border-white/10 hover:text-white'
+                 }`}
+               >
+                 {speedOpt ? '⚡ স্পিড বুস্ট: চালু' : 'স্পিড বুস্ট: বন্ধ'}
+               </button>
+             </div>
+
+             {/* Categorized Groups */}
+             <ModelCategoryList activeModelName={activeModelName} selector={selector} />
+
+             {/* Safe Rollback / Reset to Previous Default Footer Bar */}
+             <div className="p-2.5 border-t border-white/10 bg-slate-950/90 rounded-b-2xl flex items-center justify-between gap-2">
+               <span className="text-[9px] text-slate-400 normal-case tracking-normal font-medium">
+                 {resetNotice
+                   ? '✅ পূর্বের ডিফল্ট অবস্থায় ফিরিয়ে আনা হয়েছে!'
+                   : 'কোনো সমস্যা হলে ১ ক্লিকে পূর্বের অবস্থায় ফিরুন:'}
+               </span>
+               <button
+                 type="button"
+                 onClick={handleResetToDefault}
+                 className="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[9px] font-black normal-case tracking-normal transition-all cursor-pointer shrink-0"
+               >
+                 ↺ পূর্বের অবস্থায় রিসেট করুন
+               </button>
+             </div>
+
+             {hoveredModel && (
+               <ModelInfoTooltip
+                 model={hoveredModel}
+                 onMouseEnter={() => setHoveredModel(hoveredModel)}
+                 onMouseLeave={() => setHoveredModel(null)}
+               />
+             )}
+           </div>
+        </div>
+  );
+};
