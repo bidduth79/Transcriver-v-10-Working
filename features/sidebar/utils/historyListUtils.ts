@@ -53,27 +53,43 @@ export const flattenGroups = (groups: Record<string, any[]>, duplicateCounts: Re
   return arr;
 };
 
+// "M/D/YYYY" key for an ISO (fast path) or any Date-parsable value; null when unparseable
+export const historyDateKey = (dateStr: any): string | null => {
+  try {
+    if (dateStr.length >= 10 && dateStr[4] === '-' && dateStr[7] === '-') {
+      const year = dateStr.substring(0, 4);
+      const month = parseInt(dateStr.substring(5, 7), 10);
+      const day = parseInt(dateStr.substring(8, 10), 10);
+      return `${month}/${day}/${year}`;
+    }
+    const dateObj = new Date(dateStr);
+    if (!isNaN(dateObj.getTime())) {
+      return toDateKey(dateObj);
+    }
+  } catch(e) {}
+  return null;
+};
+
 export const collectHistoryDates = (items: any[]) => {
   const dates = new Set<string>();
   (items || []).forEach((item: any) => {
     if (item?.date) {
-      try {
-        const dateStr = item.date;
-        if (dateStr.length >= 10 && dateStr[4] === '-' && dateStr[7] === '-') {
-          const year = dateStr.substring(0, 4);
-          const month = parseInt(dateStr.substring(5, 7), 10);
-          const day = parseInt(dateStr.substring(8, 10), 10);
-          dates.add(`${month}/${day}/${year}`);
-        } else {
-          const dateObj = new Date(dateStr);
-          if (!isNaN(dateObj.getTime())) {
-            dates.add(toDateKey(dateObj));
-          }
-        }
-      } catch(e) {}
+      const key = historyDateKey(item.date);
+      if (key) dates.add(key);
     }
   });
   return dates;
+};
+
+// Groups items by date key; items without a usable date go to "Unknown"
+export const groupHistoryByDate = (items: any[] | undefined) => {
+  const groups: any = {};
+  (items || []).forEach((item: any) => {
+    const d = (item?.date && historyDateKey(item.date)) || 'Unknown';
+    if (!groups[d]) groups[d] = [];
+    groups[d].push(item);
+  });
+  return groups;
 };
 
 export interface CalendarDay { day: number; isCurrentMonth: boolean; date: Date; dateStr: string }

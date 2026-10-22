@@ -1,5 +1,5 @@
-import { loadAudioFromStore } from '../utils/audioUtils';
-import { useHistoryStore } from './useHistoryStore';
+import { groupHistoryByDate } from '../features/sidebar/utils/historyListUtils';
+import { createLoadHistoryItem } from './appProps/createLoadHistoryItem';
 
 export function getSidebarProps(core: any) {
   return {
@@ -34,52 +34,8 @@ export function getSidebarProps(core: any) {
     toggleFavorite: core.toggleFavorite,
     backupHistory: core.backupHistory,
     restoreHistory: core.restoreHistory,
-    groupHistory: (items: any) => {
-      const groups: any = {};
-      (items || []).forEach((item: any) => {
-        let d = 'Unknown';
-        if (item?.date) {
-          try {
-            // Very fast date parsing for format: "YYYY-MM-DDTHH:mm:ss.sssZ"
-            const dateStr = item.date;
-            if (dateStr.length >= 10 && dateStr[4] === '-' && dateStr[7] === '-') {
-              const year = dateStr.substring(0, 4);
-              const month = parseInt(dateStr.substring(5, 7), 10);
-              const day = parseInt(dateStr.substring(8, 10), 10);
-              d = `${month}/${day}/${year}`;
-            } else {
-              const dateObj = new Date(dateStr);
-              if (!isNaN(dateObj.getTime())) {
-                d = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
-              }
-            }
-          } catch(e) {}
-        }
-        if (!groups[d]) groups[d] = [];
-        groups[d].push(item);
-      });
-      return groups;
-    },
-    loadHistoryItem: async (item: any, searchKeyword?: string) => {
-      core.setTranscript(item.transcript);
-      core.setStatus('completed');
-      core.setTranscriptMeta({ name: item.fileName, duration: item.duration, channelName: item.channelName, date: item.publishedDate });
-      core.setActiveHistoryId(item.id);
-      
-      if (!item.hasBeenOpened) {
-        useHistoryStore.getState().setHistory(prev =>
-          prev.map(h => h.id === item.id ? { ...h, hasBeenOpened: true } : h)
-        );
-      }
-
-      await loadAudioFromStore(item, core.setFile, core.setFileMeta, core.setFileUrl, core.setTranscriptMeta, core.fileUrl || undefined);
-
-      if (searchKeyword) {
-        setTimeout(() => {
-          core.setSearchTerm(searchKeyword);
-        }, 100);
-      }
-    },
+    groupHistory: groupHistoryByDate,
+    loadHistoryItem: createLoadHistoryItem(core),
     appLang: core.appLang,
     isRecording: core.isRecording,
     recordingTime: core.recordingTime,
@@ -149,27 +105,7 @@ export function getExpandedHistoryProps(core: any) {
     filteredHistory: core.filteredHistory,
     historyLimit: core.historyLimit,
     setHistoryLimit: core.setHistoryLimit,
-    loadHistoryItem: async (item: any, searchKeyword?: string) => {
-      core.setTranscript(item.transcript);
-      core.setStatus('completed');
-      core.setTranscriptMeta({ name: item.fileName, duration: item.duration, channelName: item.channelName, date: item.publishedDate });
-      core.setActiveHistoryId(item.id);
-      core.setIsHistoryFullscreen(false);
-
-      if (!item.hasBeenOpened) {
-        useHistoryStore.getState().setHistory(prev =>
-          prev.map(h => h.id === item.id ? { ...h, hasBeenOpened: true } : h)
-        );
-      }
-      
-      await loadAudioFromStore(item, core.setFile, core.setFileMeta, core.setFileUrl, core.setTranscriptMeta, core.fileUrl || undefined);
-
-      if (searchKeyword) {
-        setTimeout(() => {
-          core.setSearchTerm(searchKeyword);
-        }, 100);
-      }
-    },
+    loadHistoryItem: createLoadHistoryItem(core, () => core.setIsHistoryFullscreen(false)),
     activeColors: core.activeColors
   };
 }
