@@ -96,7 +96,7 @@ npm run build    # Production build সফল হতে হবে (বড় প
 - **TypeScript:** `any` ব্যবহার করবে না (একান্ত দরকার হলে কারণসহ কমেন্ট)। `@ts-ignore` / `eslint-disable` দিয়ে error লুকাবে না।
 - **React:** শুধু Functional Component ও Hooks। লিস্টে স্থির ও ইউনিক `key`। অপ্রয়োজনীয় re-render এড়াবে (`useMemo`, `useCallback`, `memo` — যেখানে সত্যিই দরকার)।
 - **State:** গ্লোবাল স্টেটের জন্য বিদ্যমান **zustand** store ব্যবহার করবে; নতুন state library আনবে না।
-- **Styling:** শুধু **Tailwind CSS**। class মার্জের জন্য বিদ্যমান `clsx` / `tailwind-merge` প্যাটার্ন অনুসরণ করবে। inline `style={{}}` এড়াবে।
+- **Styling:** শুধু **Tailwind CSS**। conditional class-এর জন্য আশেপাশের কোডের মতো template string ব্যবহার করবে। inline `style={{}}` এড়াবে।
 - **টেক্সট:** ইউজার যে টেক্সট দেখবে তা hard-code না করে i18n (`locales/`, `react-i18next`) দিয়ে করবে — আশেপাশের কোড যেভাবে করে।
 - **Icons ও Toast:** `lucide-react` ও `sonner` — নতুন বিকল্প আনবে না।
 - **নামকরণ:** কম্পোনেন্ট `PascalCase.tsx`, হুক `useCamelCase.ts`, utils `camelCase.ts`। আশেপাশের কোডের স্টাইল অনুসরণ করবে।
