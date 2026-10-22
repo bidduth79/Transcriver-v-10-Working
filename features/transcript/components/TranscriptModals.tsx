@@ -86,10 +86,8 @@ export const TranscriptModals: React.FC<TranscriptModalsProps> = ({
           isDark={isDark} 
           appLang={appLang}
           searchTerm={searchTerm}
-          matchCount={matchCount}
           fileMeta={fileMeta}
           addToast={addToast}
-          onSeek={onSeek}
           onModelUpdate={onModelUpdate}
           setIsAiLoading={setIsAiLoading}
         />
