@@ -1,14 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { TranscriptMeta, FileMeta } from '../types';
-import { getFileMetadata } from './batch/batchUtils';
 import { useBatchMetrics } from './batch/useBatchMetrics';
 import { useBatchTimer } from './batch/useBatchTimer';
+import { createBatchRunner, FailedFile } from './batch/batchRunner';
 import { setHeavyProcessingActive } from '../services/firebaseThrottledQueue';
 
-export interface FailedFile {
-  file: File;
-  reason: string;
-}
+export type { FailedFile } from './batch/batchRunner';
 
 export const useBatchProcessor = (
   appLang: 'bn' | 'en',
@@ -25,16 +22,24 @@ export const useBatchProcessor = (
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
   const [hasBatchStarted, setHasBatchStarted] = useState(false);
   const [isBatchPaused, setIsBatchPaused] = useState(false);
+  const [failedFiles, setFailedFiles] = useState<FailedFile[]>([]);
+  const [processedCount, setProcessedCount] = useState(0);
+  const [isBatchSummaryOpen, setIsBatchSummaryOpen] = useState(false);
   const isBatchPausedRef = useRef(false);
   const prevBatchUrlRef = useRef<string | null>(null);
   const retryTimeoutRef = useRef<number | null>(null);
 
-  const clearRetryTimeout = () => {
-    if (retryTimeoutRef.current !== null) {
-      clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
-    }
-  };
+  const { progress, etaSeconds, resetMetrics } =
+    useBatchMetrics(isBatchProcessing, isBatchPaused, hasBatchStarted, batchQueue.length, currentBatchIndex);
+  const { batchCountdown, setBatchCountdown, isExtendedPause, setIsExtendedPause, clearTimer, startCountdown } =
+    useBatchTimer(isBatchPausedRef);
+
+  const { processNextBatchFile, clearRetryTimeout } = createBatchRunner({
+    appLang, addToast, setFile, setFileUrl, setActiveHistoryId, setTranscriptMeta, setFileMeta, processTranscription,
+    isBatchPausedRef, prevBatchUrlRef, retryTimeoutRef,
+    setCurrentBatchIndex, setIsBatchProcessing, setHasBatchStarted, setFailedFiles, setProcessedCount, setIsBatchSummaryOpen,
+    startCountdown,
+  });
 
   useEffect(() => {
     isBatchPausedRef.current = isBatchPaused;
@@ -42,7 +47,10 @@ export const useBatchProcessor = (
 
   useEffect(() => {
     return () => {
-      clearRetryTimeout();
+      if (retryTimeoutRef.current !== null) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
       setHeavyProcessingActive('batch', false);
       if (prevBatchUrlRef.current) {
         URL.revokeObjectURL(prevBatchUrlRef.current);
@@ -50,128 +58,6 @@ export const useBatchProcessor = (
       }
     };
   }, []);
-  
-  const [failedFiles, setFailedFiles] = useState<FailedFile[]>([]);
-  const [processedCount, setProcessedCount] = useState(0);
-  const [isBatchSummaryOpen, setIsBatchSummaryOpen] = useState(false);
-
-  const {
-    progress,
-    etaSeconds,
-    resetMetrics
-  } = useBatchMetrics(isBatchProcessing, isBatchPaused, hasBatchStarted, batchQueue.length, currentBatchIndex);
-
-  const {
-    batchCountdown,
-    setBatchCountdown,
-    isExtendedPause,
-    setIsExtendedPause,
-    clearTimer,
-    startCountdown
-  } = useBatchTimer(isBatchPausedRef);
-
-  const finishProcessing = () => {
-    clearRetryTimeout();
-    setHeavyProcessingActive('batch', false);
-    setIsBatchProcessing(false);
-    setHasBatchStarted(false);
-    
-    setFailedFiles(prevFailed => {
-      setProcessedCount(prevProcessed => {
-        if (prevFailed.length > 0) {
-          addToast(appLang === 'bn' 
-            ? `ব্যাচ সম্পন্ন। ${prevProcessed}টি সফল, ${prevFailed.length}টি ব্যর্থ।` 
-            : `Batch completed. ${prevProcessed} succeeded, ${prevFailed.length} failed.`, 'warning');
-        } else {
-          addToast(appLang === 'bn' ? 'ব্যাচ প্রসেসিং সফলভাবে সম্পন্ন হয়েছে' : 'Batch processing completed successfully', 'success');
-        }
-        setIsBatchSummaryOpen(true);
-        return prevProcessed;
-      });
-      return prevFailed;
-    });
-  };
-
-  const startCountdownForNextFile = (queue: File[], nextIndex: number) => {
-    if (isBatchPausedRef.current) {
-      setCurrentBatchIndex(nextIndex);
-      setHeavyProcessingActive('batch', false);
-      return;
-    }
-    
-    startCountdown(
-      nextIndex, 
-      queue.length, 
-      () => processNextBatchFile(queue, nextIndex), 
-      finishProcessing
-    );
-  };
-
-  const processNextBatchFile = async (queue: File[], index: number, retryCount = 0) => {
-    clearRetryTimeout();
-    if (index >= queue.length) {
-      startCountdownForNextFile(queue, index);
-      return;
-    }
-
-    // Lock Firebase sync so zero cloud streams conflict with batch audio processing
-    setHeavyProcessingActive('batch', true);
-
-    const currentFile = queue[index];
-    setCurrentBatchIndex(index);
-    
-    if (currentFile.size > 70 * 1024 * 1024) {
-      addToast(appLang === 'bn' ? `${currentFile.name} ৭০ এমবি এর বেশি, স্কিপ করা হচ্ছে` : `${currentFile.name} exceeds 70MB, skipping`, 'error');
-      setFailedFiles(prev => [...prev, { file: currentFile, reason: 'Size exceeds 70MB' }]);
-      startCountdownForNextFile(queue, index + 1);
-      return;
-    }
-
-    // Revoke previous Object URL first and yield 150ms for V8 Garbage Collector before allocating new audio buffers
-    if (prevBatchUrlRef.current) {
-      URL.revokeObjectURL(prevBatchUrlRef.current);
-      prevBatchUrlRef.current = null;
-    }
-    if (index > 0) {
-      await new Promise(resolve => setTimeout(resolve, 150));
-    }
-
-    setFile(currentFile);
-    const url = URL.createObjectURL(currentFile);
-    prevBatchUrlRef.current = url;
-    setFileUrl(url);
-    setActiveHistoryId(null);
-    setTranscriptMeta(null);
-    
-    try {
-      const metadata = await getFileMetadata(currentFile);
-      setFileMeta(metadata);
-      
-      await processTranscription(currentFile, metadata, true);
-      
-      setProcessedCount(prev => prev + 1);
-      startCountdownForNextFile(queue, index + 1);
-    } catch (error: any) {
-      console.error(`Error processing ${currentFile.name}:`, error);
-      
-      if (retryCount < 1) {
-        addToast(appLang === 'bn' ? `${currentFile.name} ব্যর্থ হয়েছে, আবার চেষ্টা করা হচ্ছে...` : `${currentFile.name} failed, retrying...`, 'warning');
-        clearRetryTimeout();
-        retryTimeoutRef.current = window.setTimeout(() => {
-          retryTimeoutRef.current = null;
-          if (!isBatchPausedRef.current) {
-            processNextBatchFile(queue, index, retryCount + 1);
-          } else {
-            setCurrentBatchIndex(index);
-          }
-        }, 3000);
-      } else {
-        addToast(appLang === 'bn' ? `${currentFile.name} ট্রান্সক্রাইব করা যায়নি` : `Failed to transcribe ${currentFile.name}`, 'error');
-        setFailedFiles(prev => [...prev, { file: currentFile, reason: error?.message || 'Transcription failed' }]);
-        startCountdownForNextFile(queue, index + 1);
-      }
-    }
-  };
 
   const startBatch = () => {
     clearRetryTimeout();
@@ -230,14 +116,14 @@ export const useBatchProcessor = (
   const removeBatchFile = (indexToRemove: number) => {
     const newQueue = batchQueue.filter((_, i) => i !== indexToRemove);
     setBatchQueue(newQueue);
-    
+
     if (indexToRemove < currentBatchIndex) {
       setCurrentBatchIndex(prev => prev - 1);
     } else if (indexToRemove === currentBatchIndex && hasBatchStarted && !isBatchPaused) {
       clearTimer();
       processNextBatchFile(newQueue, currentBatchIndex);
     }
-    
+
     if (newQueue.length === 0) {
       cancelBatch();
     }
