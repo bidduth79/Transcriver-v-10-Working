@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`InteractiveDotBackground > renders the backdrop for dark and light themes > dark 1`] = `"<div class="absolute inset-0 pointer-events-none overflow-hidden select-none z-0"><div class="absolute inset-0 bg-slate-950"></div><canvas class="absolute inset-0 w-full h-full opacity-100"></canvas></div>"`;
+
+exports[`InteractiveDotBackground > renders the backdrop for dark and light themes > light 1`] = `"<div class="absolute inset-0 pointer-events-none overflow-hidden select-none z-0"><div class="absolute inset-0 bg-slate-50"></div><canvas class="absolute inset-0 w-full h-full opacity-100"></canvas></div>"`;
