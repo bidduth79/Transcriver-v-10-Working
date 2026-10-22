@@ -1,0 +1,153 @@
+import type { AIModelDefinition } from './aiModels';
+
+export const AVAILABLE_MODELS: AIModelDefinition[] = [
+  // 1. FAST CATEGORY
+  {
+    id: 'gemini-3.5-transcribe',
+    label: 'Gemini 3.5 Transcribe',
+    badge: 'Audio Specialist',
+    category: 'fast',
+    categoryLabelBn: '⚡ দ্রুতগতির',
+    categoryLabelEn: 'Fast',
+    speedBadgeBn: 'অতি দ্রুত',
+    thinkingBehavior: 'none',
+    infoBn: {
+      howItWorks: 'এটি অডিও ট্রান্সক্রিপশনের জন্য বিশেষভাবে তৈরি ডেডিকেটেড স্পিচ-টু-টেক্সট মডেল। কোনো অতিরিক্ত থিংকিং ছাড়াই সরাসরি অডিও সিগন্যাল থেকে বাংলা টেক্সট তৈরি করে।',
+      speedAndTime: 'অত্যন্ত দ্রুত (সাধারণ মডেলের চেয়ে ৪০%–৫০% কম সময় নেয়)।',
+      bestFor: 'ভয়েস নোট, ফোন কল, ইন্টারভিউ এবং দ্রুত সাধারণ অডিও ট্রান্সক্রাইব করার জন্য সেরা।',
+      quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
+    }
+  },
+  {
+    id: 'gemini-3.5-flash-lite',
+    label: 'Gemini 3.5 Flash Lite',
+    badge: 'Fastest',
+    category: 'fast',
+    categoryLabelBn: '⚡ দ্রুতগতির',
+    categoryLabelEn: 'Fast',
+    speedBadgeBn: 'সবচেয়ে দ্রুত',
+    thinkingBehavior: 'none',
+    infoBn: {
+      howItWorks: 'সবচেয়ে হালকা (Lightweight) ও উচ্চগতির মডেল। থিংকিং প্রসেস ছাড়াই তাৎক্ষণিক রেসপন্স দেয়।',
+      speedAndTime: 'চোখের পলকে আউটপুট দেয় (সর্বনিম্ন ল্যাটেন্সি)।',
+      bestFor: 'ছোট অডিও ক্লিপ, দ্রুত পরীক্ষা বা একসাথে অনেকগুলো ফাইল ব্যাচ প্রসেস করার জন্য আদর্শ।',
+      quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
+    }
+  },
+  {
+    id: 'gemini-3.1-flash-lite-preview',
+    label: 'Gemini 3.1 Flash Lite',
+    badge: 'Ultra Light',
+    category: 'fast',
+    categoryLabelBn: '⚡ দ্রুতগতির',
+    categoryLabelEn: 'Fast',
+    speedBadgeBn: 'অতি দ্রুত',
+    thinkingBehavior: 'none',
+    infoBn: {
+      howItWorks: 'মিনিমাল প্রসেসিংয়ে দ্রুত ট্রান্সক্রিপশন এবং প্রতিটি বক্তার সংলাপ আলাদা লাইনে সাজাতে বিশেষভাবে নির্দেশিত।',
+      speedAndTime: 'অতি দ্রুত ও মেমোরি সাশ্রয়ী।',
+      bestFor: 'স্পষ্ট কণ্ঠস্বরের অডিও ও দ্রুত লাইন-বাই-লাইন টাইমস্ট্যাম্প পাওয়ার জন্য।',
+      quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
+    }
+  },
+
+  // 2. BALANCED CATEGORY
+  {
+    id: 'gemini-2.5-flash',
+    label: 'Gemini 2.5 Flash',
+    badge: 'Default & Best',
+    category: 'balanced',
+    categoryLabelBn: '⚖️ ব্যালেন্সড',
+    categoryLabelEn: 'Balanced',
+    speedBadgeBn: 'দ্রুত ও নিখুঁত',
+    thinkingBehavior: 'minimal',
+    infoBn: {
+      howItWorks: 'অপ্রয়োজনীয় থিংকিং বন্ধ রেখে দ্রুতগতিতে নিখুঁত বাংলা বানান, বিরামচিহ্ন এবং একাধিক বক্তা (Speaker 1, Speaker 2 বা বক্তার নাম) শনাক্ত করে।',
+      speedAndTime: 'দ্রুত ও স্থিতিশীল (অপ্টিমাইজড মোডে ৩০%–৪৫% দ্রুত কাজ করে)।',
+      bestFor: 'প্রতিদিনের সব ধরনের অডিও, ইউটিউব ভিডিও এবং টিভি টকশো ট্রান্সক্রিপশনের জন্য সবচেয়ে নির্ভরযোগ্য ডিফল্ট মডেল।',
+      quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
+    }
+  },
+  {
+    id: 'gemini-3.8-flash',
+    label: 'Gemini 3.8 Flash',
+    badge: 'Latest Flash',
+    category: 'balanced',
+    categoryLabelBn: '⚖️ ব্যালেন্সড',
+    categoryLabelEn: 'Balanced',
+    speedBadgeBn: 'দ্রুত ও আধুনিক',
+    thinkingBehavior: 'minimal',
+    infoBn: {
+      howItWorks: 'সর্বশেষ প্রজন্মের ফ্ল্যাশ ইঞ্জিন। ব্যাকগ্রাউন্ড মিউজিক, ইন্ট্রো জিংগেল ও শোরগোলের মধ্যেও মানুষের কণ্ঠস্বর নিখুঁতভাবে আলাদা করতে পারে।',
+      speedAndTime: 'দ্রুত (লো-থিংকিং অপ্টিমাইজড)।',
+      bestFor: 'টিভি টকশো, নিউজ ব্রডকাস্ট এবং ইংরেজি-বাংলা মিশ্রিত কথোপকথনের সাবলীল বাংলা অনুবাদের জন্য।',
+      quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
+    }
+  },
+  {
+    id: 'gemini-3.5-flash',
+    label: 'Gemini 3.5 Flash',
+    badge: 'Balanced',
+    category: 'balanced',
+    categoryLabelBn: '⚖️ ব্যালেন্সড',
+    categoryLabelEn: 'Balanced',
+    speedBadgeBn: 'দ্রুত',
+    thinkingBehavior: 'minimal',
+    infoBn: {
+      howItWorks: 'গতি এবং ভাষাগত নির্ভুলতার ভারসাম্য বজায় রেখে দীর্ঘ অডিও প্যারাগ্রাফ আকারে ট্রান্সক্রাইব করে।',
+      speedAndTime: 'দ্রুত ও ধারাবাহিক।',
+      bestFor: 'মাঝারি থেকে বড় দৈর্ঘ্যের আলোচনা, সেমিনার বা মিটিং অডিওর জন্য।',
+      quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
+    }
+  },
+  {
+    id: 'gemini-3-flash-preview',
+    label: 'Gemini 3 Flash Preview',
+    badge: 'Preview',
+    category: 'balanced',
+    categoryLabelBn: '⚖️ ব্যালেন্সড',
+    categoryLabelEn: 'Balanced',
+    speedBadgeBn: 'দ্রুত',
+    thinkingBehavior: 'minimal',
+    infoBn: {
+      howItWorks: 'Gemini 3 সিরিজের ফ্ল্যাশ মডেল যা দ্রুত অডিও টোকেন প্রসেস করে এবং রিপিটেশন বা লুপিং এড়িয়ে চলে।',
+      speedAndTime: 'দ্রুত (মিনিমাল থিংকিং)।',
+      bestFor: 'দীর্ঘ বক্তৃতা ও ধারাবাহিক কথোপকথন ট্রান্সক্রিপশনের জন্য।',
+      quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
+    }
+  },
+
+  // 3. THINKING / SLOW CATEGORY
+  {
+    id: 'gemini-2.5-pro',
+    label: 'Gemini 2.5 Pro',
+    badge: 'Deep Thinking',
+    category: 'thinking',
+    categoryLabelBn: '🧠 থিংকিং/স্লো',
+    categoryLabelEn: 'Thinking / Slow',
+    speedBadgeBn: 'ধীরগতি (গভীর বিশ্লেষণ)',
+    thinkingBehavior: 'deep',
+    infoBn: {
+      howItWorks: 'আউটপুট লেখার আগে ভেতরে ভেতরে গভীরভাবে চিন্তা (Deep Reasoning) করে এবং জটিল বাক্য ও প্রেক্ষাপট মিলিয়ে দেখে।',
+      speedAndTime: 'ধীরগতি (চিন্তা করার জন্য সাধারণ মডেলের চেয়ে ২০–৪৫ সেকেন্ড বেশি সময় নেয়)।',
+      bestFor: 'অত্যন্ত অস্পষ্ট অডিও, জটিল আঞ্চলিক ভাষা, গভীর বিশ্লেষণমূলক রিপোর্ট বা যখন সর্বোচ্চ নির্ভুলতা প্রয়োজন।',
+      quotaInfo: 'সীমিত ফ্রি কোটা (২ RPM / ৫০ RPD) — বড় ব্যাচে রেট লিমিট হতে পারে'
+    }
+  },
+  {
+    id: 'gemini-3.1-pro-preview',
+    label: 'Gemini 3.1 Pro Preview',
+    badge: 'Max Reasoning',
+    category: 'thinking',
+    categoryLabelBn: '🧠 থিংকিং/স্লো',
+    categoryLabelEn: 'Thinking / Slow',
+    speedBadgeBn: 'ধীরগতি (সর্বোচ্চ মেধা)',
+    thinkingBehavior: 'deep',
+    infoBn: {
+      howItWorks: 'সর্বোচ্চ স্তরের রিজনিং ও থিংকিং মডেল। জটিল কারিগরি শব্দ, বহু-ভাষিক অনুবাদ এবং সারসংক্ষেপ তৈরিতে সবচেয়ে শক্তিশালী।',
+      speedAndTime: 'ধীরগতি (গভীর থিংকিংয়ের কারণে বেশি সময় নেয়)।',
+      bestFor: 'জটিল তদন্ত রিপোর্ট, বিজিবি/নিরাপত্তা বিশ্লেষণ এবং বিশেষজ্ঞ পর্যায়ের ট্রান্সক্রিপশনের জন্য।',
+      quotaInfo: 'সীমিত ফ্রি কোটা (২ RPM / ৫০ RPD)'
+    }
+  }
+];
