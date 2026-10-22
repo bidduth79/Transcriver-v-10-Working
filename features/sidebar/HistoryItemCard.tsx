@@ -1,5 +1,9 @@
 import React, { memo, useMemo } from 'react';
 import { useHistoryItemCard } from './hooks/useHistoryItemCard';
+import { getHistoryCardClass } from './utils/historyCardClass';
+import { HoldToDeleteProgress } from './components/HoldToDeleteProgress';
+import { SensitiveMatchBadge } from './components/SensitiveMatchBadge';
+import { HistoryCardStatsRow } from './components/HistoryCardStatsRow';
 
 export const HistoryItemCard = memo(({ 
   item, 
@@ -38,34 +42,7 @@ export const HistoryItemCard = memo(({
     formatProcessingTime
   } = useHistoryItemCard(item, onDeleteHistoryItem, loadHistoryItem);
 
-  // Determine classes based on state
-  let itemClass = "";
-  
-  if (isPressing) {
-      itemClass = isDark
-          ? 'bg-red-950/40 border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.25)] scale-[0.98]'
-          : 'bg-red-50 border-red-400 shadow-md scale-[0.98]';
-  } else if (isActive) {
-      // ACTIVE STATE: Light Green as requested
-      itemClass = isDark 
-          ? 'bg-green-900/20 border-green-500/50 shadow-[0_0_15px_rgba(34,197,94,0.1)]' 
-          : 'bg-green-50 border-green-400 shadow-md';
-  } else if (isDuplicate) {
-      // DUPLICATE STATE: Light Yellow as requested
-      itemClass = isDark 
-          ? 'bg-yellow-900/20 border-yellow-500/50 shadow-[0_0_15px_rgba(234,179,8,0.1)]' 
-          : 'bg-yellow-50 border-yellow-400 shadow-md';
-  } else if (isSensitive) {
-      // Sensitive State
-      itemClass = isDark 
-          ? 'bg-red-900/10 border-red-500/30 hover:bg-red-900/20 hover:border-red-500/50' 
-          : 'bg-red-50 border-red-100 hover:bg-red-100 hover:border-red-200';
-  } else {
-      // Default State
-      itemClass = isDark 
-          ? 'bg-slate-800 border-slate-700 hover:bg-slate-700 hover:border-indigo-400/50' 
-          : 'bg-white border-slate-100 hover:bg-indigo-50 hover:border-indigo-200';
-  }
+  const itemClass = getHistoryCardClass({ isPressing, isActive, isDuplicate, isSensitive, isDark });
 
   return (
     <div 
@@ -83,24 +60,7 @@ export const HistoryItemCard = memo(({
       className={`p-4 border rounded-2xl transition-colors duration-200 group relative cursor-pointer shadow-sm hover:shadow-xl select-none overflow-hidden ${itemClass}`}
     >
       {/* Smooth GPU-accelerated 3-second hold-to-delete progress bar */}
-      {isPressing && (
-        <>
-          <style>{`
-            @keyframes holdDeleteProgress {
-              0% { transform: scaleX(0); }
-              100% { transform: scaleX(1); }
-            }
-          `}</style>
-          <div
-            className="absolute inset-0 bg-red-500/10 pointer-events-none origin-left"
-            style={{ animation: 'holdDeleteProgress 2.88s linear forwards' }}
-          />
-          <div
-            className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 to-rose-600 pointer-events-none origin-left z-20"
-            style={{ animation: 'holdDeleteProgress 2.88s linear forwards' }}
-          />
-        </>
-      )}
+      {isPressing && <HoldToDeleteProgress />}
 
       <div className="mb-2 flex justify-between items-start gap-2 relative z-10">
           <p className={`text-[11px] font-bold ${isPressing ? 'text-red-400' : isActive ? (isDark ? 'text-green-400' : 'text-green-800') : (isDark ? 'text-white/90' : 'text-slate-700')} truncate font-stylish-bn transition-colors group-hover:text-indigo-500`}>
@@ -153,71 +113,12 @@ export const HistoryItemCard = memo(({
                    </span>
                 )}
                 {!isPressing && isSensitive && !isActive && (
-                    <div className="relative group/badge flex flex-col items-end z-10">
-                      {/* Default View: Shows only the first match or a summary */}
-                      <div className="flex gap-1 justify-end transition-opacity duration-300 group-hover/badge:opacity-0 group-hover/badge:invisible">
-                        <span 
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onTouchStart={(e) => e.stopPropagation()}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            loadHistoryItem(item, sensitiveMatches[0]);
-                          }}
-                          className="shrink-0 px-1.5 py-0.5 bg-red-600 hover:bg-red-500 cursor-pointer transition-colors text-white text-[8px] font-black rounded uppercase tracking-wider animate-pulse"
-                        >
-                            {sensitiveMatches[0]}
-                        </span>
-                        {sensitiveMatches.length > 1 && (
-                          <span className="shrink-0 px-1.5 py-0.5 bg-red-600/80 text-white text-[8px] font-black rounded uppercase tracking-wider">
-                              +{sensitiveMatches.length - 1}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Expanded View: Shows all matches vertically on hover */}
-                      <div className="flex flex-col gap-1 items-end opacity-0 invisible translate-y-[10px] transition-all duration-300 group-hover/badge:opacity-100 group-hover/badge:visible group-hover/badge:translate-y-0 bg-slate-900/90 p-1.5 rounded-lg shadow-xl border border-red-500/30 absolute bottom-full right-0 mb-1 min-w-max">
-                        {sensitiveMatches.map((match: string, idx: number) => (
-                          <span 
-                            key={idx} 
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                loadHistoryItem(item, match);
-                            }}
-                            className="shrink-0 px-1.5 py-0.5 bg-red-600 hover:bg-red-500 text-white text-[8px] font-black rounded uppercase tracking-wider cursor-pointer transition-colors"
-                          >
-                              {match}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
+                    <SensitiveMatchBadge item={item} sensitiveMatches={sensitiveMatches} loadHistoryItem={loadHistoryItem} />
                 )}
             </div>
         </div>
         
-        {/* Processing Time & Duration Row */}
-        <div className={`flex items-center justify-between border-t border-dashed pt-1.5 mt-0.5 ${isActive ? (isDark ? 'border-green-500/30' : 'border-green-300') : 'border-current/20'}`}>
-            <div className="flex items-center gap-1.5">
-                <span className="opacity-70 group-hover:opacity-100 transition-opacity flex items-center gap-1" title="File Duration">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    {item.duration}
-                </span>
-                {item.bgbRemark && (
-                    <span className={`text-[8px] font-black uppercase tracking-wider px-1 rounded ${
-                        item.bgbRemark === 'Positive' ? 'text-green-500 bg-green-500/10' :
-                        item.bgbRemark === 'Negative' ? 'text-red-500 bg-red-500/10' :
-                        'text-yellow-500 bg-yellow-500/10'
-                    }`}>
-                        {item.bgbRemark}
-                    </span>
-                )}
-            </div>
-            <span className={`${isActive ? (isDark ? 'text-green-300' : 'text-green-600') : activeColors.text} flex items-center gap-1`} title="Processing Time">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-              {formatProcessingTime(item.timeTaken)}
-            </span>
-        </div>
+        <HistoryCardStatsRow item={item} isActive={isActive} isDark={isDark} activeColors={activeColors} formatProcessingTime={formatProcessingTime} />
       </div>
     </div>
   );
