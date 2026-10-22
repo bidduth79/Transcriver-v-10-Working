@@ -1,11 +1,11 @@
-import { db, auth, authPromise, isFirebaseConfigured } from './firebase';
-import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { db, authPromise, isFirebaseConfigured } from './firebase';
+import { doc, setDoc, deleteDoc } from "firebase/firestore";
 import { getApiUrl, isLocalServerEnabled } from '../utils/config';
-import { supabase } from './supabase';
-import { isSupabaseConfigured } from './supabase';
+import { supabase, isSupabaseConfigured } from './supabase';
 import { addToQueue } from './syncQueue';
 import { FIREBASE_SYNCED_STORES } from '../constants/storeNames';
 import { enqueueFirebaseWrite, enqueueFirebaseDelete } from './firebaseThrottledQueue';
+import { fetchFromPrimaryIdb, fetchFromLocalApi, fetchFromFirebase, fetchFromSupabase } from './sync/syncSources';
 
 // ============================================================================
 // 🌐 ক্লাউড ও জেম্প সার্ভার ব্যাকগ্রাউন্ড অটো-সেভ নিয়ন্ত্রণ (Auto Cloud Save Toggles)
@@ -15,109 +15,6 @@ export const AUTO_SYNC_XAMPP_ENABLED = false; // Kept for compatibility; use isL
 export const AUTO_SYNC_SUPABASE_ENABLED = false;  // Supabase অটো সেভ
 export const AUTO_SYNC_FIREBASE_ENABLED = true;   // Firebase ব্যাকগ্রাউন্ড অটো সেভ (ধীরে ধীরে ব্যাকগ্রাউন্ডে প্রেরিত)
 // ============================================================================
-
-// --- Helper async functions ---
-
-const fetchFromPrimaryIdb = async (storeName: string): Promise<any[]> => {
-  try {
-    const { initDB } = await import('./db');
-    const idb = await initDB();
-    return await new Promise<any[]>((resolve) => {
-      try {
-        const tx = idb.transaction([storeName], 'readonly');
-        const st = tx.objectStore(storeName);
-        const req = st.getAll();
-        req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
-        req.onerror = () => resolve([]);
-      } catch (e) {
-        resolve([]);
-      }
-    });
-  } catch (e) {
-    return [];
-  }
-};
-
-const fetchFromLocalApi = async (storeName: string): Promise<any[]> => {
-  // If local server is disabled, do not attempt to contact 127.0.0.1
-  if (!isLocalServerEnabled()) return [];
-  let allLocalData: any[] = [];
-  try {
-    let page = 1;
-    const limit = 200; // Safe chunk size
-
-    while (true) {
-      const url = getApiUrl(`api.php?action=get&store=${storeName}&page=${page}&limit=${limit}`);
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-      const response = await fetch(url, { signal: controller.signal });
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const text = await response.text();
-        try {
-          const data = JSON.parse(text);
-          if (Array.isArray(data)) {
-            const items = data.map((row: any) => row.data || row);
-            allLocalData = allLocalData.concat(items);
-            if (items.length < limit) break; // Reached the end
-          } else {
-            break; // Invalid format
-          }
-        } catch (jsonErr) {
-          console.warn(`[Local Fetch] Invalid JSON for ${storeName} on page ${page}`);
-          break;
-        }
-      } else {
-        break; // HTTP error
-      }
-      page++;
-    }
-    return allLocalData;
-  } catch (e) {
-    return allLocalData;
-  }
-};
-
-const fetchFromFirebase = async (storeName: string): Promise<any[]> => {
-  if (!isFirebaseConfigured || !db) return [];
-  try {
-    await authPromise;
-    const querySnapshot = await getDocs(collection(db, storeName));
-    return querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (e) {
-    return [];
-  }
-};
-
-const fetchFromSupabase = async (storeName: string): Promise<any[]> => {
-  if (!isSupabaseConfigured) return [];
-  try {
-    let allSupabaseData: any[] = [];
-    let from = 0;
-    const limit = 50;
-
-    while (true) {
-      const { data, error } = await supabase.from(storeName).select('*').range(from, from + limit - 1);
-
-      if (error) {
-        console.warn(`[Supabase Fetch] Info for ${storeName}:`, error.message || error);
-        break;
-      }
-
-      if (data && data.length > 0) {
-        allSupabaseData = allSupabaseData.concat(data);
-        if (data.length < limit) break;
-        from += limit;
-      } else {
-        break;
-      }
-    }
-    return allSupabaseData.map((row: any) => row.data || row);
-  } catch (e) {
-    return [];
-  }
-};
 
 // TRIPLE-SYNC READ
 export const fetchDataDual = async (storeName: string, forceAll = false) => {
