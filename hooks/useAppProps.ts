@@ -184,14 +184,12 @@ export function getTranscriptOutputProps(core: any) {
     activeColors: core.activeColors,
     setStatus: core.setStatus,
     setTranscript: core.setTranscript,
-    mainBgColor: core.mainBgColor,
     fileUrl: core.fileUrl,
     textColor: core.textColor,
     isDark: core.isDark,
     setIsSidebarOpen: core.setIsSidebarOpen,
     fileMeta: core.fileMeta,
     processTranscription: core.processTranscription,
-    cardBorder: core.cardBorder,
     transcript: core.transcript,
     fontSize: core.fontSize,
     setFontSize: core.setFontSize,
@@ -208,7 +206,6 @@ export function getTranscriptOutputProps(core: any) {
     onSeek: core.handleSeek,
     onModelUpdate: core.updateApiStats,
     setIsAiLoading: core.setIsAiLoading,
-    audioCurrentTime: core.audioCurrentTime,
     activeTranscriptSourceMeta: core.transcriptMeta || core.fileMeta,
     progress: core.progress,
     currentStage: core.currentStage,
@@ -216,7 +213,6 @@ export function getTranscriptOutputProps(core: any) {
     estimatedSeconds: core.estimatedSeconds,
     setActiveHistoryId: core.setActiveHistoryId,
     activeHistoryId: core.activeHistoryId,
-    setTranscriptMeta: core.setTranscriptMeta,
-    audioRef: core.audioRef
+    setTranscriptMeta: core.setTranscriptMeta
   };
 }
