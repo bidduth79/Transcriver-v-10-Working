@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
-import { logSystemActivity } from '../../services/SystemLogger';
 import { useReportAnalysis } from './hooks/useReportAnalysis';
 import { useReportActions, ReportItem } from './hooks/useReportActions';
 import { useModalResize } from './hooks/useModalResize';
 import { copyToClipboard } from '../../utils/clipboard';
-
+import { ReportModalHeader } from './report/ReportModalHeader';
+import { ReportGenerateView } from './report/ReportGenerateView';
+import { ReportHistoryView } from './report/ReportHistoryView';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -39,7 +40,6 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   // Resizing states with automatic cleanup on unmount
   const { size, isMinimized, setIsMinimized, isMaximized, setIsMaximized, startResizing } = useModalResize(900, 750, 'report-modal-container', 500, 400);
 
-  // ... (Existing Logic: analysisData, loadReportsFromDB, generateReport etc. - Unchanged)
   const analysisData = useReportAnalysis(transcript, searchTerm, fileMeta);
 
   useEffect(() => {
@@ -128,93 +128,40 @@ export const ReportModal: React.FC<ReportModalProps> = ({
         onClick={e => e.stopPropagation()}
       >
         
-        <header className="px-12 py-10 bg-slate-950 text-white flex items-center justify-between shrink-0 cursor-move">
-          <div className="flex items-center gap-6 group">
-            <div className={`w-14 h-14 ${activeColors.primary} rounded-2xl flex items-center justify-center shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6`}>
-              <svg className="w-8 h-8 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            </div>
-            <div>
-              <h2 className="text-2xl font-black uppercase tracking-tight font-stylish-bn leading-none transition-colors group-hover:text-white/90">রিপোর্ট জেনারেটর</h2>
-              <div className="flex gap-6 mt-4">
-                <button onClick={() => { setViewMode('generate'); setSelectedReport(null); }} className={`text-[10px] font-black uppercase tracking-widest pb-1 border-b-2 transition-all ${viewMode === 'generate' ? 'border-white' : 'border-transparent opacity-40 hover:opacity-100'}`}>তৈরি করুন</button>
-                <button onClick={() => { setViewMode('history'); setSelectedReport(null); }} className={`text-[10px] font-black uppercase tracking-widest pb-1 border-b-2 transition-all ${viewMode === 'history' ? 'border-white' : 'border-transparent opacity-40 hover:opacity-100'}`}>হিস্টোরি ({reportHistory.length})</button>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button onClick={() => setIsMinimized(true)} className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/5 group">
-                <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4"/></svg>
-            </button>
-            <button onClick={() => setIsMaximized(!isMaximized)} className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/5 group">
-                <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M20 8V4m0 0h-4M4 16v4m0 0h4M20 16v4m0 0h-4"/></svg>
-            </button>
-            <button onClick={onClose} className="w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/5 group">
-                <svg className="w-6 h-6 transition-transform group-hover:scale-110 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          </div>
-        </header>
+        <ReportModalHeader
+          activeColors={activeColors}
+          viewMode={viewMode}
+          historyCount={reportHistory.length}
+          onSelectView={(mode) => { setViewMode(mode); setSelectedReport(null); }}
+          setIsMinimized={setIsMinimized}
+          isMaximized={isMaximized}
+          setIsMaximized={setIsMaximized}
+          onClose={onClose}
+        />
 
         <div className="flex-1 flex overflow-hidden">
           {viewMode === 'generate' ? (
-            <div className="flex-1 flex flex-col p-12 overflow-y-auto custom-scrollbar">
-              {!report && !loading ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center space-y-8">
-                  <div className="w-24 h-24 bg-slate-100 dark:bg-white/5 rounded-[2.5rem] flex items-center justify-center opacity-30"><svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
-                  <div className="space-y-3">
-                    <p className="text-xl font-black uppercase tracking-widest opacity-20">রিপোর্ট তৈরি করতে নিচের বাটনে ক্লিক করুন</p>
-                    <p className="text-sm font-bold opacity-30 font-stylish-bn">সার্চ করা শব্দ: "{searchTerm}"</p>
-                  </div>
-                  <button onClick={generateReport} className={`px-12 py-5 ${activeColors.primary} text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all`}>জেনারেট রিপোর্ট</button>
-                </div>
-              ) : loading ? (
-                <div className="flex-1 flex flex-col items-center justify-center space-y-6">
-                  <div className="w-16 h-16 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 animate-pulse">এআই প্রসেসিং চলছে...</p>
-                </div>
-              ) : (
-                <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <div className={`p-12 rounded-[3rem] border shadow-inner whitespace-pre-wrap font-stylish-bn text-lg leading-relaxed ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
-                    {report}
-                  </div>
-                  <div className="flex justify-center gap-4">
-                    <button onClick={handleCopy} className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-125 transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>কপি করুন</button>
-                    <button onClick={handleDownload} className={`flex items-center gap-3 px-8 py-4 ${activeColors.primary} text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg transition-all active:scale-95`}><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>ডাউনলোড করুন</button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ReportGenerateView
+              report={report}
+              loading={loading}
+              searchTerm={searchTerm}
+              isDark={isDark}
+              activeColors={activeColors}
+              onGenerate={generateReport}
+              onCopy={handleCopy}
+              onDownload={handleDownload}
+            />
           ) : (
-            <div className="flex-1 flex overflow-hidden">
-               <div className="w-1/3 border-r border-white/5 overflow-y-auto custom-scrollbar p-6 space-y-4 bg-black/5">
-                 {reportHistory.length === 0 ? (
-                   <p className="text-center py-20 opacity-20 uppercase font-black text-[10px]">খালি</p>
-                 ) : (
-                   reportHistory.map(item => (
-                     <div key={item.id} onClick={() => setSelectedReport(item)} className={`p-6 rounded-3xl border transition-all cursor-pointer group relative ${selectedReport?.id === item.id ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
-                       <p className="text-xs font-black uppercase tracking-tight mb-2 truncate">{item.searchTerm}</p>
-                       <p className={`text-[10px] opacity-40 tabular-nums ${selectedReport?.id === item.id ? 'text-white' : ''}`}>{new Date(item.date).toLocaleDateString()}</p>
-                       <button onClick={(e) => handleDeleteReport(e, item.id)} className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
-                     </div>
-                   ))
-                 )}
-               </div>
-               <div className="flex-1 p-12 overflow-y-auto custom-scrollbar">
-                  {selectedReport ? (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                      <div className={`p-12 rounded-[3rem] border shadow-inner whitespace-pre-wrap font-stylish-bn text-lg leading-relaxed ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
-                        {selectedReport.content}
-                      </div>
-                      <div className="flex justify-center gap-4">
-                        <button onClick={handleCopy} className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-125 transition-all">কপি করুন</button>
-                        <button onClick={handleDownload} className={`flex items-center gap-3 px-8 py-4 ${activeColors.primary} text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg transition-all active:scale-95`}>ডাউনলোড করুন</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="h-full flex items-center justify-center opacity-10 uppercase font-black tracking-[0.4em]">রিপোর্ট সিলেক্ট করুন</div>
-                  )}
-               </div>
-            </div>
+            <ReportHistoryView
+              reportHistory={reportHistory}
+              selectedReport={selectedReport}
+              setSelectedReport={setSelectedReport}
+              isDark={isDark}
+              activeColors={activeColors}
+              onDelete={handleDeleteReport}
+              onCopy={handleCopy}
+              onDownload={handleDownload}
+            />
           )}
         </div>
 
