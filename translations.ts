@@ -45,13 +45,7 @@ export const translations = {
     modePro: "Pro",
     exitFullScreen: "Exit Full Screen",
     fullScreen: "Full Screen",
-    tools: "Tools",
-    youtubeFb: "YouTube & FB DL",
-    converter: "Converter",
-    videoEditor: "Video Editor",
-    audioEditor: "Audio Editor",
     activityLogs: "Activity Logs",
-    youtubeMonitor: "YouTube Monitor",
     report: "Report",
     settings: "Settings"
   },
@@ -101,13 +95,7 @@ export const translations = {
     modePro: "প্রো",
     exitFullScreen: "ছোট স্ক্রিন",
     fullScreen: "ফুল স্ক্রিন",
-    tools: "টুলস",
-    youtubeFb: "ইউটিউব ও ফেসবুক",
-    converter: "কনভার্টার",
-    videoEditor: "ভিডিও এডিটর",
-    audioEditor: "অডিও এডিটর",
     activityLogs: "অ্যাক্টিভিটি লগ",
-    youtubeMonitor: "ইউটিউব মনিটর",
     report: "রিপোর্ট",
     settings: "সেটিংস"
   }

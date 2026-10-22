@@ -223,7 +223,7 @@ Do not include markdown blocks like \`\`\`json, just return the raw JSON object.
   }, [transcriptContext]);
 
   const closeProfile = useCallback(() => setIsOpen(false), []);
-  const refreshProfile = useCallback(() => openProfile(speakerName, true), [speakerName]);
+  const refreshProfile = useCallback(() => openProfile(speakerName, true), [openProfile, speakerName]);
 
   return {
     isOpen,

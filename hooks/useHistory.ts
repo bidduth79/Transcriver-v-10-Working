@@ -36,7 +36,7 @@ export const useHistory = (
       setDebouncedHistSearch(histSearch);
     }, 400);
     return () => clearTimeout(timer);
-  }, [histSearch]);
+  }, [histSearch, setDebouncedHistSearch]);
 
   const updateSessionCache = useCallback((items: HistoryItem[]) => {
     setTimeout(() => {

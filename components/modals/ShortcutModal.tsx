@@ -34,7 +34,7 @@ export const ShortcutModal: React.FC<ShortcutModalProps> = ({ isOpen, onClose, i
     return DEFAULT_SHORTCUTS.filter(s => 
       s.label.toLowerCase().includes(lower) || 
       s.description.toLowerCase().includes(lower) ||
-      getDisplayKey(s.id, s.defaultKeys).toLowerCase().includes(lower)
+      (customMap[s.id] || s.defaultKeys).toLowerCase().includes(lower)
     );
   }, [searchTerm, customMap]);
 

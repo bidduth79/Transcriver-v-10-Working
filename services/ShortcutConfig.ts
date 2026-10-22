@@ -3,7 +3,6 @@ export const SHORTCUT_CATEGORIES = [
   'File Upload',
   'Audio Control',
   'Video Control',
-  'Converter',
   'History/Search/Report',
   'UI & View',
   'Text Output Control'
@@ -18,29 +17,22 @@ export const DEFAULT_SHORTCUTS = [
   { id: 'audio.play_pause', label: 'Play / Pause', defaultKeys: 'Space', category: 'Audio Control', description: 'Toggle audio playback' },
   { id: 'audio.vol_up', label: 'Volume Up', defaultKeys: 'Ctrl+ArrowUp', category: 'Audio Control', description: 'Increase volume' },
   { id: 'audio.vol_down', label: 'Volume Down', defaultKeys: 'Ctrl+ArrowDown', category: 'Audio Control', description: 'Decrease volume' },
-  { id: 'audio.cut', label: 'Audio Cutter', defaultKeys: 'Ctrl+A', category: 'Audio Control', description: 'Open audio cutting tool' },
-  { id: 'audio.join', label: 'Audio Joiner', defaultKeys: 'Ctrl+Shift+A', category: 'Audio Control', description: 'Open audio merger tool' },
 
   // 3. Video Control
-  { id: 'video.cut', label: 'Video Cutter', defaultKeys: 'Ctrl+V', category: 'Video Control', description: 'Open video cutting tool' },
-  { id: 'video.join', label: 'Video Joiner', defaultKeys: 'Ctrl+Shift+V', category: 'Video Control', description: 'Open video merger tool' },
   { id: 'ui.fullscreen', label: 'Toggle Fullscreen', defaultKeys: 'F', category: 'Video Control', description: 'Toggle fullscreen mode' },
 
-  // 4. Converter
-  { id: 'tools.converter', label: 'Converter', defaultKeys: 'Ctrl+C', category: 'Converter', description: 'Open media converter' },
-
-  // 5. History / Search
+  // 4. History / Search
   { id: 'view.history', label: 'History Panel', defaultKeys: 'Ctrl+H', category: 'History/Search/Report', description: 'Expand history view' },
   { id: 'view.search', label: 'Focus Search', defaultKeys: 'Ctrl+F', category: 'History/Search/Report', description: 'Focus transcript search' },
   { id: 'view.report', label: 'Report Dashboard', defaultKeys: 'Ctrl+R', category: 'History/Search/Report', description: 'Open report generator' },
 
-  // 6. UI & View
+  // 5. UI & View
   { id: 'ui.theme', label: 'Day/Night Mode', defaultKeys: 'Ctrl+D', category: 'UI & View', description: 'Toggle light/dark theme' },
   { id: 'ui.lang', label: 'Switch Language', defaultKeys: 'Ctrl+L', category: 'UI & View', description: 'Toggle BN/EN language' },
   { id: 'ui.refresh', label: 'Refresh View', defaultKeys: 'Ctrl+Shift+R', category: 'UI & View', description: 'Reload the application' },
   { id: 'ui.sidebar', label: 'Toggle Sidebar', defaultKeys: 'Ctrl+B', category: 'UI & View', description: 'Collapse/Expand sidebar' },
 
-  // 7. Text Output
+  // 6. Text Output
   { id: 'text.zoom_in', label: 'Increase Font', defaultKeys: 'Ctrl++', category: 'Text Output Control', description: 'Increase transcript font size' },
   { id: 'text.zoom_out', label: 'Decrease Font', defaultKeys: 'Ctrl+-', category: 'Text Output Control', description: 'Decrease transcript font size' },
   { id: 'text.download', label: 'Download Text', defaultKeys: 'Ctrl+S', category: 'Text Output Control', description: 'Open download menu' },
