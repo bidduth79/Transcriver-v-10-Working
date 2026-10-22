@@ -122,11 +122,13 @@ export default defineConfig(({ mode }) => {
         rollupOptions: {
           output: {
             manualChunks: {
-              'vendor-react': ['react', 'react-dom'],
+              'vendor-react': ['react', 'react-dom', 'react-dom/client'],
               'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/analytics'],
               'vendor-genai': ['@google/genai'],
               'vendor-ui': ['framer-motion', 'lucide-react'],
               'vendor-supabase': ['@supabase/supabase-js'],
+              'vendor-media': ['music-metadata-browser'],
+              'vendor-i18n': ['i18next', 'react-i18next'],
             }
           }
         }
