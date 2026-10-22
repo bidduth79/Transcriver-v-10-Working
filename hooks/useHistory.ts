@@ -3,6 +3,7 @@ import { getAllFromStore, deleteFromStore, addToStore, STORES } from '../service
 import { HistoryItem } from '../types';
 import { useHistoryStore } from './useHistoryStore';
 import { useBroadcastSync, broadcastHistoryUpdate } from './useBroadcastSync';
+import { scheduleGentleFirebasePull } from '../services/firebaseThrottledQueue';
 
 export const useHistory = (
   appLang: 'en' | 'bn',
@@ -70,6 +71,13 @@ export const useHistory = (
       setIsLoadingHistory(false);
     }
   }, [setHistory, setIsLoadingHistory, updateSessionCache]);
+
+  // Gently check Firebase once 4 seconds after startup and merge any missing cloud records in small chunks
+  useEffect(() => {
+    scheduleGentleFirebasePull(() => {
+      loadHistory();
+    }, false);
+  }, [loadHistory]);
 
   useBroadcastSync(loadHistory);
 

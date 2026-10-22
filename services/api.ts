@@ -50,27 +50,51 @@ export const performMasterSync = async (onProgress: (msg: string, p: number) => 
     try {
         const stores = FIREBASE_SYNCED_STORES;
         const totalStores = stores.length;
+        const { initDB } = await import('./db');
+        const idb = await initDB();
 
         for (let i = 0; i < totalStores; i++) {
             const store = stores[i];
             const displayStoreName = store.replace('studio_', '').toUpperCase();
 
-            onProgress(`Syncing ${displayStoreName}...`, Math.round((i / totalStores) * 100));
+            onProgress(`ধীরে ধীরে সিঙ্ক হচ্ছে: ${displayStoreName}...`, Math.round((i / totalStores) * 100));
 
             // Fetch from all sources (Local, IDB, Firebase, Supabase) and deduplicate
             const allData = await fetchDataDual(store, true);
 
-            if (allData.length === 0) continue;
+            if (allData.length === 0) {
+                await new Promise(r => setTimeout(r, 400));
+                continue;
+            }
 
-            // Push deduplicated data back to all sources
-            const batchSize = 10;
+            // Ensure merged cloud items are saved in primary IndexedDB in gentle chunks
+            const idbChunkSize = 15;
+            for (let k = 0; k < allData.length; k += idbChunkSize) {
+                const chunk = allData.slice(k, k + idbChunkSize);
+                await new Promise<void>((res) => {
+                    try {
+                        const tx = idb.transaction([store], 'readwrite');
+                        const st = tx.objectStore(store);
+                        chunk.forEach((item: any) => st.put(item));
+                        tx.oncomplete = () => res();
+                        tx.onerror = () => res();
+                    } catch (e) {
+                        res();
+                    }
+                });
+                await new Promise(r => setTimeout(r, 150));
+            }
+
+            // Push deduplicated data back to cloud sources gently (5 at a time with 350ms breather)
+            const batchSize = 5;
             for (let j = 0; j < allData.length; j += batchSize) {
                 const batch = allData.slice(j, j + batchSize);
                 await Promise.all(batch.map((item: any) => saveDataDual(store, item, true)));
+                await new Promise(r => setTimeout(r, 350));
             }
         }
 
-        onProgress("Sync Complete", 100);
+        onProgress("সিনক্রোনাইজ সম্পন্ন হয়েছে", 100);
         return true;
     } catch (e: any) {
         console.error("Master Sync Failed:", e);
@@ -79,8 +103,6 @@ export const performMasterSync = async (onProgress: (msg: string, p: number) => 
 };
 
 // NOTE: performMasterSync performs BIDIRECTIONAL merge (reads from all sources, deduplicates, writes back).
-// Previously had misleading aliases (syncAllLocalToCloud, restoreAllCloudToLocal, restoreCloudData).
-// All callers should use performMasterSync directly.
-export const syncAllLocalToCloud = performMasterSync; // Kept for backward compatibility — actually performs bidirectional sync
-export const restoreAllCloudToLocal = performMasterSync; // Kept for backward compatibility — actually performs bidirectional sync
-export const restoreCloudData = performMasterSync; // Kept for backward compatibility — actually performs bidirectional sync
+export const syncAllLocalToCloud = performMasterSync;
+export const restoreAllCloudToLocal = performMasterSync;
+export const restoreCloudData = performMasterSync;

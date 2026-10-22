@@ -3,7 +3,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { initDB } from '../../services/db.ts';
 import { getApiUrl, checkCloudConnection } from '../../services/api.ts';
 import { isLocalServerEnabled } from '../../utils/config';
-import { getApiCallLogs, ApiCallLog, setActiveModel, AVAILABLE_MODELS } from '../../services/ApiKeyManager.ts';
+import { 
+  getApiCallLogs, 
+  ApiCallLog, 
+  setActiveModel, 
+  AVAILABLE_MODELS, 
+  MODEL_CATEGORY_GROUPS,
+  AIModelDefinition,
+  getModelDefinition,
+  isSpeedOptimizationEnabled,
+  setSpeedOptimizationEnabled,
+  resetModelToClassicDefault,
+  DEFAULT_MODEL
+} from '../../services/ApiKeyManager.ts';
 import { ShortcutModal } from '../modals/ShortcutModal';
 import { MemoryWidget } from './MemoryWidget';
 
@@ -24,7 +36,7 @@ export const Footer: React.FC<FooterProps> = ({
   t, 
   activeColors, 
   activeApiKeySource = 'Environment', 
-  activeModelName = 'gemini-2.0-flash-exp',
+  activeModelName = 'gemini-2.5-flash',
   totalApiCalls = 0,
   isAiLoading = false,
   onKeyUpdate,
@@ -35,14 +47,20 @@ export const Footer: React.FC<FooterProps> = ({
   const [showProfile, setShowProfile] = useState(false);
   const [showShortcutModal, setShowShortcutModal] = useState(false);
   const [showModelSelect, setShowModelSelect] = useState(false);
+  const [hoveredModel, setHoveredModel] = useState<AIModelDefinition | null>(null);
+  const [speedOpt, setSpeedOpt] = useState<boolean>(() => isSpeedOptimizationEnabled());
+  const [resetNotice, setResetNotice] = useState(false);
   const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [cloudStatus, setCloudStatus] = useState<{ status: 'checking' | 'online' | 'offline' | 'auth-error', message: string }>({ status: 'checking', message: 'Connecting...' });
   const modelSelectRef = useRef<HTMLDivElement>(null);
+
+  const currentModelDef = getModelDefinition(activeModelName);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modelSelectRef.current && !modelSelectRef.current.contains(event.target as Node)) {
         setShowModelSelect(false);
+        setHoveredModel(null);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -52,7 +70,28 @@ export const Footer: React.FC<FooterProps> = ({
   const handleModelSelect = (modelId: string) => {
     setActiveModel(modelId);
     setShowModelSelect(false);
+    setHoveredModel(null);
     if (onKeyUpdate) onKeyUpdate();
+  };
+
+  const handleToggleSpeedOpt = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = !speedOpt;
+    setSpeedOpt(next);
+    setSpeedOptimizationEnabled(next);
+    if (onKeyUpdate) onKeyUpdate();
+  };
+
+  const handleResetToDefault = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    resetModelToClassicDefault();
+    setSpeedOpt(false);
+    setResetNotice(true);
+    if (onKeyUpdate) onKeyUpdate();
+    setTimeout(() => {
+      setResetNotice(false);
+      setShowModelSelect(false);
+    }, 1200);
   };
 
   // Check Local XAMPP & Cloud Status
@@ -135,10 +174,10 @@ export const Footer: React.FC<FooterProps> = ({
         
         <span className="opacity-20 text-white">|</span>
         
-        {/* Dynamic Model Info */}
+        {/* Dynamic Categorized Model Selector */}
         <div 
           ref={modelSelectRef}
-          className="flex items-center gap-3 group relative px-3 py-1.5 rounded-full transition-all duration-500 cursor-pointer hover:bg-white/5"
+          className="flex items-center gap-3 group relative px-3 py-1.5 rounded-full transition-all duration-300 cursor-pointer hover:bg-white/5"
           onClick={() => setShowModelSelect(!showModelSelect)}
         >
            <div className="relative">
@@ -152,31 +191,174 @@ export const Footer: React.FC<FooterProps> = ({
            </div>
            
            <div className="flex flex-col">
-              <span className={`text-[8px] font-black tracking-widest transition-all duration-300 ${isAiLoading ? 'text-rose-400' : 'text-amber-400/40'}`}>
-                {isAiLoading ? 'NEURAL ENGINE PROCESSING...' : 'ENGINE STABLE'}
+              <span className={`text-[8px] font-black tracking-widest transition-all duration-300 ${isAiLoading ? 'text-rose-400' : 'text-amber-400/50'}`}>
+                {isAiLoading ? 'NEURAL ENGINE PROCESSING...' : `${currentModelDef.categoryLabelBn} • ${speedOpt ? 'FAST OPT' : 'CLASSIC'}`}
               </span>
-              <span className={`text-[10px] font-black uppercase transition-all duration-500 ${isAiLoading ? 'text-white translate-x-1' : 'text-amber-400/80'}`}>
-                {isAiLoading ? 'ANALYZING:' : 'MODEL:'} <span className={isAiLoading ? 'text-rose-400' : ''}>{activeModelName}</span>
+              <span className={`text-[10px] font-black uppercase transition-all duration-500 flex items-center gap-1.5 ${isAiLoading ? 'text-white translate-x-1' : 'text-amber-400/90'}`}>
+                {isAiLoading ? 'ANALYZING:' : 'MODEL:'} <span className={isAiLoading ? 'text-rose-400' : ''}>{currentModelDef.label}</span>
               </span>
            </div>
 
-           {/* Dropdown Menu */}
-           <div className={`absolute bottom-[120%] left-0 mb-2 w-64 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300 origin-bottom-left ${showModelSelect ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}>
-             <div className="p-3 border-b border-white/5 bg-white/5">
-               <span className="text-[9px] text-white/50 font-black tracking-widest uppercase">Select AI Engine</span>
+           {/* Categorized Model Dropdown + Bengali Info Tooltip Panel */}
+           <div 
+             onClick={(e) => e.stopPropagation()}
+             className={`absolute bottom-[130%] left-0 mb-2 w-[380px] md:w-[430px] bg-slate-900/98 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-[0_25px_70px_rgba(0,0,0,0.85)] overflow-visible transition-all duration-200 origin-bottom-left cursor-default ${showModelSelect ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'}`}
+           >
+             {/* Header */}
+             <div className="p-3.5 border-b border-white/10 bg-slate-950/70 rounded-t-2xl flex items-center justify-between gap-2">
+               <div>
+                 <span className="block text-[11px] text-white font-black tracking-wider">
+                   এআই মডেল ও স্পিড ক্যাটাগরি নির্বাচন করুন
+                 </span>
+                 <span className="block text-[9px] text-slate-400 font-medium normal-case tracking-normal mt-0.5">
+                   যেকোনো মডেলের ডানপাশের <b className="text-indigo-400">(i)</b> বাটনে মাউস রাখলে বাংলায় পূর্ণ নির্দেশনা দেখবেন
+                 </span>
+               </div>
+               <button
+                 type="button"
+                 onClick={handleToggleSpeedOpt}
+                 title="ফাস্ট থিংকিং অপ্টিমাইজেশন চালু/বন্ধ করুন"
+                 className={`px-2.5 py-1 rounded-lg text-[9px] font-black tracking-wider uppercase border transition-all cursor-pointer shrink-0 ${
+                   speedOpt 
+                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30' 
+                     : 'bg-slate-800 text-slate-400 border-white/10 hover:text-white'
+                 }`}
+               >
+                 {speedOpt ? '⚡ স্পিড বুস্ট: চালু' : 'স্পিড বুস্ট: বন্ধ'}
+               </button>
              </div>
-             <div className="p-2 flex flex-col gap-1">
-               {AVAILABLE_MODELS.map(m => (
-                 <button
-                   key={m.id}
-                   onClick={(e) => { e.stopPropagation(); handleModelSelect(m.id); }}
-                   className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all ${activeModelName === m.id ? 'bg-indigo-500/20 text-indigo-400' : 'hover:bg-white/5 text-slate-400 hover:text-white'}`}
-                 >
-                   <span className="text-[11px] font-bold tracking-wider">{m.label}</span>
-                   {m.badge && <span className={`text-[9px] px-2 py-0.5 rounded-md font-black tracking-widest ${activeModelName === m.id ? 'bg-indigo-500/30 text-indigo-300' : 'bg-white/10 text-white/40'}`}>{m.badge}</span>}
-                 </button>
-               ))}
+
+             {/* Categorized Groups */}
+             <div className="p-2.5 max-h-[370px] overflow-y-auto custom-scrollbar space-y-3">
+               {MODEL_CATEGORY_GROUPS.map(group => {
+                 const groupModels = AVAILABLE_MODELS.filter(m => m.category === group.id);
+                 return (
+                   <div key={group.id} className="bg-slate-950/50 border border-white/5 rounded-xl p-2">
+                     <div className="px-2 py-1 mb-1 border-b border-white/5">
+                       <div className={`text-[10px] font-black tracking-wide normal-case ${group.accentClass}`}>
+                         {group.titleBn}
+                       </div>
+                       <div className="text-[9px] text-slate-400 font-medium normal-case tracking-normal">
+                         {group.subtitleBn}
+                       </div>
+                     </div>
+
+                     <div className="flex flex-col gap-1">
+                       {groupModels.map(m => {
+                         const isSelected = activeModelName === m.id;
+                         const isHovered = hoveredModel?.id === m.id;
+                         return (
+                           <div
+                             key={m.id}
+                             onClick={() => handleModelSelect(m.id)}
+                             className={`flex items-center justify-between px-3 py-2 rounded-lg text-left transition-all cursor-pointer ${
+                               isSelected 
+                                 ? 'bg-indigo-500/25 border border-indigo-500/40 text-white shadow-sm' 
+                                 : 'hover:bg-white/5 text-slate-300 hover:text-white border border-transparent'
+                             }`}
+                           >
+                             <div className="flex items-center gap-2 min-w-0">
+                               <div className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.9)]' : 'bg-slate-600'}`}></div>
+                               <div className="truncate">
+                                 <span className="text-[11px] font-bold tracking-wider block truncate">{m.label}</span>
+                                 <span className="text-[9px] text-slate-400 normal-case tracking-normal font-medium">
+                                   গতি: {m.speedBadgeBn} {m.id === DEFAULT_MODEL ? '• (ডিফল্ট)' : ''}
+                                 </span>
+                               </div>
+                             </div>
+
+                             <div className="flex items-center gap-2 shrink-0">
+                               {m.badge && (
+                                 <span className={`text-[8px] px-2 py-0.5 rounded-md font-black tracking-wider border ${group.badgeClass}`}>
+                                   {m.badge}
+                                 </span>
+                               )}
+
+                               {/* Info (i) Button for Bengali Hover Instructions */}
+                               <button
+                                 type="button"
+                                 onMouseEnter={() => setHoveredModel(m)}
+                                 onMouseLeave={() => setHoveredModel(prev => (prev?.id === m.id ? null : prev))}
+                                 onFocus={() => setHoveredModel(m)}
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   setHoveredModel(prev => (prev?.id === m.id ? null : m));
+                                 }}
+                                 aria-label={`${m.label} বাংলা নির্দেশনা`}
+                                 className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-serif italic font-black transition-all border cursor-help ${
+                                   isHovered
+                                     ? 'bg-indigo-500 text-white border-indigo-400 scale-110 shadow-[0_0_12px_rgba(99,102,241,0.8)]'
+                                     : 'bg-white/10 text-indigo-300 border-white/15 hover:bg-indigo-500 hover:text-white'
+                                 }`}
+                               >
+                                 i
+                               </button>
+                             </div>
+                           </div>
+                         );
+                       })}
+                     </div>
+                   </div>
+                 );
+               })}
              </div>
+
+             {/* Safe Rollback / Reset to Previous Default Footer Bar */}
+             <div className="p-2.5 border-t border-white/10 bg-slate-950/90 rounded-b-2xl flex items-center justify-between gap-2">
+               <span className="text-[9px] text-slate-400 normal-case tracking-normal font-medium">
+                 {resetNotice 
+                   ? '✅ পূর্বের ডিফল্ট অবস্থায় ফিরিয়ে আনা হয়েছে!' 
+                   : 'কোনো সমস্যা হলে ১ ক্লিকে পূর্বের অবস্থায় ফিরুন:'}
+               </span>
+               <button
+                 type="button"
+                 onClick={handleResetToDefault}
+                 className="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[9px] font-black normal-case tracking-normal transition-all cursor-pointer shrink-0"
+               >
+                 ↺ পূর্বের অবস্থায় রিসেট করুন
+               </button>
+             </div>
+
+             {/* Floating Bengali Instruction Tooltip Card when hovering (i) button */}
+             {hoveredModel && (
+               <div 
+                 onMouseEnter={() => setHoveredModel(hoveredModel)}
+                 onMouseLeave={() => setHoveredModel(null)}
+                 className="absolute bottom-4 left-full ml-3 w-80 bg-slate-900/98 backdrop-blur-2xl border border-indigo-500/40 rounded-2xl p-4 shadow-[0_20px_60px_rgba(0,0,0,0.9)] z-[80] text-left normal-case tracking-normal pointer-events-auto"
+               >
+                 <div className="flex items-center justify-between border-b border-white/10 pb-2.5 mb-2.5">
+                   <div>
+                     <span className="text-xs font-black text-white block">{hoveredModel.label}</span>
+                     <span className="text-[10px] font-bold text-indigo-400">{hoveredModel.categoryLabelBn} • {hoveredModel.speedBadgeBn}</span>
+                   </div>
+                   <span className="w-6 h-6 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 flex items-center justify-center text-xs font-serif italic font-black">
+                     i
+                   </span>
+                 </div>
+
+                 <div className="space-y-2.5 text-[11px] leading-relaxed text-slate-200">
+                   <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
+                     <span className="text-indigo-300 font-black block text-[10px] mb-0.5">⚙️ কীভাবে কাজ করে:</span>
+                     <p className="text-slate-300 font-normal">{hoveredModel.infoBn.howItWorks}</p>
+                   </div>
+
+                   <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
+                     <span className="text-emerald-300 font-black block text-[10px] mb-0.5">⏱️ গতি ও সময়:</span>
+                     <p className="text-slate-300 font-normal">{hoveredModel.infoBn.speedAndTime}</p>
+                   </div>
+
+                   <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
+                     <span className="text-amber-300 font-black block text-[10px] mb-0.5">🎯 কখন ব্যবহার করবেন:</span>
+                     <p className="text-slate-300 font-normal">{hoveredModel.infoBn.bestFor}</p>
+                   </div>
+
+                   <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 px-1">
+                     <span>📊 কোটা তথ্য:</span>
+                     <span className="text-slate-200 font-bold">{hoveredModel.infoBn.quotaInfo}</span>
+                   </div>
+                 </div>
+               </div>
+             )}
            </div>
         </div>
       </div>

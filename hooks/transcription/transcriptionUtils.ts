@@ -416,7 +416,7 @@ export const convertAudioToWav = async (
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0));
+    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
     const duration = audioBuffer.duration;
 
     // Prevent rendering audio longer than 3 minutes in browser memory

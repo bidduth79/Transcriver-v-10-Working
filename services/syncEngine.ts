@@ -4,7 +4,6 @@ import { getApiUrl, isLocalServerEnabled } from '../utils/config';
 import { supabase } from './supabase';
 import { isSupabaseConfigured } from './supabase';
 import { addToQueue } from './syncQueue';
-import { get, set, setMany } from 'idb-keyval';
 import { FIREBASE_SYNCED_STORES } from '../constants/storeNames';
 import { enqueueFirebaseWrite, enqueueFirebaseDelete } from './firebaseThrottledQueue';
 
@@ -17,15 +16,23 @@ export const AUTO_SYNC_SUPABASE_ENABLED = false;  // Supabase অটো সে�
 export const AUTO_SYNC_FIREBASE_ENABLED = true;   // Firebase ব্যাকগ্রাউন্ড অটো সেভ (ধীরে ধীরে ব্যাকগ্রাউন্ডে প্রেরিত)
 // ============================================================================
 
-// --- Helper async functions (replaces `new Promise(async ...)` anti-pattern) ---
+// --- Helper async functions ---
 
-const fetchFromIdb = async (storeName: string): Promise<any[]> => {
+const fetchFromPrimaryIdb = async (storeName: string): Promise<any[]> => {
   try {
-    const keys = await import('idb-keyval').then(m => m.keys());
-    const storeKeys = keys.filter(k => typeof k === 'string' && k.startsWith(`${storeName}_`));
-    const dataPromises = storeKeys.map(k => get(k as string));
-    const data = await Promise.all(dataPromises);
-    return data.filter(Boolean);
+    const { initDB } = await import('./db');
+    const idb = await initDB();
+    return await new Promise<any[]>((resolve) => {
+      try {
+        const tx = idb.transaction([storeName], 'readonly');
+        const st = tx.objectStore(storeName);
+        const req = st.getAll();
+        req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+        req.onerror = () => resolve([]);
+      } catch (e) {
+        resolve([]);
+      }
+    });
   } catch (e) {
     return [];
   }
@@ -115,7 +122,7 @@ const fetchFromSupabase = async (storeName: string): Promise<any[]> => {
 // TRIPLE-SYNC READ
 export const fetchDataDual = async (storeName: string, forceAll = false) => {
   const promises: Promise<any[]>[] = [
-    fetchFromIdb(storeName),
+    fetchFromPrimaryIdb(storeName),
   ];
 
   if (forceAll || AUTO_SYNC_XAMPP_ENABLED) {
@@ -143,26 +150,13 @@ export const fetchDataDual = async (storeName: string, forceAll = false) => {
     }
   });
   
-  const uniqueDataArray = Array.from(uniqueDataMap.values());
-  
-  // Batch write to avoid IndexedDB lockup / OOM crash from 1000s of concurrent transactions
-  const entriesToSet = uniqueDataArray.map(item => [`${storeName}_${item.id}`, item] as [string, any]);
-  if (entriesToSet.length > 0) {
-    setMany(entriesToSet).catch(e => console.warn("Failed to batch save to idb-keyval", e));
-  }
-  
-  return uniqueDataArray;
+  return Array.from(uniqueDataMap.values());
 };
 
 // TRIPLE-SYNC WRITE
 export const saveDataDual = async (storeName: string, data: any, forceAll = false) => {
   const id = String(data.id || Date.now());
   const payload = { ...data, id };
-  
-  // Non-blocking secondary cache write
-  set(`${storeName}_${id}`, payload).catch(e => {
-     console.warn("Secondary cache write notice:", e);
-  });
 
   const isSyncedStore = FIREBASE_SYNCED_STORES.includes(storeName);
   const promises = [];
@@ -220,13 +214,6 @@ export const saveDataDual = async (storeName: string, data: any, forceAll = fals
 
 // TRIPLE-SYNC DELETE
 export const deleteDataDual = async (storeName: string, id: string, forceAll = false) => {
-  try {
-     const del = await import('idb-keyval').then(m => m.del);
-     await del(`${storeName}_${id}`);
-  } catch (e) {
-    console.error("Failed to delete from Primary Cache:", e);
-  }
-
   const isSyncedStore = FIREBASE_SYNCED_STORES.includes(storeName);
   const promises = [];
 

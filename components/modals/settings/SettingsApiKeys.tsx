@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Key, Plus, Trash2, CheckCircle2, Copy, AlertCircle, Cpu } from 'lucide-react';
-import { UserApiKey, addUserApiKey, deleteApiKey, setActiveApiKey, getAllApiKeys, getActiveKeyId, AVAILABLE_MODELS, getActiveModel, setActiveModel } from '../../../services/ApiKeyManager';
+import { UserApiKey, addUserApiKey, deleteApiKey, setActiveApiKey, getAllApiKeys, getActiveKeyId, AVAILABLE_MODELS, MODEL_CATEGORY_GROUPS, getActiveModel, setActiveModel } from '../../../services/ApiKeyManager';
 import { STORES } from '../../../services/db';
 import { ConfirmModal } from '../ConfirmModal';
 
@@ -35,18 +35,15 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
     };
 
     useEffect(() => {
-        let mounted = true;
         refreshKeys();
-        refreshKeys();
-        return () => { 
-            mounted = false; 
-        };
     }, []);
 
     const apiKeysUpdates = useAppStore(state => state.storeUpdates[STORES.API_KEYS]);
+    const activeApiKeyChanged = useAppStore(state => state.activeApiKeyChanged);
     useEffect(() => {
         refreshKeys();
-    }, [apiKeysUpdates]);
+        setSelectedModel(getActiveModel());
+    }, [apiKeysUpdates, activeApiKeyChanged]);
 
     const handleAddKey = async () => {
         if (!newKeyInput.trim()) {
@@ -59,7 +56,7 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
             setNewKeyInput('');
             setNewKeyLabel('');
             await refreshKeys();
-            addToast(appLang === 'bn' ? 'কি যুক্ত করা হয়েছে' : 'Key added successfully', 'success');
+            addToast(appLang === 'bn' ? 'নতুন কি যুক্ত এবং সক্রিয় (Active) করা হয়েছে' : 'Key added and set as Active', 'success');
         } catch (e) {
             console.error(e);
             addToast('Failed to add key', 'error');
@@ -107,7 +104,7 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
                             {appLang === 'bn' ? 'সক্রিয় এআই মডেল' : 'Active AI Model'}
                         </h3>
                         <p className="text-[11px] opacity-50 mt-0.5">
-                            {appLang === 'bn' ? 'ট্রান্সক্রিপশন ও বিশ্লেষণের জন্য ব্যবহৃত মডেল' : 'Select Gemini model for transcription & analysis'}
+                            {appLang === 'bn' ? 'ট্রান্সক্রিপশন ও বিশ্লেষণের জন্য ব্যবহৃত মডেল (ক্যাটাগরি অনুযায়ী)' : 'Select Gemini model for transcription & analysis'}
                         </p>
                     </div>
                 </div>
@@ -120,10 +117,14 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
                             isDark ? 'bg-slate-800 border-slate-600 text-white focus:ring-indigo-500/50' : 'bg-white border-slate-300 text-slate-800 focus:ring-indigo-500/20'
                         }`}
                     >
-                        {AVAILABLE_MODELS.map((m) => (
-                            <option key={m.id} value={m.id}>
-                                {m.label} {m.badge ? `(${m.badge})` : ''}
-                            </option>
+                        {MODEL_CATEGORY_GROUPS.map(group => (
+                            <optgroup key={group.id} label={appLang === 'bn' ? group.titleBn : group.titleEn}>
+                                {AVAILABLE_MODELS.filter(m => m.category === group.id).map((m) => (
+                                    <option key={m.id} value={m.id}>
+                                        {m.label} — {m.speedBadgeBn} {m.badge ? `(${m.badge})` : ''}
+                                    </option>
+                                ))}
+                            </optgroup>
                         ))}
                     </select>
                 </div>

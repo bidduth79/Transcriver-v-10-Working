@@ -1,8 +1,16 @@
 import { useEffect, useRef } from 'react';
-import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
-import { getActiveProvider, incrementTotalCalls } from '../services/ApiKeyManager';
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold, ThinkingLevel } from "@google/genai";
+import { 
+  getActiveProvider, 
+  getFallbackProviders, 
+  setActiveApiKey, 
+  incrementTotalCalls,
+  getModelDefinition,
+  isSpeedOptimizationEnabled
+} from '../services/ApiKeyManager';
 
 import { addToStore, STORES } from '../services/db';
+import { setHeavyProcessingActive } from '../services/firebaseThrottledQueue';
 import { logSystemActivity } from '../services/SystemLogger';
 import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL, TRANSCRIPTION_PROMPT_TEXT_NORMAL } from '../constants/instructions';
 import { useTranscriptionState } from './transcription/useTranscriptionState';
@@ -16,7 +24,22 @@ import {
   isFormatNativelySupportedByGemini
 } from './transcription/transcriptionUtils';
 
-const formatErrorMessage = (rawError: any, lang: 'bn' | 'en'): string => {
+const isKeyOrProjectBlockedError = (err: any): boolean => {
+  const msg = (typeof err === 'string' ? err : (err?.message || '')).toLowerCase();
+  return (
+    msg.includes('denied access') ||
+    msg.includes('permission_denied') ||
+    msg.includes('403') ||
+    msg.includes('api_key_invalid') ||
+    msg.includes('api key not valid') ||
+    msg.includes('suspended') ||
+    msg.includes('429') ||
+    msg.includes('quota') ||
+    msg.includes('rate limit')
+  );
+};
+
+const formatErrorMessage = (rawError: any, lang: 'bn' | 'en', keyInfo?: string): string => {
   let rawMsg = typeof rawError === 'string' ? rawError : (rawError?.message || "Unknown error occurred");
   
   try {
@@ -38,7 +61,20 @@ const formatErrorMessage = (rawError: any, lang: 'bn' | 'en'): string => {
   }
 
   const lowerMsg = rawMsg.toLowerCase();
+  const keyTag = keyInfo ? ` [${keyInfo}]` : '';
   
+  if (lowerMsg.includes('denied access') || lowerMsg.includes('suspended') || lowerMsg.includes('permission_denied')) {
+      return lang === 'bn'
+        ? `আপনার বর্তমান এপিআই কি${keyTag}-এর Google Cloud Project-টি গুগল ব্লক (Denied Access) করেছে। সমাধান: সেটিংস (Settings ⚙️ > API Key Management) থেকে পুরনো কি-টি ডিলিট করুন এবং Google AI Studio-তে "Create API key in NEW project" সিলেক্ট করে নতুন প্রজেক্টের কি যুক্ত করুন।`
+        : `Your Google Cloud Project for key${keyTag} has been denied access. Please delete the old key in Settings and create a new API key in a NEW Google Cloud project.`;
+  }
+
+  if (lowerMsg.includes('api_key_invalid') || lowerMsg.includes('api key not valid')) {
+      return lang === 'bn'
+        ? `প্রদত্ত এপিআই কি${keyTag} সঠিক নয় বা অকার্যকর। দয়া করে সেটিংস থেকে সঠিক জেমিনি এপিআই কি যুক্ত করুন।`
+        : `The API Key${keyTag} is invalid. Please check your Gemini API Key in Settings.`;
+  }
+
   if (lowerMsg.includes('no api key') || lowerMsg.includes('api key configured') || lowerMsg.includes('api_key')) {
       return lang === 'bn'
         ? "কোনো এপিআই কি (API Key) পাওয়া যায়নি। দয়া করে সেটিংস (Settings) থেকে আপনার জেমিনি এপিআই কি যুক্ত করুন।"
@@ -47,14 +83,14 @@ const formatErrorMessage = (rawError: any, lang: 'bn' | 'en'): string => {
   
   if (lowerMsg.includes('503') || lowerMsg.includes('unavailable') || lowerMsg.includes('high demand') || lowerMsg.includes('overloaded')) {
       return lang === 'bn' 
-        ? "সার্ভারে এখন অনেক চাপ রয়েছে (High Demand)। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।"
+        ? "সার্ভারে এখন অনেক চাপ রয়েছে (High Demand)। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন অথবা ফুটার থেকে অন্য একটি ফাস্ট মডেল সিলেক্ট করুন।"
         : "The server is currently experiencing high demand. Please try again later.";
   }
   
   if (lowerMsg.includes('429') || lowerMsg.includes('quota') || lowerMsg.includes('rate limit')) {
       return lang === 'bn' 
-        ? "আপনার এপিআই কোটা শেষ হয়ে গেছে অথবা লিমিট অতিক্রম করেছে।"
-        : "Your API quota has been exceeded or rate limit reached.";
+        ? `আপনার এপিআই কি${keyTag}-এর কোটা শেষ হয়ে গেছে অথবা লিমিট অতিক্রম করেছে। ফুটার থেকে ফাস্ট মডেল সিলেক্ট করুন অথবা সেটিংসে নতুন কি যুক্ত করুন।`
+        : `Your API quota for key${keyTag} has been exceeded or rate limit reached.`;
   }
   
   if (lowerMsg.includes('400') || lowerMsg.includes('invalid argument') || lowerMsg.includes('bad request')) {
@@ -127,6 +163,7 @@ export const useTranscription = (
     }
 
     clearTranscriptionTimer();
+    setHeavyProcessingActive('transcription', true);
     setStatus('processing');
     setTranscript('');
     setProgress(0);
@@ -166,6 +203,7 @@ export const useTranscription = (
       });
     }, 1000);
 
+    let lastUsedKeyLabel = '';
     try {
       const checkProvider = await getActiveProvider();
       
@@ -173,7 +211,11 @@ export const useTranscription = (
         throw new Error("No API Key configured. Please add one in Settings.");
       }
 
-      const ai = new GoogleGenAI({ apiKey: checkProvider.key });
+      let activeKey = checkProvider.key;
+      let activeSource = checkProvider.source;
+      lastUsedKeyLabel = `${activeSource} (****${activeKey.slice(-4)})`;
+
+      let ai = new GoogleGenAI({ apiKey: activeKey });
 
       const currentFileName = inputMetadata?.name || (inputFile as File).name || 'audio_file';
       const lowerName = currentFileName.toLowerCase();
@@ -214,6 +256,9 @@ export const useTranscription = (
         : TRANSCRIPTION_SYSTEM_INSTRUCTION;
 
       const modelName = checkProvider.model || 'gemini-2.5-flash';
+      const modelDef = getModelDefinition(modelName);
+      const speedOptActive = isSpeedOptimizationEnabled();
+
       let promptText = transcriptionMode === 'normal' 
         ? TRANSCRIPTION_PROMPT_TEXT_NORMAL 
         : TRANSCRIPTION_PROMPT_TEXT;
@@ -222,7 +267,17 @@ export const useTranscription = (
           promptText += "\n\nCRITICAL FOR THIS MODEL: Ensure every timestamp like [MM:SS] starts on a NEW LINE. Do NOT put timestamps in the middle of text. Each speaker's dialogue MUST be on a separate line. Example:\n[00:00] **Speaker 1:** Hello.\n[00:05] **Speaker 2:** Hi there.";
       }
 
-      const requestOptions = {
+      // Build optional thinkingConfig for Fast/Balanced models when Speed Boost is enabled
+      let thinkingConfigOption: any = undefined;
+      if (speedOptActive && modelDef.category !== 'thinking') {
+        if (modelName === 'gemini-2.5-flash') {
+          thinkingConfigOption = { thinkingBudget: 0 };
+        } else if (modelName.startsWith('gemini-3') && !modelName.includes('transcribe')) {
+          thinkingConfigOption = { thinkingLevel: ThinkingLevel.LOW };
+        }
+      }
+
+      const requestOptions: any = {
           model: modelName, 
           contents: [
               {
@@ -236,6 +291,7 @@ export const useTranscription = (
           config: {
               systemInstruction: systemInstruction,
               temperature: 0.35,
+              ...(thinkingConfigOption ? { thinkingConfig: thinkingConfigOption } : {}),
               safetySettings: [
                   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
                   { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -285,9 +341,60 @@ export const useTranscription = (
           lastResultObj = response;
           fullText = extractText(response);
       } catch (err: any) {
-          console.error("Transcription generation failed:", err);
+          console.error("Transcription generation failed on primary key:", err);
           if (err?.message?.includes('RECITATION') || err?.message?.includes('Recitation')) {
             console.warn("Caught recitation in generateContent error");
+          } else if (isKeyOrProjectBlockedError(err)) {
+            // Try fallback API keys automatically if available
+            const fallbacks = await getFallbackProviders(activeKey);
+            let recoveredWithFallback = false;
+
+            for (const fb of fallbacks) {
+              try {
+                setCurrentStage(appLang === 'bn' 
+                  ? `বিকল্প এপিআই কি (${fb.source}) দিয়ে পুনরায় চেষ্টা করা হচ্ছে...` 
+                  : `Retrying with alternate API Key (${fb.source})...`);
+                const fbAi = new GoogleGenAI({ apiKey: fb.key });
+                const fbResp = await fbAi.models.generateContent(requestOptions);
+                lastResultObj = fbResp;
+                fullText = extractText(fbResp);
+                ai = fbAi;
+                activeKey = fb.key;
+                activeSource = fb.source;
+                lastUsedKeyLabel = `${fb.source} (****${fb.key.slice(-4)})`;
+                if (fb.id && fb.id !== 'env' && fb.id !== 'local_server') {
+                  setActiveApiKey(fb.id);
+                }
+                addToast(
+                  appLang === 'bn'
+                    ? `পূর্বের কি-তে সমস্যা থাকায় স্বয়ংক্রিয়ভাবে "${fb.source}" কি ব্যবহার করা হয়েছে`
+                    : `Automatically switched to working key: ${fb.source}`,
+                  'info'
+                );
+                recoveredWithFallback = true;
+                break;
+              } catch (fbErr) {
+                console.warn(`Fallback key ${fb.source} also failed:`, fbErr);
+              }
+            }
+
+            if (!recoveredWithFallback) {
+              throw err;
+            }
+          } else if (thinkingConfigOption) {
+            // Safe fallback if a specific preview model rejected thinkingConfig
+            try {
+              const classicOptions = {
+                ...requestOptions,
+                config: { ...requestOptions.config }
+              };
+              delete classicOptions.config.thinkingConfig;
+              const retryClassic = await ai.models.generateContent(classicOptions);
+              lastResultObj = retryClassic;
+              fullText = extractText(retryClassic);
+            } catch (innerErr) {
+              throw err;
+            }
           } else {
             throw err;
           }
@@ -430,7 +537,7 @@ export const useTranscription = (
         }
       }
 
-      await incrementTotalCalls('Transcription', modelName, checkProvider.source);
+      await incrementTotalCalls('Transcription', modelName, activeSource);
       updateApiStats();
 
       setElapsedSeconds(actualElapsedSeconds);
@@ -450,72 +557,68 @@ export const useTranscription = (
         }
       }, 50);
 
-      // 2. Non-UI disk persistence only (does NOT mutate React state or trigger component re-renders)
-      const runOnIdle = (task: () => Promise<void> | void, delayMs: number) => {
-        setTimeout(() => {
-          if ('requestIdleCallback' in window) {
-            (window as any).requestIdleCallback(() => task(), { timeout: 2000 });
-          } else {
-            task();
-          }
-        }, delayMs);
-      };
-
-      runOnIdle(async () => {
+      // 2. Save directly to local IndexedDB (Firebase sync is paused via setHeavyProcessingActive and only queues the tiny ID string)
+      if (!isNoSpeechDetected) {
         try {
-          if (!isNoSpeechDetected) {
-            await addToStore(STORES.HISTORY, historyItem);
-            try {
-              const { broadcastHistoryUpdate } = await import('./useBroadcastSync');
-              broadcastHistoryUpdate();
-            } catch (e) {}
-          }
-          logSystemActivity('TRANSCRIPTION', 'SUCCESS', 'File Transcribed', `File: ${fileName}`);
+          await addToStore(STORES.HISTORY, historyItem);
+          try {
+            const { broadcastHistoryUpdate } = await import('./useBroadcastSync');
+            broadcastHistoryUpdate();
+          } catch (e) {}
         } catch (e) {
-          console.warn("Background history persistence notice:", e);
+          console.warn("Local history persistence notice:", e);
         }
-      }, 1500);
+      }
+      logSystemActivity('TRANSCRIPTION', 'SUCCESS', 'File Transcribed', `File: ${fileName}`);
 
-      runOnIdle(async () => {
-        try {
-          if (uploadedFile?.name) {
-            try {
-              await ai.files.delete({ name: uploadedFile.name });
-            } catch (err) {
-              console.warn("Could not delete file from Gemini server:", err);
-            }
-          }
+      // 3. Only schedule optional post-processing if needed, avoiding retaining large closures when disabled
+      const isBgbAnalysisEnabled = localStorage.getItem('bgbAnalysisEnabled') === 'true';
+      if ((uploadedFile?.name) || (isBgbAnalysisEnabled && !isNoSpeechDetected)) {
+        const textForBgb = isBgbAnalysisEnabled ? fullText : '';
+        const itemForBgb = isBgbAnalysisEnabled ? { ...historyItem } : null;
+        const uploadedFileName = uploadedFile?.name;
 
-          const isBgbAnalysisEnabled = localStorage.getItem('bgbAnalysisEnabled') === 'true';
-          if (isBgbAnalysisEnabled && !isNoSpeechDetected) {
-            const { getSensitiveKeywords } = await import('../utils/sensitiveKeywords');
-            const { analyzeTranscriptForBgb } = await import('../services/bgbAnalysisService');
-            const keywords = getSensitiveKeywords();
-            const lower = fullText.toLowerCase();
-            const matches = keywords.filter((kw: string) => lower.includes(kw.toLowerCase()));
-            if (matches.length > 0) {
-              const result = await analyzeTranscriptForBgb(fullText, matches);
-              if (result?.remark) {
-                historyItem.bgbRemark = result.remark as any;
-                await addToStore(STORES.HISTORY, historyItem);
+        setTimeout(async () => {
+          try {
+            if (uploadedFileName) {
+              try {
+                await ai.files.delete({ name: uploadedFileName });
+              } catch (err) {
+                console.warn("Could not delete file from Gemini server:", err);
               }
             }
+
+            if (isBgbAnalysisEnabled && itemForBgb && textForBgb) {
+              const { getSensitiveKeywords } = await import('../utils/sensitiveKeywords');
+              const { analyzeTranscriptForBgb } = await import('../services/bgbAnalysisService');
+              const keywords = getSensitiveKeywords();
+              const lower = textForBgb.toLowerCase();
+              const matches = keywords.filter((kw: string) => lower.includes(kw.toLowerCase()));
+              if (matches.length > 0) {
+                const result = await analyzeTranscriptForBgb(textForBgb, matches);
+                if (result?.remark) {
+                  itemForBgb.bgbRemark = result.remark as any;
+                  await addToStore(STORES.HISTORY, itemForBgb);
+                }
+              }
+            }
+          } catch (e) {
+            console.warn("Background cleanup & analysis notice:", e);
           }
-        } catch (e) {
-          console.warn("Background cleanup & analysis notice:", e);
-        }
-      }, 4000);
+        }, 2500);
+      }
 
       return { success: true, text: fullText };
     } catch (error: any) {
       console.error("Transcription Error:", error);
       setStatus('error');
-      const safeMsg = formatErrorMessage(error, appLang);
+      const safeMsg = formatErrorMessage(error, appLang, lastUsedKeyLabel);
       setErrorMessage(safeMsg);
       logSystemActivity('TRANSCRIPTION', 'ERROR', 'Failed', safeMsg);
       return { success: false, error: safeMsg };
     } finally {
       clearTranscriptionTimer();
+      setHeavyProcessingActive('transcription', false);
       setProgress(100);
     }
   };

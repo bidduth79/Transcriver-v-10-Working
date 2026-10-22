@@ -3,6 +3,7 @@ import { TranscriptMeta, FileMeta } from '../types';
 import { getFileMetadata } from './batch/batchUtils';
 import { useBatchMetrics } from './batch/useBatchMetrics';
 import { useBatchTimer } from './batch/useBatchTimer';
+import { setHeavyProcessingActive } from '../services/firebaseThrottledQueue';
 
 export interface FailedFile {
   file: File;
@@ -42,6 +43,7 @@ export const useBatchProcessor = (
   useEffect(() => {
     return () => {
       clearRetryTimeout();
+      setHeavyProcessingActive('batch', false);
       if (prevBatchUrlRef.current) {
         URL.revokeObjectURL(prevBatchUrlRef.current);
         prevBatchUrlRef.current = null;
@@ -70,6 +72,7 @@ export const useBatchProcessor = (
 
   const finishProcessing = () => {
     clearRetryTimeout();
+    setHeavyProcessingActive('batch', false);
     setIsBatchProcessing(false);
     setHasBatchStarted(false);
     
@@ -92,6 +95,7 @@ export const useBatchProcessor = (
   const startCountdownForNextFile = (queue: File[], nextIndex: number) => {
     if (isBatchPausedRef.current) {
       setCurrentBatchIndex(nextIndex);
+      setHeavyProcessingActive('batch', false);
       return;
     }
     
@@ -110,6 +114,9 @@ export const useBatchProcessor = (
       return;
     }
 
+    // Lock Firebase sync so zero cloud streams conflict with batch audio processing
+    setHeavyProcessingActive('batch', true);
+
     const currentFile = queue[index];
     setCurrentBatchIndex(index);
     
@@ -120,9 +127,16 @@ export const useBatchProcessor = (
       return;
     }
 
+    // Revoke previous Object URL first and yield 150ms for V8 Garbage Collector before allocating new audio buffers
+    if (prevBatchUrlRef.current) {
+      URL.revokeObjectURL(prevBatchUrlRef.current);
+      prevBatchUrlRef.current = null;
+    }
+    if (index > 0) {
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+
     setFile(currentFile);
-    // Revoke previous Object URL to prevent memory leak during batch processing
-    if (prevBatchUrlRef.current) URL.revokeObjectURL(prevBatchUrlRef.current);
     const url = URL.createObjectURL(currentFile);
     prevBatchUrlRef.current = url;
     setFileUrl(url);
@@ -161,6 +175,7 @@ export const useBatchProcessor = (
 
   const startBatch = () => {
     clearRetryTimeout();
+    setHeavyProcessingActive('batch', true);
     setHasBatchStarted(true);
     setIsBatchProcessing(true);
     setIsBatchPaused(false);
@@ -172,18 +187,21 @@ export const useBatchProcessor = (
 
   const pauseBatch = () => {
     setIsBatchPaused(true);
+    setHeavyProcessingActive('batch', false);
     clearTimer();
     clearRetryTimeout();
   };
 
   const resumeBatch = () => {
     setIsBatchPaused(false);
+    setHeavyProcessingActive('batch', true);
     processNextBatchFile(batchQueue, currentBatchIndex);
   };
 
   const cancelBatch = () => {
     clearTimer();
     clearRetryTimeout();
+    setHeavyProcessingActive('batch', false);
     setBatchQueue([]);
     setCurrentBatchIndex(0);
     setIsBatchProcessing(false);
@@ -203,6 +221,7 @@ export const useBatchProcessor = (
   const jumpToBatchFile = (index: number) => {
     clearTimer();
     clearRetryTimeout();
+    setHeavyProcessingActive('batch', true);
     setHasBatchStarted(true);
     setIsBatchPaused(false);
     processNextBatchFile(batchQueue, index);
@@ -232,6 +251,7 @@ export const useBatchProcessor = (
     setFailedFiles([]);
     setProcessedCount(0);
     resetMetrics();
+    setHeavyProcessingActive('batch', true);
     setHasBatchStarted(true);
     setIsBatchPaused(false);
     setIsBatchProcessing(true);
