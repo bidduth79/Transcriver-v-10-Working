@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { BgbRemarkType, BgbAnalysisResult } from '../types/bgb';
 import { getActiveProvider } from './ApiKeyManager';
+import { DEFAULT_MODEL } from '../constants/aiModels';
 
 export const analyzeTranscriptForBgb = async (transcript: string, sensitiveMatches: string[]): Promise<BgbAnalysisResult | null> => {
   if (!transcript || sensitiveMatches.length === 0) {
@@ -10,7 +11,7 @@ export const analyzeTranscriptForBgb = async (transcript: string, sensitiveMatch
   try {
     const provider = await getActiveProvider();
     const apiKey = provider?.key;
-    const modelToUse = provider?.model || 'gemini-2.5-flash';
+    const modelToUse = provider?.model || DEFAULT_MODEL;
     if (!apiKey) {
       throw new Error('API Key missing');
     }

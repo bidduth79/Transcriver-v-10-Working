@@ -30,6 +30,8 @@ export const setActiveModel = (modelId: string) => {
   useAppStore.getState().triggerActiveApiKeyChanged();
 };
 
+// A saved choice of a model that is no longer offered (retired by Google) falls back to the default
 export const getActiveModel = () => {
-  return localStorage.getItem(ACTIVE_MODEL_STORAGE) || DEFAULT_MODEL;
+  const saved = localStorage.getItem(ACTIVE_MODEL_STORAGE);
+  return saved && AVAILABLE_MODELS.some(m => m.id === saved) ? saved : DEFAULT_MODEL;
 };

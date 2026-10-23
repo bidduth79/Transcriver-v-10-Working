@@ -5,6 +5,7 @@ import { useSystemStatus } from './footer/useSystemStatus';
 import { SystemStatusBar } from './footer/SystemStatusBar';
 import { ModelSelector } from './footer/ModelSelector';
 import { FooterProfile } from './footer/FooterProfile';
+import { DEFAULT_MODEL } from '../../constants/aiModels';
 
 interface FooterProps {
   t: any;
@@ -19,7 +20,7 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({
   t,
   activeColors,
-  activeModelName = 'gemini-2.5-flash',
+  activeModelName = DEFAULT_MODEL,
   isAiLoading = false,
   onKeyUpdate,
   appLang,

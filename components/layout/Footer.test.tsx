@@ -57,7 +57,7 @@ describe('Footer markup', () => {
     m.speedOpt.value = true;
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ status: 'online' }) })));
     m.cloud.mockResolvedValue({ status: 'online', message: 'Synced' });
-    const { container } = await setup({ isAiLoading: true, isDark: false, activeModelName: 'gemini-2.5-pro' });
+    const { container } = await setup({ isAiLoading: true, isDark: false, activeModelName: 'gemini-3.1-pro-preview' });
     await waitFor(() => expect(container.textContent).toContain('LOCAL DB: ONLINE'));
     expect(container.innerHTML).toMatchSnapshot();
     vi.unstubAllGlobals();
@@ -124,7 +124,7 @@ describe('Footer behavior', () => {
 
   it('toggles and clears the info tooltip', async () => {
     const { infoBtn, container } = await setup();
-    const btn = infoBtn('Gemini 2.5 Pro');
+    const btn = infoBtn('Gemini 3.1 Pro Preview');
     fireEvent.click(btn);
     expect(container.textContent).toContain('⚙️ কীভাবে কাজ করে:');
     fireEvent.click(btn);

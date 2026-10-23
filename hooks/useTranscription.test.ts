@@ -71,7 +71,7 @@ beforeEach(() => {
   m.keys.length = 0;
   m.speedOpt.value = false;
   localStorage.clear();
-  m.getActiveProvider.mockResolvedValue({ key: 'KEY-AAAA', source: 'Primary', model: 'gemini-2.5-flash' });
+  m.getActiveProvider.mockResolvedValue({ key: 'KEY-AAAA', source: 'Primary', model: 'gemini-3.8-flash' });
   m.getFallbackProviders.mockResolvedValue([]);
 });
 
@@ -87,7 +87,7 @@ describe('useTranscription.processTranscription', () => {
 
     const [key, req] = m.generate.mock.calls[0];
     expect(key).toBe('KEY-AAAA');
-    expect(req.model).toBe('gemini-2.5-flash');
+    expect(req.model).toBe('gemini-3.8-flash');
     expect(req.config.temperature).toBe(0.35);
     expect(req.config.safetySettings).toHaveLength(4);
     expect(req.config.thinkingConfig).toBeUndefined();
@@ -97,19 +97,20 @@ describe('useTranscription.processTranscription', () => {
       fileName: 'clip.mp3', transcript: out.text, extension: 'mp3', duration: '00:10',
     }));
     expect(m.setHistory).toHaveBeenCalledTimes(1);
-    expect(m.incrementTotalCalls).toHaveBeenCalledWith('Transcription', 'gemini-2.5-flash', 'Primary');
+    expect(m.incrementTotalCalls).toHaveBeenCalledWith('Transcription', 'gemini-3.8-flash', 'Primary');
     expect(updateApiStats).toHaveBeenCalled();
     await waitFor(() => expect(playSuccessSound).toHaveBeenCalled());
     expect(addToast).toHaveBeenCalledWith('ট্রান্সক্রিপশন সফলভাবে সম্পন্ন হয়েছে!', 'success');
   });
 
-  it('uses normal-mode prompt and extra line rule for flash-lite', async () => {
-    m.getActiveProvider.mockResolvedValue({ key: 'K', source: 'S', model: 'gemini-3.1-flash-lite-preview' });
+  it('uses the normal-mode prompt without extra per-model rules', async () => {
+    m.getActiveProvider.mockResolvedValue({ key: 'K', source: 'S', model: 'gemini-3.5-flash-lite' });
     m.generate.mockResolvedValue(resp('text'));
     const { run } = setup('normal');
     await run();
     const req = m.generate.mock.calls[0][1];
-    expect(req.contents[0].parts[1].text).toContain('CRITICAL FOR THIS MODEL');
+    expect(req.contents[0].parts[1].text).toMatch(/^Please transcribe the entire audio/);
+    expect(req.contents[0].parts[1].text).not.toContain('CRITICAL FOR THIS MODEL');
   });
 
   it('rejects files over 500MB without calling the API', async () => {
@@ -143,7 +144,7 @@ describe('useTranscription.processTranscription', () => {
     expect(out).toEqual({ success: true, text: 'ok' });
     expect(m.setActiveApiKey).toHaveBeenCalledWith('k2');
     expect(addToast).toHaveBeenCalledWith(expect.stringContaining('Backup'), 'info');
-    expect(m.incrementTotalCalls).toHaveBeenCalledWith('Transcription', 'gemini-2.5-flash', 'Backup');
+    expect(m.incrementTotalCalls).toHaveBeenCalledWith('Transcription', 'gemini-3.8-flash', 'Backup');
   });
 
   it('shows quota message with key label when all keys fail', async () => {
@@ -185,7 +186,7 @@ describe('useTranscription.processTranscription', () => {
     m.generate.mockRejectedValueOnce(new Error('thinking not supported')).mockResolvedValueOnce(resp('plain'));
     const { run } = setup();
     const out = await run();
-    expect(m.generate.mock.calls[0][1].config.thinkingConfig).toEqual({ thinkingBudget: 0 });
+    expect(m.generate.mock.calls[0][1].config.thinkingConfig).toEqual({ thinkingLevel: 'LOW' });
     expect(m.generate.mock.calls[1][1].config.thinkingConfig).toBeUndefined();
     expect(out.text).toBe('plain');
   });

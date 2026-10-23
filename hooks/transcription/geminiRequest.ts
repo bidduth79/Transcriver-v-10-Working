@@ -9,8 +9,6 @@ const SAFETY_SETTINGS = [
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
 ];
 
-const FLASH_LITE_LINE_RULE = "\n\nCRITICAL FOR THIS MODEL: Ensure every timestamp like [MM:SS] starts on a NEW LINE. Do NOT put timestamps in the middle of text. Each speaker's dialogue MUST be on a separate line. Example:\n[00:00] **Speaker 1:** Hello.\n[00:05] **Speaker 2:** Hi there.";
-
 const HIGH_SENSITIVITY_PROMPT = "You are an assistive speech-to-text accessibility tool. Listen carefully through any intro music, background noise, or low-volume sections, and transcribe all spoken words and dialogue in this recording into Bengali (Bangla). Format with [MM:SS] **Speaker 1:** when speech occurs.";
 const HIGH_SENSITIVITY_SYSTEM = "You are a high-sensitivity speech-to-text transcriber for user audio accessibility. Faithfully write down everything spoken in the audio in Bengali script without summarizing or stopping early.";
 
@@ -31,7 +29,6 @@ const buildAudioRequest = (model: string, audioPart: Part, text: string, config:
 // Optional thinkingConfig for Fast/Balanced models when Speed Boost is enabled
 const buildThinkingConfig = (modelName: string): any => {
   if (!isSpeedOptimizationEnabled() || getModelDefinition(modelName).category === 'thinking') return undefined;
-  if (modelName === 'gemini-2.5-flash') return { thinkingBudget: 0 };
   if (modelName.startsWith('gemini-3') && !modelName.includes('transcribe')) return { thinkingLevel: ThinkingLevel.LOW };
   return undefined;
 };
@@ -42,10 +39,7 @@ export const buildTranscriptionRequest = (
   audioPart: Part
 ): any => {
   const systemInstruction = mode === 'normal' ? TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL : TRANSCRIPTION_SYSTEM_INSTRUCTION;
-  let promptText = mode === 'normal' ? TRANSCRIPTION_PROMPT_TEXT_NORMAL : TRANSCRIPTION_PROMPT_TEXT;
-  if (modelName === 'gemini-3.1-flash-lite-preview') {
-    promptText += FLASH_LITE_LINE_RULE;
-  }
+  const promptText = mode === 'normal' ? TRANSCRIPTION_PROMPT_TEXT_NORMAL : TRANSCRIPTION_PROMPT_TEXT;
   const thinkingConfig = buildThinkingConfig(modelName);
   return buildAudioRequest(modelName, audioPart, promptText, {
     systemInstruction,

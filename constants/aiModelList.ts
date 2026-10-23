@@ -34,44 +34,12 @@ export const AVAILABLE_MODELS: AIModelDefinition[] = [
       quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
     }
   },
-  {
-    id: 'gemini-3.1-flash-lite-preview',
-    label: 'Gemini 3.1 Flash Lite',
-    badge: 'Ultra Light',
-    category: 'fast',
-    categoryLabelBn: '⚡ দ্রুতগতির',
-    categoryLabelEn: 'Fast',
-    speedBadgeBn: 'অতি দ্রুত',
-    thinkingBehavior: 'none',
-    infoBn: {
-      howItWorks: 'মিনিমাল প্রসেসিংয়ে দ্রুত ট্রান্সক্রিপশন এবং প্রতিটি বক্তার সংলাপ আলাদা লাইনে সাজাতে বিশেষভাবে নির্দেশিত।',
-      speedAndTime: 'অতি দ্রুত ও মেমোরি সাশ্রয়ী।',
-      bestFor: 'স্পষ্ট কণ্ঠস্বরের অডিও ও দ্রুত লাইন-বাই-লাইন টাইমস্ট্যাম্প পাওয়ার জন্য।',
-      quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
-    }
-  },
 
   // 2. BALANCED CATEGORY
   {
-    id: 'gemini-2.5-flash',
-    label: 'Gemini 2.5 Flash',
-    badge: 'Default & Best',
-    category: 'balanced',
-    categoryLabelBn: '⚖️ ব্যালেন্সড',
-    categoryLabelEn: 'Balanced',
-    speedBadgeBn: 'দ্রুত ও নিখুঁত',
-    thinkingBehavior: 'minimal',
-    infoBn: {
-      howItWorks: 'অপ্রয়োজনীয় থিংকিং বন্ধ রেখে দ্রুতগতিতে নিখুঁত বাংলা বানান, বিরামচিহ্ন এবং একাধিক বক্তা (Speaker 1, Speaker 2 বা বক্তার নাম) শনাক্ত করে।',
-      speedAndTime: 'দ্রুত ও স্থিতিশীল (অপ্টিমাইজড মোডে ৩০%–৪৫% দ্রুত কাজ করে)।',
-      bestFor: 'প্রতিদিনের সব ধরনের অডিও, ইউটিউব ভিডিও এবং টিভি টকশো ট্রান্সক্রিপশনের জন্য সবচেয়ে নির্ভরযোগ্য ডিফল্ট মডেল।',
-      quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
-    }
-  },
-  {
     id: 'gemini-3.8-flash',
     label: 'Gemini 3.8 Flash',
-    badge: 'Latest Flash',
+    badge: 'Default & Latest',
     category: 'balanced',
     categoryLabelBn: '⚖️ ব্যালেন্সড',
     categoryLabelEn: 'Balanced',
@@ -100,40 +68,8 @@ export const AVAILABLE_MODELS: AIModelDefinition[] = [
       quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
     }
   },
-  {
-    id: 'gemini-3-flash-preview',
-    label: 'Gemini 3 Flash Preview',
-    badge: 'Preview',
-    category: 'balanced',
-    categoryLabelBn: '⚖️ ব্যালেন্সড',
-    categoryLabelEn: 'Balanced',
-    speedBadgeBn: 'দ্রুত',
-    thinkingBehavior: 'minimal',
-    infoBn: {
-      howItWorks: 'Gemini 3 সিরিজের ফ্ল্যাশ মডেল যা দ্রুত অডিও টোকেন প্রসেস করে এবং রিপিটেশন বা লুপিং এড়িয়ে চলে।',
-      speedAndTime: 'দ্রুত (মিনিমাল থিংকিং)।',
-      bestFor: 'দীর্ঘ বক্তৃতা ও ধারাবাহিক কথোপকথন ট্রান্সক্রিপশনের জন্য।',
-      quotaInfo: 'উচ্চ কোটা লিমিট (১৫ RPM / ১৫০০ RPD)'
-    }
-  },
 
   // 3. THINKING / SLOW CATEGORY
-  {
-    id: 'gemini-2.5-pro',
-    label: 'Gemini 2.5 Pro',
-    badge: 'Deep Thinking',
-    category: 'thinking',
-    categoryLabelBn: '🧠 থিংকিং/স্লো',
-    categoryLabelEn: 'Thinking / Slow',
-    speedBadgeBn: 'ধীরগতি (গভীর বিশ্লেষণ)',
-    thinkingBehavior: 'deep',
-    infoBn: {
-      howItWorks: 'আউটপুট লেখার আগে ভেতরে ভেতরে গভীরভাবে চিন্তা (Deep Reasoning) করে এবং জটিল বাক্য ও প্রেক্ষাপট মিলিয়ে দেখে।',
-      speedAndTime: 'ধীরগতি (চিন্তা করার জন্য সাধারণ মডেলের চেয়ে ২০–৪৫ সেকেন্ড বেশি সময় নেয়)।',
-      bestFor: 'অত্যন্ত অস্পষ্ট অডিও, জটিল আঞ্চলিক ভাষা, গভীর বিশ্লেষণমূলক রিপোর্ট বা যখন সর্বোচ্চ নির্ভুলতা প্রয়োজন।',
-      quotaInfo: 'সীমিত ফ্রি কোটা (২ RPM / ৫০ RPD) — বড় ব্যাচে রেট লিমিট হতে পারে'
-    }
-  },
   {
     id: 'gemini-3.1-pro-preview',
     label: 'Gemini 3.1 Pro Preview',

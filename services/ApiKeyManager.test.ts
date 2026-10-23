@@ -34,20 +34,21 @@ afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
 describe('model settings', () => {
   it('exposes model catalog and definitions', () => {
-    expect(AKM.DEFAULT_MODEL).toBe('gemini-2.5-flash');
+    expect(AKM.DEFAULT_MODEL).toBe('gemini-3.8-flash');
     expect(AKM.AVAILABLE_MODELS.map(x => x.id)).toEqual([
-      'gemini-3.5-transcribe', 'gemini-3.5-flash-lite', 'gemini-3.1-flash-lite-preview',
-      'gemini-2.5-flash', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview',
-      'gemini-2.5-pro', 'gemini-3.1-pro-preview',
+      'gemini-3.5-transcribe', 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.1-pro-preview',
     ]);
     expect(AKM.MODEL_CATEGORY_GROUPS.map(g => g.id)).toEqual(['fast', 'balanced', 'thinking']);
-    expect(AKM.getModelDefinition('gemini-2.5-pro').category).toBe('thinking');
-    expect(AKM.getModelDefinition('unknown').id).toBe('gemini-2.5-flash');
-    expect(JSON.stringify(AKM.AVAILABLE_MODELS).length).toMatchInlineSnapshot(`5123`);
+    expect(AKM.getModelDefinition('gemini-3.1-pro-preview').category).toBe('thinking');
+    expect(AKM.getModelDefinition('unknown').id).toBe('gemini-3.8-flash');
+    expect(JSON.stringify(AKM.AVAILABLE_MODELS).length).toMatchInlineSnapshot(`2818`);
   });
 
   it('stores active model and speed mode', () => {
-    expect(AKM.getActiveModel()).toBe('gemini-2.5-flash');
+    expect(AKM.getActiveModel()).toBe('gemini-3.8-flash');
+    // A saved model that Google retired falls back to the default
+    localStorage.setItem('manual_active_model', 'gemini-2.5-flash');
+    expect(AKM.getActiveModel()).toBe('gemini-3.8-flash');
     expect(AKM.isSpeedOptimizationEnabled()).toBe(true);
     AKM.setActiveModel('gemini-3.5-flash');
     expect(AKM.getActiveModel()).toBe('gemini-3.5-flash');
@@ -57,7 +58,7 @@ describe('model settings', () => {
     AKM.setSpeedOptimizationEnabled(true);
     expect(localStorage.getItem('transcription_speed_opt_mode')).toBe('optimized');
     AKM.resetModelToClassicDefault();
-    expect(AKM.getActiveModel()).toBe('gemini-2.5-flash');
+    expect(AKM.getActiveModel()).toBe('gemini-3.8-flash');
     expect(AKM.isSpeedOptimizationEnabled()).toBe(false);
     expect(m.triggerActiveApiKeyChanged).toHaveBeenCalledTimes(4);
   });
@@ -74,21 +75,21 @@ describe('getActiveProvider', () => {
   it('clears a stale selection and falls back to the newest key', async () => {
     m.store = [key('1', 'AAA', 'Old', '2026-01-01'), key('2', 'BBB', 'New', '2026-02-01')];
     localStorage.setItem('manual_active_key_id', 'gone');
-    expect(await AKM.getActiveProvider()).toEqual({ id: '2', key: 'BBB', model: 'gemini-2.5-flash', source: 'New' });
+    expect(await AKM.getActiveProvider()).toEqual({ id: '2', key: 'BBB', model: 'gemini-3.8-flash', source: 'New' });
     expect(AKM.getActiveKeyId()).toBe('2');
     expect(m.triggerActiveApiKeyChanged).toHaveBeenCalledTimes(1);
   });
 
   it('uses the .env key when no saved keys exist', async () => {
     vi.stubEnv('VITE_GEMINI_API_KEY', ' ENVKEY ');
-    expect(await AKM.getActiveProvider()).toEqual({ id: 'env', key: 'ENVKEY', model: 'gemini-2.5-flash', source: 'Environment (.env)' });
+    expect(await AKM.getActiveProvider()).toEqual({ id: 'env', key: 'ENVKEY', model: 'gemini-3.8-flash', source: 'Environment (.env)' });
   });
 
   it('asks the local server when enabled', async () => {
     m.localServer.value = true;
     const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ key: ' SRV ' }) }));
     vi.stubGlobal('fetch', fetchMock);
-    expect(await AKM.getActiveProvider()).toEqual({ id: 'local_server', key: 'SRV', model: 'gemini-2.5-flash', source: 'Server Master Key' });
+    expect(await AKM.getActiveProvider()).toEqual({ id: 'local_server', key: 'SRV', model: 'gemini-3.8-flash', source: 'Server Master Key' });
     expect(fetchMock).toHaveBeenCalledWith('http://local/get_api_key.php');
   });
 

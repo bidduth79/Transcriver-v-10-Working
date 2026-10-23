@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, act } from '@testing-library/react';
 
 const m = vi.hoisted(() => ({
-  keys: [] as any[], active: { value: null as string | null }, model: { value: 'gemini-2.5-flash' },
+  keys: [] as any[], active: { value: null as string | null }, model: { value: 'gemini-3.8-flash' },
   add: vi.fn(), del: vi.fn(), setActive: vi.fn(), setModel: vi.fn(),
 }));
 vi.mock('../../../services/ApiKeyManager', async (orig) => ({
@@ -37,7 +37,7 @@ const inputs = (c: HTMLElement) => c.querySelectorAll('input[type="text"]') as N
 
 beforeEach(() => {
   vi.clearAllMocks();
-  m.keys = sample; m.active.value = 'k2'; m.model.value = 'gemini-2.5-flash';
+  m.keys = sample; m.active.value = 'k2'; m.model.value = 'gemini-3.8-flash';
   m.add.mockImplementation(async (key: string, label: string) => { m.keys = [...m.keys, { id: 'k3', key, label, addedAt: 'x' }]; m.active.value = 'k3'; });
   m.del.mockImplementation(async (id: string) => { m.keys = m.keys.filter(k => k?.id !== id); });
   m.setModel.mockImplementation((id: string) => { m.model.value = id; });
@@ -90,10 +90,10 @@ describe('SettingsApiKeys behavior', () => {
     expect(container.textContent).not.toContain('Home');
     const select = container.querySelector('select') as HTMLSelectElement;
     const trigger = vi.spyOn(useAppStore.getState(), 'triggerActiveApiKeyChanged');
-    await act(async () => { fireEvent.change(select, { target: { value: 'gemini-2.5-pro' } }); });
-    expect(m.setModel).toHaveBeenCalledWith('gemini-2.5-pro');
-    expect(select.value).toBe('gemini-2.5-pro');
-    expect(toasts(props).slice(-1)[0]).toBe(nfc('success:মডেল পরিবর্তন হয়েছে: gemini-2.5-pro'));
+    await act(async () => { fireEvent.change(select, { target: { value: 'gemini-3.1-pro-preview' } }); });
+    expect(m.setModel).toHaveBeenCalledWith('gemini-3.1-pro-preview');
+    expect(select.value).toBe('gemini-3.1-pro-preview');
+    expect(toasts(props).slice(-1)[0]).toBe(nfc('success:মডেল পরিবর্তন হয়েছে: gemini-3.1-pro-preview'));
     expect(toasts(props)).toContain(nfc('success:এপিআই কি সিলেক্ট করা হয়েছে'));
     expect(toasts(props)).toContain(nfc('warning:কি ডিলিট করা হয়েছে'));
     trigger.mockRestore();

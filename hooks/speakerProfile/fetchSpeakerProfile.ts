@@ -1,15 +1,13 @@
 import { GoogleGenAI } from '@google/genai';
 import { SpeakerProfile } from '../../types/speaker';
 import { fetchWikiSummary, fetchWikiImageByTitle, searchWikiImage, searchCommonsImage } from '../speakerProfileUtils';
+import { DEFAULT_MODEL } from '../../constants/aiModels';
 
-const LITE_MODEL = 'gemini-3.1-flash-lite-preview';
+const LITE_MODEL = 'gemini-3.5-flash-lite';
 
 // Tries Google Search grounding, then plain generation, then the lite model
 export const generateProfileResponse = async (ai: GoogleGenAI, prompt: string, preferredModel: string | undefined) => {
-  let modelToUse = preferredModel || 'gemini-3-flash-preview';
-  if (modelToUse === 'gemini-2.5-flash') {
-    modelToUse = 'gemini-3-flash-preview';
-  }
+  let modelToUse = preferredModel || DEFAULT_MODEL;
 
   let response: any;
   try {
@@ -30,7 +28,7 @@ export const generateProfileResponse = async (ai: GoogleGenAI, prompt: string, p
         contents: prompt
       });
     } catch (genErr: any) {
-      console.warn("Primary model generation failed, trying fallback model gemini-3.1-flash-lite-preview:", genErr);
+      console.warn(`Primary model generation failed, trying fallback model ${LITE_MODEL}:`, genErr);
       // Third try: fast fallback model
       response = await ai.models.generateContent({
         model: LITE_MODEL,

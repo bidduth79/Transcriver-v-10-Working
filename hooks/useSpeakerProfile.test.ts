@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
 const m = vi.hoisted(() => ({
-  provider: { value: { key: 'K', model: 'gemini-2.5-flash', source: 'Primary' } as any },
+  provider: { value: { key: 'K', model: 'gemini-3.8-flash', source: 'Primary' } as any },
   generate: vi.fn(), increment: vi.fn(), scan: vi.fn(async () => ({ bgbMentionCount: 2 })),
   note: { value: null as any }, saveNote: vi.fn(),
   wikiImg: vi.fn(async () => null as any), searchImg: vi.fn(async () => null as any), wikiSummary: vi.fn(async (..._a: any[]) => null as any),
@@ -27,7 +27,7 @@ const bn = (s: string) => s.normalize('NFC');
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
-  m.provider.value = { key: 'K', model: 'gemini-2.5-flash', source: 'Primary' };
+  m.provider.value = { key: 'K', model: 'gemini-3.8-flash', source: 'Primary' };
   m.note.value = null;
   m.generate.mockResolvedValue({ text: '```json\n' + JSON.stringify(aiProfile) + '\n```' });
   vi.stubGlobal('fetch', fetchMock);
@@ -41,7 +41,7 @@ describe('useSpeakerProfile', () => {
     const { result } = setup('x'.repeat(2100) + '"q"');
     await open(result);
     const [req] = m.generate.mock.calls[0];
-    expect(req.model).toBe('gemini-3-flash-preview');
+    expect(req.model).toBe('gemini-3.8-flash');
     expect(req.config).toEqual({ tools: [{ googleSearch: {} }] });
     expect(req.contents).toContain('public figure: "রহিম"');
     expect(req.contents).toContain('x'.repeat(2000) + '"\n');
@@ -52,7 +52,7 @@ describe('useSpeakerProfile', () => {
     expect(m.wikiSummary.mock.calls).toEqual([['রহিম_উদ্দিন', 'bn'], ['রহিম', 'en']]);
     expect(result.current).toMatchObject({ isOpen: true, speakerName: 'রহিম', isLoading: false, error: '' });
     expect(result.current.profile).toMatchObject({ imageUrl: 'commons.jpg', wikiSummaryBn: 'BN', wikiSummaryEn: 'EN', databaseStats: { bgbMentionCount: 2 }, customNote: undefined });
-    expect(m.increment).toHaveBeenCalledWith('Speaker Profile', 'gemini-3-flash-preview', 'Primary');
+    expect(m.increment).toHaveBeenCalledWith('Speaker Profile', 'gemini-3.8-flash', 'Primary');
     expect(getCachedProfile('রহিম')?.imageUrl).toBe('commons.jpg');
   });
 
@@ -73,8 +73,8 @@ describe('useSpeakerProfile', () => {
     m.generate.mockRejectedValueOnce(new Error('no search')).mockRejectedValueOnce(new Error('busy')).mockResolvedValueOnce({ text: 'noise ' + JSON.stringify({ ...aiProfile, imageUrl: 'given.jpg', wikipediaTitle: '' }) + ' tail' });
     const { result } = setup();
     await open(result);
-    expect(m.generate.mock.calls.map(c => [c[0].model, !!c[0].config])).toEqual([['gemini-3.5-flash', true], ['gemini-3.5-flash', false], ['gemini-3.1-flash-lite-preview', false]]);
-    expect(m.increment).toHaveBeenCalledWith('Speaker Profile', 'gemini-3.1-flash-lite-preview', 'S');
+    expect(m.generate.mock.calls.map(c => [c[0].model, !!c[0].config])).toEqual([['gemini-3.5-flash', true], ['gemini-3.5-flash', false], ['gemini-3.5-flash-lite', false]]);
+    expect(m.increment).toHaveBeenCalledWith('Speaker Profile', 'gemini-3.5-flash-lite', 'S');
     expect(result.current.profile?.imageUrl).toBe('given.jpg');
     expect(m.wikiImg).not.toHaveBeenCalled();
     expect(m.wikiSummary.mock.calls).toEqual([['রহিম', 'bn'], ['রহিম', 'en']]);

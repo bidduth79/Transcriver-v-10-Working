@@ -90,7 +90,7 @@ export const resolveEmptyTranscript = (finishReason: string | undefined, lang: '
       : 'Transcription was blocked by AI safety policy.');
   } else if (finishReason === 'RECITATION') {
     throw new Error(lang === 'bn'
-      ? 'অডিওটিতে থাকা বক্তব্য/উদ্ধৃতি কপিরাইট বা রিসিটেশন ফিল্টারে পড়েছে। অনুগ্রহ করে Settings থেকে অন্য কোনো মডেল (যেমন: Gemini 2.5 Flash বা 3.1 Lite) অথবা Normal মোড দিয়ে পুনরায় চেষ্টা করুন।'
+      ? 'অডিওটিতে থাকা বক্তব্য/উদ্ধৃতি কপিরাইট বা রিসিটেশন ফিল্টারে পড়েছে। অনুগ্রহ করে Settings থেকে অন্য কোনো মডেল (যেমন: Gemini 3.5 Flash বা 3.5 Flash Lite) অথবা Normal মোড দিয়ে পুনরায় চেষ্টা করুন।'
       : 'Transcription was blocked due to copyright or recitation policies. Please select another model in Settings or try Normal mode.');
   } else if (finishReason === 'MAX_TOKENS') {
     throw new Error(lang === 'bn'
