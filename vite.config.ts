@@ -51,7 +51,7 @@ export default defineConfig(({ mode }) => {
             ]
           },
           workbox: {
-            maximumFileSizeToCacheInBytes: 50 * 1024 * 1024 // 50MB to accommodate ffmpeg-core.wasm
+            maximumFileSizeToCacheInBytes: 50 * 1024 * 1024 // 50MB precache limit per file
           }
         })
       ],

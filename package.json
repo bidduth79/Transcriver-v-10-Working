@@ -13,9 +13,6 @@
   },
   "dependencies": {
     "@abdalgolabs/ansi-unicode-converter": "^1.0.5",
-    "@ffmpeg/core": "^0.12.6",
-    "@ffmpeg/ffmpeg": "^0.12.15",
-    "@ffmpeg/util": "^0.12.2",
     "@google/genai": "^1.37.0",
     "@supabase/supabase-js": "^2.113.0",
     "@tanstack/react-virtual": "^3.14.3",
