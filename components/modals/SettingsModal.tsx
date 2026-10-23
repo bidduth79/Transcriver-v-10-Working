@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QuotaMonitor } from './QuotaMonitor';
+import { useModalResize } from './hooks/useModalResize';
 import { SettingsApiKeys } from './settings/SettingsApiKeys';
 import { SettingsKeywords } from './settings/SettingsKeywords';
 import { SettingsSync } from './settings/SettingsSync';
@@ -18,43 +19,14 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, isDark, activeColors, appLang, addToast }) => {
   const [activeTab, setActiveTab] = useState<'keys' | 'quota' | 'sync' | 'keywords' | 'system'>('keys');
   
-  // Window State
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [isMaximized, setIsMaximized] = useState(false);
-  const [size, setSize] = useState({ width: 700, height: 600 });
-  const isResizing = useRef(false);
+  const { size, isMinimized, setIsMinimized, isMaximized, setIsMaximized, startResizing } =
+    useModalResize(700, 600, 'settings-modal-container', 400, 400);
 
   useEffect(() => {
     if (isOpen) {
         setIsMinimized(false); 
     }
-  }, [isOpen]);
-
-  // --- Resizing Logic ---
-  const startResizing = (e: React.MouseEvent) => {
-    e.preventDefault();
-    isResizing.current = true;
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', stopResizing);
-  };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isResizing.current) return;
-    const modalElement = document.getElementById('settings-modal-container');
-    if (modalElement) {
-      const rect = modalElement.getBoundingClientRect();
-      setSize({
-        width: Math.max(400, e.clientX - rect.left),
-        height: Math.max(400, e.clientY - rect.top)
-      });
-    }
-  };
-
-  const stopResizing = () => {
-    isResizing.current = false;
-    window.removeEventListener('mousemove', handleMouseMove);
-    window.removeEventListener('mouseup', stopResizing);
-  };
+  }, [isOpen, setIsMinimized]);
 
   if (!isOpen) return null;
 
