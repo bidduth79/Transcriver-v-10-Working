@@ -7,6 +7,7 @@ import './index.css';
 import './i18n.ts';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Toaster } from 'sonner';
+import { requestPersistentStorage } from './services/storagePersistence';
 
 window.addEventListener('error', (event) => {
   if (event.message === 'Script error.') {
@@ -65,5 +66,7 @@ if (rootElement) {
       <Toaster position="top-center" richColors theme="system" />
     </ErrorBoundary>
   );
+  // Keep saved transcripts from being cleared by the browser when disk space runs low
+  requestPersistentStorage();
 }
 
