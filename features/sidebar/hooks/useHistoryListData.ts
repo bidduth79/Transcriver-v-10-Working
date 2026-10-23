@@ -93,6 +93,18 @@ export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory
     [viewDate, isDatePickerOpen]
   );
 
+  // After a day is brought from the cloud, scroll to it once the reloaded list contains it
+  const pendingScrollGroupRef = React.useRef<string | null>(null);
+  const scrollToGroupWhenListed = React.useCallback((group: string) => { pendingScrollGroupRef.current = group; }, []);
+  useEffect(() => {
+    const group = pendingScrollGroupRef.current;
+    if (!group) return;
+    const index = flatItems.findIndex(i => i.type === 'header' && i.group === group);
+    if (index === -1) return;
+    pendingScrollGroupRef.current = null;
+    rowVirtualizer.scrollToIndex(index, { align: 'start' });
+  }, [flatItems, rowVirtualizer]);
+
   // Smoothly scroll to active item to prevent layout jump when FileInfoSection mounts
   const prevActiveIdRef = React.useRef(activeHistoryId);
   useEffect(() => {
@@ -124,7 +136,7 @@ export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory
     isLoadingDate, setIsLoadingDate,
     viewDate, setViewDate,
     processedGroupedHistory, flatItems, rowVirtualizer,
-    availableDateStrings, calendarDays,
+    availableDateStrings, calendarDays, scrollToGroupWhenListed,
   };
 };
 

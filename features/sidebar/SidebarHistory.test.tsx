@@ -12,6 +12,8 @@ vi.mock('@tanstack/react-virtual', () => ({
     scrollToIndex: m.scrollToIndex,
   }),
 }));
+// Shown only when Firebase is configured; stubbed so markup does not depend on the machine's .env
+vi.mock('./components/LoadOlderHistoryButton', () => ({ LoadOlderHistoryButton: () => React.createElement('div', { 'data-c': 'LoadOlderHistoryButton' }) }));
 vi.mock('./HistoryItemCard', () => ({
   HistoryItemCard: ({ item, isDuplicate, activeHistoryId }: any) =>
     <div data-card={item.id} data-dup={String(isDuplicate)} data-active={String(activeHistoryId === item.id)}>{item.fileName}</div>,

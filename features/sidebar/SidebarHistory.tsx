@@ -5,6 +5,7 @@ import { HistoryDatePicker } from './components/HistoryDatePicker';
 import { HistorySentimentPicker } from './components/HistorySentimentPicker';
 import { HistorySkeletonCard } from './components/HistorySkeletonCard';
 import { VirtualHistoryRows } from './components/VirtualHistoryRows';
+import { LoadOlderHistoryButton } from './components/LoadOlderHistoryButton';
 
 export const SidebarHistory = ({
   t,
@@ -104,6 +105,7 @@ export const SidebarHistory = ({
         )}
         <div ref={bottomRef} className="mt-2 flex flex-col gap-3 pb-4">
             {isHistoryLoading && <HistorySkeletonCard isDark={isDark} />}
+            {!searchQuery && <LoadOlderHistoryButton t={t} isDark={isDark} appLang={appLang} history={fullHistory && fullHistory.length > 0 ? fullHistory : (history || [])} />}
         </div>
       </div>
     </div>

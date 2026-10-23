@@ -1,6 +1,7 @@
 import React from 'react';
 import type { HistoryListData } from '../hooks/useHistoryListData';
 import { toDateKey } from '../utils/historyListUtils';
+import { fetchHistoryDaysFromCloud } from '../../../services/firebaseSync/historyRangePull';
 
 interface Props {
   t: any;
@@ -12,7 +13,7 @@ interface Props {
 export const HistoryDatePicker = ({ t, list, isDark, appLang }: Props) => {
   const {
     viewDate, setViewDate, isLoadingDate, setIsLoadingDate, setIsDatePickerOpen,
-    calendarDays, availableDateStrings, flatItems, rowVirtualizer,
+    calendarDays, availableDateStrings, flatItems, rowVirtualizer, scrollToGroupWhenListed,
   } = list;
   const isTodayStr = toDateKey(new Date());
 
@@ -64,6 +65,15 @@ export const HistoryDatePicker = ({ t, list, isDark, appLang }: Props) => {
                       onClick={(e) => {
                         e.stopPropagation();
                         setIsLoadingDate(true);
+                        // A past day with nothing saved locally is brought from the cloud (only that day is read)
+                        if (!hasHistory && calDay.date <= new Date()) {
+                          fetchHistoryDaysFromCloud(calDay.date).catch(() => 0).then(added => {
+                            if (added > 0) scrollToGroupWhenListed(calDayStr);
+                            setIsDatePickerOpen(false);
+                            setIsLoadingDate(false);
+                          });
+                          return;
+                        }
                         const index = flatItems.findIndex(i => i.type === 'header' && i.group === calDayStr);
                         setTimeout(() => {
                             if (index !== -1) {

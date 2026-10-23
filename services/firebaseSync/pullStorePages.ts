@@ -42,8 +42,8 @@ interface PullStoreOptions {
   shouldStop: () => boolean;
   onCloudCount: (count: number) => void;
   onMerged: (count: number) => void;
-  // Only documents whose `field` is at least `min` (a Date is compared as a Firestore timestamp)
-  since?: { field: string; min: string | Date };
+  // Only documents whose `field` is at least `min` and below `max` (a Date is compared as a Firestore timestamp)
+  since?: { field: string; min: string | Date; max?: string };
   // Sees every cloud document read (also ones already stored locally)
   onCloudDoc?: (id: string, data: Record<string, any>) => void;
 }
@@ -65,7 +65,11 @@ export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloud
   let merged = 0;
   let completed = false;
   const filter: QueryConstraint[] = since
-    ? [where(since.field, '>=', since.min instanceof Date ? Timestamp.fromDate(since.min) : since.min), orderBy(since.field)]
+    ? [
+        where(since.field, '>=', since.min instanceof Date ? Timestamp.fromDate(since.min) : since.min),
+        ...(since.max !== undefined ? [where(since.field, '<', since.max)] : []),
+        orderBy(since.field),
+      ]
     : [orderBy(documentId())];
 
   while (true) {
