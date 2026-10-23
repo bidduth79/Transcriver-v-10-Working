@@ -1,4 +1,6 @@
-// Pure helpers for the transcriber activity report (rows, pages, CSV, print window)
+import { printHtmlInFrame } from '../../common/print/printHtmlInFrame';
+
+// Helpers for the transcriber activity report (rows, pages, CSV, printing)
 
 export const parseDurationToSeconds = (dur: string) => {
   if (!dur) return 0;
@@ -78,15 +80,9 @@ export const paginateReportRows = (reportData: any[]) => {
   return pages;
 };
 
-// Opens a print window with the rendered report pages (the user saves it as PDF)
+// Prints the rendered report pages from a hidden frame in this page (no popup window); saved as PDF from the dialog
 export const printReportElement = (element: HTMLElement, fromDate: string, toDate: string) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('পপ-আপ ব্লক করা আছে। দয়া করে ব্রাউজারের পপ-আপ অ্যালাউ করুন।');
-      return;
-    }
-
-    printWindow.document.write(`
+  printHtmlInFrame(`
       <!DOCTYPE html>
       <html>
         <head>
@@ -114,15 +110,9 @@ export const printReportElement = (element: HTMLElement, fromDate: string, toDat
           <div style="display: flex; flex-direction: column; gap: 2rem;">
             ${element.innerHTML}
           </div>
-          <script>
-            document.fonts.ready.then(() => { setTimeout(() => { window.print(); }, 500); });
-            window.onafterprint = () => { window.close(); };
-          </script>
         </body>
       </html>
-    `);
-    
-    printWindow.document.close();
+    `, { fontWaitMs: 1500 });
 };
 
 export const buildReportCsv = (reportData: any[], totalQty: number, totalDurationSecs: number) => {

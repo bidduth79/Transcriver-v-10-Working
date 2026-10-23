@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { normalizeTimestamps } from './exportContent';
+import { printHtmlInFrame } from '../print/printHtmlInFrame';
 
 const TOAST_ID = 'pdf-export-toast';
 
@@ -80,49 +81,15 @@ const buildPdfHtml = ({ transcript, fileName, searchTerm, keywordRegex }: PdfOpt
       `;
 };
 
-// Opens a print-ready window; the user saves it as PDF from the browser print dialog
-export const printTranscriptAsPdf = (options: PdfOptions, addToast?: (msg: string, type: string) => void) => {
+// Prints from a hidden frame in this page (no popup window); the user saves it as PDF from the print dialog
+export const printTranscriptAsPdf = (options: PdfOptions) => {
   try {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      if (addToast) addToast('পপ-আপ ব্লক করা আছে। দয়া করে পপ-আপ অ্যালাউ করুন।', 'error');
-      return;
-    }
-
     // Show brief notification that disappears quickly
     toast.info('PDF প্রস্তুত করা হচ্ছে...', { id: TOAST_ID, duration: 1500 });
-
-    printWindow.document.write(buildPdfHtml(options));
-    printWindow.document.close();
-
-    const triggerPrint = () => {
-      if (!printWindow || printWindow.closed) return;
-      toast.success('PDF প্রস্তুত হয়েছে!', { id: TOAST_ID, duration: 1200 });
-      try {
-        printWindow.focus();
-        printWindow.print();
-      } catch (e) {
-        console.error(e);
-      }
-    };
-
-    printWindow.onafterprint = () => {
-      try {
-        printWindow.close();
-      } catch (e) {}
-    };
-
-    // Fast font load fallback (max 300ms) to prevent long freezes
-    if (printWindow.document.fonts) {
-      Promise.race([
-        printWindow.document.fonts.ready,
-        new Promise(resolve => setTimeout(resolve, 300))
-      ]).then(() => {
-        setTimeout(triggerPrint, 50);
-      });
-    } else {
-      setTimeout(triggerPrint, 50);
-    }
+    printHtmlInFrame(buildPdfHtml(options), {
+      fontWaitMs: 300,
+      onBeforePrint: () => toast.success('PDF প্রস্তুত হয়েছে!', { id: TOAST_ID, duration: 1200 }),
+    });
   } catch (error: any) {
     console.error('PDF Export Error:', error);
     toast.error(`PDF এরর: ${error.message}`, { id: TOAST_ID, duration: 2500 });

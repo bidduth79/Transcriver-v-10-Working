@@ -92,44 +92,53 @@ describe('DownloadMenu exports', () => {
     expect(await toText(blobs[0].blob)).toBe('1\n01:02:03,000 --> 01:02:08,000\nএক\n\n2\n00:01:59,000 --> 00:02:04,000\nদুই\n\n');
   });
 
-  it('writes a print window for PDF with search and keyword highlights', async () => {
+  // PDF printing happens in a hidden frame inside the page (no popup window)
+  const watchPrintFrame = (fonts?: any) => {
+    const frame: { el?: HTMLIFrameElement; html: string; print: any } = { html: '', print: vi.fn() };
+    const append = document.body.appendChild.bind(document.body);
+    vi.spyOn(document.body, 'appendChild').mockImplementation((node: any) => {
+      const added = append(node);
+      if (node instanceof HTMLIFrameElement) {
+        frame.el = node;
+        node.contentWindow!.print = frame.print;
+        vi.spyOn(node.contentDocument!, 'write').mockImplementation((h: string) => { frame.html += h; });
+        if (fonts) Object.defineProperty(node.contentDocument!, 'fonts', { value: fonts });
+      }
+      return added;
+    });
+    return frame;
+  };
+
+  it('prints the PDF from a hidden frame with search and keyword highlights', async () => {
     vi.useRealTimers();
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-10-22T10:00:00'));
-    let html = '';
-    const win: any = { closed: false, document: { write: (h: string) => { html += h; }, close: vi.fn() }, focus: vi.fn(), print: vi.fn(), close: vi.fn() };
-    vi.spyOn(window, 'open').mockReturnValue(win);
+    const frame = watchPrintFrame();
     const { open, pick, container } = setup({ searchTerm: 'কথা' });
     open(); pick('PDF Document');
     expect(container.textContent).not.toContain('PDF Document');
     expect(m.toast.info).toHaveBeenCalledWith(bn('PDF প্রস্তুত করা হচ্ছে...'), { id: 'pdf-export-toast', duration: 1500 });
-    expect(html).toMatchSnapshot();
-    expect(win.print).not.toHaveBeenCalled();
-    await act(async () => { vi.advanceTimersByTime(50); });
-    expect(win.print).toHaveBeenCalled();
+    expect(frame.html).toMatchSnapshot();
+    expect(frame.el!.style.width).toBe('0px');
+    expect(frame.print).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(50); });
+    expect(frame.print).toHaveBeenCalled();
     expect(m.toast.success).toHaveBeenCalledWith(bn('PDF প্রস্তুত হয়েছে!'), { id: 'pdf-export-toast', duration: 1200 });
-    win.onafterprint();
-    expect(win.close).toHaveBeenCalled();
+    frame.el!.contentWindow!.onafterprint!(new Event('afterprint'));
+    await act(async () => { await vi.advanceTimersByTimeAsync(100); });
+    expect(frame.el!.isConnected).toBe(false);
   });
 
   it('waits for fonts (max 300ms) before printing', async () => {
     vi.useRealTimers();
     vi.useFakeTimers();
-    const win: any = { closed: false, document: { write: vi.fn(), close: vi.fn(), fonts: { ready: new Promise(() => {}) } }, focus: vi.fn(), print: vi.fn() };
-    vi.spyOn(window, 'open').mockReturnValue(win);
+    const frame = watchPrintFrame({ ready: new Promise(() => {}) });
     const { open, pick } = setup();
     open(); pick('PDF Document');
     await act(async () => { await vi.advanceTimersByTimeAsync(349); });
-    expect(win.print).not.toHaveBeenCalled();
+    expect(frame.print).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-    expect(win.print).toHaveBeenCalled();
-  });
-
-  it('reports blocked popups', () => {
-    vi.spyOn(window, 'open').mockReturnValue(null);
-    const { open, pick, addToast } = setup();
-    open(); pick('PDF Document');
-    expect(addToast).toHaveBeenCalledWith(bn('পপ-আপ ব্লক করা আছে। দয়া করে পপ-আপ অ্যালাউ করুন।'), 'error');
+    expect(frame.print).toHaveBeenCalled();
   });
 
   it('reports download errors and closes on outside click', () => {

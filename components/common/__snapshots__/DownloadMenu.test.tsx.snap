@@ -36,7 +36,7 @@ exports[`DownloadMenu exports > exports Word with and without keyword highlight 
 
 exports[`DownloadMenu exports > exports Word with and without keyword highlight > plain 1`] = `"<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Transcript</title><style>body { font-family: "Hind Siliguri", sans-serif; }</style></head><body>[00:05] <strong style="color: #4338ca;">Speaker 1:</strong> হ্যালো, সীমান্ত এলাকায় আজ মাদক উদ্ধার হয়েছে। <br>[০১:০৭] <strong style="color: #4338ca;">বক্তা ২:</strong> জি, Border Guard দল কাজ করছে <br>(00:59) এবং <br>[1:02:03] পরে আবার। <br>[00:58] <strong style="color: #4338ca;">Speaker 1:</strong> শেষ কথা।</body></html>"`;
 
-exports[`DownloadMenu exports > writes a print window for PDF with search and keyword highlights 1`] = `
+exports[`DownloadMenu exports > prints the PDF from a hidden frame with search and keyword highlights 1`] = `
 "
         <!DOCTYPE html>
         <html>

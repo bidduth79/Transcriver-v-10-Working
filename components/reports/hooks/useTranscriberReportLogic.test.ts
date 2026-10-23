@@ -66,21 +66,27 @@ describe('useTranscriberReportLogic', () => {
     expect(await blob!.text()).toMatchSnapshot();
   });
 
-  it('prints the report page HTML, or alerts when popups are blocked', async () => {
+  it('prints the report page HTML from a hidden frame (no popup)', async () => {
     const { result } = await setup();
     act(() => result.current.handleDownloadPDF());
     const el = document.createElement('div');
     el.id = 'report-content'; el.innerHTML = '<p>রিপোর্ট</p>';
     document.body.appendChild(el);
     let html = '';
-    const win: any = { document: { write: (s: string) => { html += s; }, close: vi.fn() } };
-    vi.spyOn(window, 'open').mockReturnValueOnce(win).mockReturnValueOnce(null);
+    const open = vi.spyOn(window, 'open');
+    const append = document.body.appendChild.bind(document.body);
+    vi.spyOn(document.body, 'appendChild').mockImplementation((node: any) => {
+      const added = append(node);
+      if (node instanceof HTMLIFrameElement) vi.spyOn(node.contentDocument!, 'write').mockImplementation((h: string) => { html += h; });
+      return added;
+    });
     act(() => result.current.handleDownloadPDF());
+    const frame = document.querySelector('iframe[title="print"]');
+    expect(frame).not.toBeNull();
+    expect(open).not.toHaveBeenCalled();
     expect(html).toMatchSnapshot();
-    expect(win.document.close).toHaveBeenCalled();
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-    act(() => result.current.handleDownloadPDF());
-    expect(alertSpy.mock.calls[0][0].normalize('NFC')).toBe('পপ-আপ ব্লক করা আছে। দয়া করে ব্রাউজারের পপ-আপ অ্যালাউ করুন।'.normalize('NFC'));
+    expect(html).not.toContain('<script>');
+    frame!.remove();
     el.remove();
   });
 });

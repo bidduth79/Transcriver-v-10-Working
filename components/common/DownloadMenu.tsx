@@ -51,10 +51,7 @@ export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMat
 
   const exportPDF = () => {
     setIsOpen(false);
-    printTranscriptAsPdf(
-      { transcript, fileName: baseFileName(fileName), searchTerm, keywordRegex: keywordRegex() },
-      addToast
-    );
+    printTranscriptAsPdf({ transcript, fileName: baseFileName(fileName), searchTerm, keywordRegex: keywordRegex() });
   };
 
   return (

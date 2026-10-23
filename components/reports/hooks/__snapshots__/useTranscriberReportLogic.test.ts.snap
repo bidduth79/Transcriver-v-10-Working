@@ -43,7 +43,7 @@ exports[`useTranscriberReportLogic > exports a CSV with escaped cells and totals
 "
 `;
 
-exports[`useTranscriberReportLogic > prints the report page HTML, or alerts when popups are blocked 1`] = `
+exports[`useTranscriberReportLogic > prints the report page HTML from a hidden frame (no popup) 1`] = `
 "
       <!DOCTYPE html>
       <html>
@@ -72,10 +72,6 @@ exports[`useTranscriberReportLogic > prints the report page HTML, or alerts when
           <div style="display: flex; flex-direction: column; gap: 2rem;">
             <p>রিপোর্ট</p>
           </div>
-          <script>
-            document.fonts.ready.then(() => { setTimeout(() => { window.print(); }, 500); });
-            window.onafterprint = () => { window.close(); };
-          </script>
         </body>
       </html>
     "
