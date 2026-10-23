@@ -11,7 +11,7 @@ vi.mock('./firebase', () => ({ get db() { return m.fbConfigured.value ? {} : nul
 vi.mock('firebase/firestore', () => ({
   collection: (_d: any, n: string) => n, doc: (_d: any, s: string, id: string) => `${s}/${id}`,
   getDocs: vi.fn(async () => ({ docs: m.fb.map(d => ({ id: d.id, data: () => d })) })),
-  setDoc: m.setDoc, deleteDoc: m.deleteDoc,
+  setDoc: m.setDoc, deleteDoc: m.deleteDoc, serverTimestamp: () => 'SERVER_TIME',
 }));
 vi.mock('../utils/config', () => ({ getApiUrl: (p: string) => `http://local/${p}`, isLocalServerEnabled: () => m.local.value }));
 vi.mock('./supabase', () => ({
@@ -109,7 +109,7 @@ describe('saveDataDual / deleteDataDual', () => {
     await SE.saveDataDual('studio_history', { id: 'a', t: 1 }, true);
     expect(fetchMock).toHaveBeenCalledWith('http://local/api.php?action=save&store=studio_history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"id":"a","t":1}' });
     expect(m.addToQueue).toHaveBeenCalledWith('local', 'save', 'studio_history', 'a', { id: 'a', t: 1 });
-    expect(m.setDoc).toHaveBeenCalledWith('studio_history/a', { id: 'a', t: 1 });
+    expect(m.setDoc).toHaveBeenCalledWith('studio_history/a', { id: 'a', t: 1, _syncedAt: 'SERVER_TIME' });
     expect(m.upsert).toHaveBeenCalledWith({ id: 'a', data: { id: 'a', t: 1 } });
     expect(m.enqueueWrite).not.toHaveBeenCalled();
 

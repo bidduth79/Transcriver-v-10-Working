@@ -2,6 +2,8 @@ import { db, authPromise, isFirebaseConfigured } from '../firebase';
 import { FIREBASE_SYNCED_STORES, STORES } from '../../constants/storeNames';
 import { runtime, syncStats, notifyListeners, isHeavyProcessingActive, sleep } from './syncState';
 import { pullStoreInPages } from './pullStorePages';
+import { SYNC_STAMP_FIELD } from './syncStamp';
+import { startOfYesterday, getPullCheckpoint, savePullCheckpoint, countCloudDocs } from './pullWindow';
 
 /**
  * কোনোরকম চাপ বা ফ্রিজ ছাড়াই ফায়ারবেইজ থেকে নতুন ডাটা ছোট ছোট চ্যাংকে (Chunk) লোকাল IndexedDB-তে নিয়ে আসে।
@@ -53,17 +55,19 @@ export const scheduleGentleFirebasePull = (
 
         const { initDB } = await import('../db');
         const idb = await initDB();
+        const cloudDb = db;
+        const pullStartedAt = Date.now();
+        const shouldStop = () => !navigator.onLine || (!forceManual && isHeavyProcessingActive());
 
         for (const storeName of FIREBASE_SYNCED_STORES) {
-          if (!navigator.onLine || (!forceManual && isHeavyProcessingActive())) break;
+          if (shouldStop()) break;
 
           try {
             const isHistory = storeName === STORES.HISTORY;
-            const { cloudCount, merged } = await pullStoreInPages({
-              db, idb, storeName,
-              shouldStop: () => !navigator.onLine || (!forceManual && isHeavyProcessingActive()),
+            const pull = (since?: { field: string; min: string | Date }) => pullStoreInPages({
+              db: cloudDb, idb, storeName, shouldStop, since,
               onCloudCount: (count) => {
-                if (!isHistory) return;
+                if (!isHistory || !forceManual) return;
                 cloudHistoryTotal = count;
                 syncStats.totalCloudHistoryDocs = cloudHistoryTotal;
                 notifyListeners();
@@ -75,6 +79,22 @@ export const scheduleGentleFirebasePull = (
               },
             });
 
+            // App start: only documents saved since the last pull, plus every transcript dated today or
+            // yesterday. A manual sync from Settings still compares the whole collection.
+            const parts = [await pull(forceManual ? undefined : { field: SYNC_STAMP_FIELD, min: getPullCheckpoint(storeName) })];
+            if (isHistory && !forceManual && !shouldStop()) {
+              parts.push(await pull({ field: 'date', min: startOfYesterday().toISOString() }));
+            }
+            if (parts.every(part => part.completed)) savePullCheckpoint(storeName, pullStartedAt);
+
+            if (isHistory && !forceManual) {
+              cloudHistoryTotal = await countCloudDocs(cloudDb, storeName);
+              syncStats.totalCloudHistoryDocs = cloudHistoryTotal;
+              notifyListeners();
+            }
+
+            const cloudCount = parts.reduce((sum, part) => sum + part.cloudCount, 0);
+            const merged = parts.reduce((sum, part) => sum + part.merged, 0);
             if (cloudCount === 0) {
               await sleep(600);
               continue;

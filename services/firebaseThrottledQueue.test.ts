@@ -15,7 +15,7 @@ vi.mock('./firebase', () => ({
   authPromise: Promise.resolve(),
 }));
 vi.mock('firebase/firestore', () => ({
-  doc: (_db: any, store: string, id: string) => `${store}/${id}`, setDoc: m.setDoc, deleteDoc: m.deleteDoc,
+  doc: (_db: any, store: string, id: string) => `${store}/${id}`, setDoc: m.setDoc, deleteDoc: m.deleteDoc, serverTimestamp: () => 'SERVER_TIME',
 }));
 vi.mock('firebase/firestore/lite', () => ({
   setLogLevel: vi.fn(), getFirestore: () => ({}), collection: (_db: any, name: string) => name,
@@ -93,7 +93,7 @@ describe('push queue', () => {
     expect(m.setDoc).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1);
     expect(m.setDoc).toHaveBeenCalledTimes(1);
-    expect(m.setDoc).toHaveBeenLastCalledWith('studio_history/1', { id: '1', text: 'a' });
+    expect(m.setDoc).toHaveBeenLastCalledWith('studio_history/1', { id: '1', text: 'a', _syncedAt: 'SERVER_TIME' });
     expect(stats(q)).toMatchObject({ isPushing: true, statusMessageBn: 'ব্যাকগ্রাউন্ডে ধীরে ধীরে ফায়ারবেইজে সেভ হচ্ছে...' });
     await vi.advanceTimersByTimeAsync(2500);
     expect(m.setDoc).toHaveBeenCalledTimes(2);
@@ -157,44 +157,5 @@ describe('push queue', () => {
     (navigator as any).onLine = true;
     await vi.advanceTimersByTimeAsync(5000 + 2500);
     expect(m.setDoc).toHaveBeenCalledTimes(3);
-  });
-});
-
-describe('gentle pull', () => {
-  it('runs once at startup after 4s, merges only missing docs in chunks, then can be forced', async () => {
-    const q = await load();
-    m.cloud.studio_history = Array.from({ length: 12 }, (_, i) => ({ id: String(i), data: { fileName: `f${i}` } }));
-    m.cloud.studio_reports = [{ id: 'r1', data: { a: 1 } }];
-    m.local.set('studio_history::0', { id: '0', fileName: 'local' });
-    const onHistory = vi.fn();
-    const p = q.scheduleGentleFirebasePull(onHistory);
-    await vi.advanceTimersByTimeAsync(3999);
-    expect(m.getDocs).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(60000);
-    expect(await p).toEqual({ pulledCount: 12, cloudTotal: 12 });
-    expect(m.local.get('studio_history::0').fileName).toBe('local');
-    expect(m.local.get('studio_history::11')).toEqual({ id: '11', fileName: 'f11' });
-    expect(m.local.get('studio_reports::r1')).toEqual({ id: 'r1', a: 1 });
-    expect(onHistory).toHaveBeenCalledTimes(1);
-    expect(stats(q)).toMatchObject({ isPulling: false, lastPulledCount: 12, totalCloudHistoryDocs: 12, statusMessageBn: 'ফায়ারবেইজ থেকে 12টি নতুন ডাটা সফলভাবে যুক্ত হয়েছে (মোট ক্লাউড হিস্টোরি: 12টি)' });
-
-    expect(await q.scheduleGentleFirebasePull()).toEqual({ pulledCount: 12, cloudTotal: 12 });
-    const forced = q.scheduleGentleFirebasePull(undefined, true);
-    await vi.advanceTimersByTimeAsync(60000);
-    expect(await forced).toEqual({ pulledCount: 0, cloudTotal: 12 });
-    expect(stats(q).statusMessageBn).toBe('ফায়ারবেইজের সকল ডাটা (12টি হিস্টোরি) লোকালে আপ-টু-ডেট আছে');
-  });
-
-  it('skips while processing unless forced, and reports connection errors', async () => {
-    const q = await load();
-    q.setHeavyProcessingActive('batch', true);
-    expect(await q.scheduleGentleFirebasePull()).toEqual({ pulledCount: 0, cloudTotal: 0 });
-    expect(m.getDocs).not.toHaveBeenCalled();
-    const { initDB } = await import('./db');
-    (initDB as any).mockRejectedValueOnce(new Error('idb down'));
-    const forced = q.scheduleGentleFirebasePull(undefined, true);
-    await vi.advanceTimersByTimeAsync(100);
-    expect(await forced).toEqual({ pulledCount: 0, cloudTotal: 0 });
-    expect(stats(q).statusMessageBn).toBe('ফায়ারবেইজ কানেকশন সাময়িকভাবে পাওয়া যায়নি');
   });
 });

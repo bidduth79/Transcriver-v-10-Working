@@ -2,6 +2,7 @@ import { db, authPromise, isFirebaseConfigured } from '../firebase';
 import { collection, getDocs } from "firebase/firestore";
 import { getApiUrl, isLocalServerEnabled } from '../../utils/config';
 import { supabase, isSupabaseConfigured } from '../supabase';
+import { withoutSyncStamp } from '../firebaseSync/syncStamp';
 
 // Readers for each storage backend. Every reader resolves to [] on failure so one source never blocks the others.
 
@@ -71,7 +72,7 @@ export const fetchFromFirebase = async (storeName: string): Promise<any[]> => {
   try {
     await authPromise;
     const querySnapshot = await getDocs(collection(db, storeName));
-    return querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    return querySnapshot.docs.map(d => ({ id: d.id, ...withoutSyncStamp(d.data()) }));
   } catch (e) {
     return [];
   }

@@ -6,6 +6,7 @@ import { addToQueue } from './syncQueue';
 import { FIREBASE_SYNCED_STORES } from '../constants/storeNames';
 import { enqueueFirebaseWrite, enqueueFirebaseDelete } from './firebaseThrottledQueue';
 import { fetchFromPrimaryIdb, fetchFromLocalApi, fetchFromFirebase, fetchFromSupabase } from './sync/syncSources';
+import { withSyncStamp } from './firebaseSync/syncStamp';
 
 // ============================================================================
 // 🌐 ক্লাউড ও জেম্প সার্ভার ব্যাকগ্রাউন্ড অটো-সেভ নিয়ন্ত্রণ (Auto Cloud Save Toggles)
@@ -81,7 +82,7 @@ export const saveDataDual = async (storeName: string, data: any, forceAll = fals
       if (forceAll) {
         // Immediate sync if manual master sync is running from Settings
         promises.push(
-          authPromise.then(() => setDoc(doc(db!, storeName, id), payload))
+          authPromise.then(() => setDoc(doc(db!, storeName, id), withSyncStamp(payload)))
             .catch(e => console.warn("Firebase immediate sync warning:", e.message))
         );
       } else if (AUTO_SYNC_FIREBASE_ENABLED) {

@@ -4,6 +4,7 @@ import {
   queueMap, activeProcessingLocks, runtime, syncStats, notifyListeners, isHeavyProcessingActive,
   sleep, IDLE_MESSAGE, THROTTLE_DELAY_MS, INITIAL_IDLE_WAIT_MS, POST_PROCESSING_COOL_DOWN_MS,
 } from './syncState';
+import { withSyncStamp } from './syncStamp';
 
 /**
  * ট্রান্সক্রিপশন বা ব্যাচ প্রসেসিং শুরু/শেষ হলে এই লক কল করা হয়।
@@ -122,7 +123,7 @@ const startWorker = async () => {
             if (localRecord) {
               const cleanPayload = sanitizeForFirestore(localRecord);
               localRecord = null; // Free reference immediately
-              await setDoc(doc(db, item.storeName, item.id), cleanPayload);
+              await setDoc(doc(db, item.storeName, item.id), withSyncStamp(cleanPayload));
               console.debug(`[Firebase Gentle Sync] Sent document ${item.storeName}/${item.id}`);
             }
           } else if (item.action === 'delete') {
