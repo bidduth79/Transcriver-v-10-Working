@@ -10,7 +10,8 @@ const LOWER_BGB_KEYWORDS = BGB_KEYWORDS.map(kw => kw.toLowerCase());
 const POSITIVE_WORDS = ['সাহসী', 'বীরত্ব', 'ধন্যবাদ', 'প্রশংসা', 'পাহারায়', 'নিরাপত্তা', 'সতর্ক', 'শক্তিশালী', 'গর্ব'];
 const CRITICAL_WORDS = ['ব্যর্থ', 'অসহায়', 'হত্যা', 'গুলি', 'দুর্নীতি', 'নিষ্ক্রিয়', 'দায়িত্বজ্ঞানহীন', 'অভিযোগ', 'বর্বরোচিত', 'অন্যায়'];
 
-const SPEAKER_BOLD_REGEX = /^(\[[0-9০-৯]{1,2}:[0-9০-৯]{2}(?::[0-9০-৯]{2})?\])?\s*\*\*([^*]+)\*\*:\s*(.*)$/;
+// Speaker label in bold, with the colon inside (**Speaker 1:**, the transcription format) or outside (**Speaker 1**:)
+const SPEAKER_BOLD_REGEX = /^(\[[0-9০-৯]{1,2}:[0-9০-৯]{2}(?::[0-9০-৯]{2})?\])?\s*\*\*([^*]+?)\s*(?::\*\*|\*\*:)\s*(.*)$/;
 const SPEAKER_PLAIN_REGEX = /^(\[[0-9০-৯]{1,2}:[0-9০-৯]{2}(?::[0-9০-৯]{2})?\])?\s*([A-Za-z0-9\u0980-\u09FF\s._-]+):\s*(.*)$/;
 
 export interface SpeakerScanRecord { id: string; fileName: string; date: string; transcript: string }
