@@ -17,6 +17,8 @@ vi.mock('./firebase', () => ({
 vi.mock('firebase/firestore', () => ({
   collection: (_db: any, name: string) => name,
   doc: (_db: any, store: string, id: string) => `${store}/${id}`,
+  query: (name: string, ...c: any[]) => Object.assign({ name }, ...c),
+  orderBy: () => ({}), documentId: () => '__name__', startAfter: (d: any) => ({ after: d.id }), limit: (n: number) => ({ lim: n }),
   getDocs: m.getDocs,
   setDoc: m.setDoc,
   deleteDoc: m.deleteDoc,
@@ -46,10 +48,11 @@ vi.mock('./db', () => ({
 const load = async () => import('./firebaseThrottledQueue');
 // Compare Bengali status text after NFC normalization (source and test may encode "য়" differently)
 const stats = (q: any) => { const s = q.getFirebaseSyncStats(); return { ...s, statusMessageBn: s.statusMessageBn.normalize('NFC') }; };
-const snap = (docs: { id: string; data: any }[]) => ({
-  size: docs.length, empty: docs.length === 0,
-  forEach: (fn: any) => docs.forEach(d => fn({ id: d.id, data: () => d.data })),
-});
+// One page of a collection, ordered by id like Firestore's documentId()
+const page = (q: any) => (m.cloud[q.name] || []).filter(d => q.after === undefined || d.id > q.after)
+  .sort((a, b) => (a.id < b.id ? -1 : 1)).slice(0, q.lim)
+  .map(d => ({ id: d.id, data: () => d.data }));
+const snap = (docs: any[]) => ({ size: docs.length, empty: docs.length === 0, docs, forEach: (fn: any) => docs.forEach(fn) });
 
 beforeEach(() => {
   vi.resetModules();
@@ -58,7 +61,7 @@ beforeEach(() => {
   m.configured.value = true;
   m.local.clear();
   m.cloud = {};
-  m.getDocs.mockImplementation(async (name: string) => snap(m.cloud[name] || []));
+  m.getDocs.mockImplementation(async (q: any) => snap(page(q)));
   vi.stubGlobal('navigator', { onLine: true });
 });
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); });

@@ -1,34 +1,7 @@
 import { db, authPromise, isFirebaseConfigured } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
 import { FIREBASE_SYNCED_STORES, STORES } from '../../constants/storeNames';
 import { runtime, syncStats, notifyListeners, isHeavyProcessingActive, sleep } from './syncState';
-
-// লোকাল ডাটাবেজে আগে থেকে কোন কোন ID আছে তা হালকাভাবে চেক করুন
-const getLocalKeys = (idb: IDBDatabase, storeName: string) => new Promise<Set<string>>((res) => {
-  try {
-    const tx = idb.transaction([storeName], 'readonly');
-    const st = tx.objectStore(storeName);
-    const req = st.getAllKeys();
-    req.onsuccess = () => {
-      res(new Set((req.result || []).map(k => String(k))));
-    };
-    req.onerror = () => res(new Set());
-  } catch (e) {
-    res(new Set());
-  }
-});
-
-const putChunk = (idb: IDBDatabase, storeName: string, chunk: any[]) => new Promise<void>((res) => {
-  try {
-    const tx = idb.transaction([storeName], 'readwrite');
-    const st = tx.objectStore(storeName);
-    chunk.forEach(item => st.put(item));
-    tx.oncomplete = () => res();
-    tx.onerror = () => res();
-  } catch (e) {
-    res();
-  }
-});
+import { pullStoreInPages } from './pullStorePages';
 
 /**
  * কোনোরকম চাপ বা ফ্রিজ ছাড়াই ফায়ারবেইজ থেকে নতুন ডাটা ছোট ছোট চ্যাংকে (Chunk) লোকাল IndexedDB-তে নিয়ে আসে।
@@ -85,47 +58,30 @@ export const scheduleGentleFirebasePull = (
           if (!navigator.onLine || (!forceManual && isHeavyProcessingActive())) break;
 
           try {
-            const snap = await getDocs(collection(db, storeName));
-            if (storeName === STORES.HISTORY) {
-              cloudHistoryTotal = snap.size;
-              syncStats.totalCloudHistoryDocs = cloudHistoryTotal;
-              notifyListeners();
-            }
+            const isHistory = storeName === STORES.HISTORY;
+            const { cloudCount, merged } = await pullStoreInPages({
+              db, idb, storeName,
+              shouldStop: () => !navigator.onLine || (!forceManual && isHeavyProcessingActive()),
+              onCloudCount: (count) => {
+                if (!isHistory) return;
+                cloudHistoryTotal = count;
+                syncStats.totalCloudHistoryDocs = cloudHistoryTotal;
+                notifyListeners();
+              },
+              onMerged: (count) => {
+                totalNewItemsMerged += count;
+                syncStats.lastPulledCount = totalNewItemsMerged;
+                notifyListeners();
+              },
+            });
 
-            if (snap.empty) {
+            if (cloudCount === 0) {
               await sleep(600);
               continue;
             }
 
-            const existingKeys = await getLocalKeys(idb, storeName);
-
-            // শুধুমাত্র যে ডকুমেন্টগুলো লোকালে নেই সেগুলো আলাদা করুন (যাতে অযথা ডুপ্লিকেট রাইট না হয়)
-            const missingDocs: any[] = [];
-            snap.forEach((docSnap) => {
-              const docId = String(docSnap.id);
-              if (!existingKeys.has(docId)) {
-                missingDocs.push({ id: docId, ...docSnap.data() });
-              }
-            });
-
-            if (missingDocs.length > 0) {
-              syncStats.statusMessageBn = `${storeName} থেকে ${missingDocs.length}টি নতুন ডাটা ধীরে ধীরে যুক্ত হচ্ছে...`;
-              notifyListeners();
-
-              // ১০টি করে ছোট ব্যাচে সেভ করুন এবং প্রতি ব্যাচের মাঝে ২৫০ms বিরতি দিন (Zero UI Pressure)
-              const CHUNK_SIZE = 10;
-              for (let i = 0; i < missingDocs.length; i += CHUNK_SIZE) {
-                const chunk = missingDocs.slice(i, i + CHUNK_SIZE);
-                await putChunk(idb, storeName, chunk);
-                totalNewItemsMerged += chunk.length;
-                syncStats.lastPulledCount = totalNewItemsMerged;
-                notifyListeners();
-                await sleep(250);
-              }
-
-              if (storeName === STORES.HISTORY && onHistoryUpdated) {
-                onHistoryUpdated();
-              }
+            if (merged > 0 && isHistory && onHistoryUpdated) {
+              onHistoryUpdated();
             }
           } catch (storeErr: any) {
             console.warn(`[Firebase Gentle Pull] Notice on ${storeName}:`, storeErr?.message || storeErr);
