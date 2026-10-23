@@ -5,6 +5,7 @@ import { getFallbackProviders, setActiveApiKey } from '../../services/ApiKeyMana
 import { detectAudioMimeType, convertAudioToWav, blobToBase64 } from './transcriptionUtils';
 import { isKeyOrProjectBlockedError } from './transcriptionErrors';
 import { buildHighSensitivityRequest, releaseRequestAudio } from './geminiRequest';
+import { createGeminiClient } from '../../services/apiKeys/geminiClient';
 
 type Lang = 'bn' | 'en';
 type Toast = (msg: string, type: 'success' | 'error' | 'info' | 'warning') => void;
@@ -62,7 +63,7 @@ const generateWaitingOnRateLimit = async (ai: GoogleGenAI, request: any, lang: L
 
 // Calls Gemini; on blocked/quota errors tries fallback keys, and drops thinkingConfig if a model rejects it.
 export const generateWithRecovery = async ({ provider, buildRequest, lang, setStage, addToast }: RecoveryOptions) => {
-  let ai = new GoogleGenAI({ apiKey: provider.key });
+  let ai = createGeminiClient(provider.key);
   let apiKey = provider.key;
   let request: any = null;
   let source = provider.source;
@@ -85,7 +86,7 @@ export const generateWithRecovery = async ({ provider, buildRequest, lang, setSt
           setStage(lang === 'bn'
             ? `বিকল্প এপিআই কি (${fb.source}) দিয়ে পুনরায় চেষ্টা করা হচ্ছে...`
             : `Retrying with alternate API Key (${fb.source})...`);
-          const fbAi = new GoogleGenAI({ apiKey: fb.key });
+          const fbAi = createGeminiClient(fb.key);
           releaseRequestAudio(request);
           request = await buildRequest(fbAi, fb.key);
           response = await fbAi.models.generateContent(request);

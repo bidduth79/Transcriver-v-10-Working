@@ -2,17 +2,18 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, act } from '@testing-library/react';
 
-const m = vi.hoisted(() => ({ logs: [] as any[], model: 'gemini-2.5-flash', getLogs: vi.fn() }));
+const m = vi.hoisted(() => ({ logs: [] as any[], model: 'gemini-3.8-flash', getLogs: vi.fn() }));
 vi.mock('../../services/ApiKeyManager', () => ({
   getApiCallLogs: m.getLogs,
   getActiveModel: () => m.model,
+  getActiveProvider: async () => ({ key: 'KEY-ABCD' }),
 }));
 
 import { QuotaMonitor } from './QuotaMonitor';
 import { useAppStore } from '@/hooks/useAppStore';
 
 const NOW = new Date('2026-10-22T12:00:30Z').getTime();
-const at = (msAgo: number, tokens?: number, id = String(msAgo)) => ({ id, timestamp: new Date(NOW - msAgo).toISOString(), model: 'm', status: 'success', tokens });
+const at = (msAgo: number, tokens?: number, id = String(msAgo)) => ({ id, timestamp: new Date(NOW - msAgo).toISOString(), model: m.model, status: 'success', tokens });
 const MIN = 60000, DAY = 86400000;
 
 const busyLogs = [
@@ -31,7 +32,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
   vi.setSystemTime(NOW);
-  m.model = 'gemini-2.5-flash';
+  m.model = 'gemini-3.8-flash';
   m.logs = [];
   m.getLogs.mockImplementation(async () => m.logs);
 });
@@ -48,7 +49,7 @@ describe('QuotaMonitor markup', () => {
   });
 
   it('renders pro model at/over limits (dark)', async () => {
-    m.model = 'gemini-2.5-pro';
+    m.model = 'gemini-3.1-pro-preview';
     m.logs = [at(1000, 20000), at(2000, 20000), at(3000), ...Array.from({ length: 60 }, (_, i) => at(3600000 + i * 1000, 10))];
     expect((await renderAt()).container.innerHTML).toMatchSnapshot();
   });
@@ -80,7 +81,8 @@ describe('QuotaMonitor refresh', () => {
     m.model = 'gemini-3.1-pro-preview';
     await act(async () => { useAppStore.getState().triggerActiveApiKeyChanged(); });
     expect(container.textContent).toContain('gemini-3.1-pro-preview');
-    expect(container.textContent).toContain('2 / 2');
+    // Requests are counted per model, so the other model's requests do not use this quota
+    expect(container.textContent).toContain('0 / 2');
     await act(async () => { useAppStore.getState().triggerApiCallLogged(); });
     expect(m.getLogs.mock.calls.length).toBe(base + 4);
   });

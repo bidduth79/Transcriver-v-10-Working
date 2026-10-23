@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GenerateContentResponse } from "@google/genai";
 import { getActiveProvider, incrementTotalCalls } from '../../../services/ApiKeyManager';
 import { logSystemActivity } from '../../../services/SystemLogger';
+import { createGeminiClient } from '../../../services/apiKeys/geminiClient';
 
 export function useSummaryAnalysis(
   searchTerm: string, 
@@ -26,7 +27,7 @@ export function useSummaryAnalysis(
           throw new Error("No Active API Key Selected. Please select one in Settings.");
       }
 
-      const ai = new GoogleGenAI({ apiKey: provider.key });
+      const ai = createGeminiClient(provider.key);
       const prompt = `Analyze the context of the word/phrase "${searchTerm}" in this transcript.
       Task:
       1. Determine if the discussion about "${searchTerm}" is Positive, Negative, or Neutral.

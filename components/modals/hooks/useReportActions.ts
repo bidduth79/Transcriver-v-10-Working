@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GenerateContentResponse } from "@google/genai";
 import { addToStore, getAllFromStore, deleteFromStore, STORES } from '../../../services/db';
 import { getActiveProvider, incrementTotalCalls } from '../../../services/ApiKeyManager';
 import { logSystemActivity } from '../../../services/SystemLogger';
+import { createGeminiClient } from '../../../services/apiKeys/geminiClient';
 
 export interface ReportItem {
   id: string;
@@ -46,7 +47,7 @@ export const useReportActions = (
           throw new Error("No Active API Key Selected.");
       }
 
-      const ai = new GoogleGenAI({ apiKey: provider.key });
+      const ai = createGeminiClient(provider.key);
       const prompt = `Analyze these snippets about "${searchTerm}".
       Task:
       1. Provide a brief Bengali summary (strictly under 5 words, e.g., "রাজনৈতিক আলোচনা" or "অর্থনৈতিক বিষয়").

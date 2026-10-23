@@ -1,11 +1,11 @@
 import { useState, useCallback } from 'react';
 import { getActiveProvider, incrementTotalCalls } from '../services/ApiKeyManager';
-import { GoogleGenAI } from '@google/genai';
 import { SpeakerProfile, SpeakerCustomNote } from '../types/speaker';
 import { scanDatabaseForSpeaker, getCustomNote, saveCustomNote } from '../services/speakerArchiveService';
 import { getCachedProfile, setCachedProfile } from './speakerProfileUtils';
 import { buildSpeakerProfilePrompt } from './speakerProfile/speakerProfilePrompt';
 import { generateProfileResponse, parseProfileJson, enrichProfileFromWiki, getSpeakerProfileErrorMessage } from './speakerProfile/fetchSpeakerProfile';
+import { createGeminiClient } from '../services/apiKeys/geminiClient';
 
 export const useSpeakerProfile = (transcriptContext: string) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -58,7 +58,7 @@ export const useSpeakerProfile = (transcriptContext: string) => {
       const apiKey = provider?.key;
       if (!apiKey) throw new Error("এপিআই কি (API Key) কনফিগার করা নেই। Settings থেকে ঠিক করুন।");
 
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = createGeminiClient(apiKey);
       const { response, modelToUse } = await generateProfileResponse(ai, buildSpeakerProfilePrompt(name, transcriptContext), provider?.model);
 
       await incrementTotalCalls('Speaker Profile', modelToUse, provider.source);

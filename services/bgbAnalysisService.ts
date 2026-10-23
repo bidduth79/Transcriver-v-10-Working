@@ -1,7 +1,7 @@
-import { GoogleGenAI } from '@google/genai';
 import { BgbRemarkType, BgbAnalysisResult } from '../types/bgb';
 import { getActiveProvider } from './ApiKeyManager';
 import { DEFAULT_MODEL } from '../constants/aiModels';
+import { createGeminiClient } from './apiKeys/geminiClient';
 
 export const analyzeTranscriptForBgb = async (transcript: string, sensitiveMatches: string[]): Promise<BgbAnalysisResult | null> => {
   if (!transcript || sensitiveMatches.length === 0) {
@@ -16,7 +16,7 @@ export const analyzeTranscriptForBgb = async (transcript: string, sensitiveMatch
       throw new Error('API Key missing');
     }
 
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = createGeminiClient(apiKey);
     
     const prompt = `
       You are an intelligent transcript analyzer. 

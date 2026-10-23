@@ -19,6 +19,7 @@ vi.mock('../hooks/useAppStore', () => ({
 }));
 
 import * as AKM from './ApiKeyManager';
+import { logApiCall } from './apiKeys/apiCallStats';
 
 const key = (id: string, k: string, label: string, addedAt: string) => ({ id, key: k, label, addedAt });
 
@@ -134,21 +135,27 @@ describe('key store', () => {
 });
 
 describe('call stats', () => {
-  it('counts calls and keeps a capped log', async () => {
+  it('counts finished features without logging them as requests', async () => {
     expect(await AKM.getTotalCalls()).toBe(0);
-    expect(await AKM.incrementTotalCalls('Transcription', 'gemini-2.5-flash', 'Primary', 12)).toBe(1);
+    expect(await AKM.incrementTotalCalls('Transcription', 'gemini-3.8-flash', 'Primary', 12)).toBe(1);
     expect(await AKM.getTotalCalls()).toBe(1);
-    const logs = await AKM.getApiCallLogs();
-    expect(logs).toHaveLength(1);
-    expect(logs[0]).toMatchObject({ model: 'gemini-2.5-flash', status: 'success', tokens: 12 });
+    expect(await AKM.getApiCallLogs()).toEqual([]);
     expect(m.triggerApiCallLogged).toHaveBeenCalledTimes(1);
+  });
+
+  it('logs each request with a unique id and keeps the last 2000', async () => {
+    logApiCall({ status: 'success', model: 'gemini-3.8-flash', keyTail: 'AAAA', promptTokens: 12, tokens: 20 });
+    logApiCall({ status: 'error', model: 'gemini-3.8-flash', rateLimited: true });
+    const logs = await AKM.getApiCallLogs();
+    expect(logs.map(l => [l.status, l.promptTokens, l.rateLimited])).toEqual([['success', 12, undefined], ['error', undefined, true]]);
+    expect(logs[0].id).not.toBe(logs[1].id);
 
     localStorage.setItem('api_call_logs', JSON.stringify(Array.from({ length: 2000 }, (_, i) => ({ id: String(i) }))));
-    await AKM.incrementTotalCalls();
+    logApiCall({ status: 'success', model: 'm' });
     const capped = await AKM.getApiCallLogs();
     expect(capped).toHaveLength(2000);
     expect(capped[0].id).toBe('1');
-    expect(capped[1999]).toMatchObject({ model: 'Unknown', tokens: 0 });
+    expect(capped[1999]).toMatchObject({ model: 'm', status: 'success' });
   });
 
   it('returns empty logs on corrupt storage', async () => {

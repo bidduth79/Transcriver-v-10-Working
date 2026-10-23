@@ -1,8 +1,7 @@
 import type { ApiCallLog } from '../../../services/ApiKeyManager';
+import { pacificDayIndex, pacificDayStart } from './pacificDay';
 
 const MINUTE_MS = 60000;
-const DAY_MS = 86400000;
-const DEFAULT_TOKENS_PER_CALL = 500;
 
 export interface QuotaLimits { rpm: number; tpm: number; rpd: number }
 
@@ -18,12 +17,22 @@ export const getModelLimits = (modelId: string): QuotaLimits => {
 export const formatQuotaNumber = (num: number) =>
   num >= 1000000 ? (num/1000000).toFixed(1).replace('.0','') + 'M' : num >= 1000 ? (num/1000).toFixed(1).replace('.0','') + 'K' : num;
 
-const tokensOf = (log: ApiCallLog) => log.tokens || DEFAULT_TOKENS_PER_CALL;
+// TPM limits count input tokens, as reported by Gemini for each request
+const tokensOf = (log: ApiCallLog) => log.promptTokens ?? log.tokens ?? 0;
 
-// Usage in the last minute (RPM/TPM) and last 24h (RPD), as counts and % of limit
+/**
+ * Requests that count against the quota of one model on one key: requests Gemini refused with 429
+ * are left out, and so are other keys' requests (quota is per project; keys are told apart by their
+ * last 4 characters). Older log entries without a key are kept.
+ */
+export const quotaLogsFor = (logs: ApiCallLog[], model: string, keyTail?: string) =>
+  logs.filter(l => !l.rateLimited && l.model === model && (!keyTail || !l.keyTail || l.keyTail === keyTail));
+
+// Usage in the last minute (RPM/TPM) and since midnight Pacific time (RPD), as counts and % of limit
 export const computeCurrentUsage = (logs: ApiCallLog[], limits: QuotaLimits, now: number) => {
   const rpmLogs = logs.filter(l => now - new Date(l.timestamp).getTime() < MINUTE_MS);
-  const rpdLogs = logs.filter(l => now - new Date(l.timestamp).getTime() < DAY_MS);
+  const dayStart = pacificDayStart(now);
+  const rpdLogs = logs.filter(l => new Date(l.timestamp).getTime() >= dayStart);
 
   const rpmCount = rpmLogs.length;
   const tpmCount = rpmLogs.reduce((acc, l) => acc + tokensOf(l), 0);
@@ -47,7 +56,7 @@ export const computePeakTrends = (logs: ApiCallLog[], now: number) => {
   logs.forEach(log => {
     const time = new Date(log.timestamp).getTime();
     const minKey = Math.floor(time / MINUTE_MS);
-    const dayKey = Math.floor(time / DAY_MS);
+    const dayKey = pacificDayIndex(time);
 
     if (!minuteGroups[minKey]) minuteGroups[minKey] = { requests: 0, tokens: 0 };
     minuteGroups[minKey].requests += 1;
@@ -77,7 +86,7 @@ export const computePeakTrends = (logs: ApiCallLog[], now: number) => {
     tpmHistory.push(group.tokens);
   }
 
-  const currentDay = Math.floor(now / DAY_MS);
+  const currentDay = pacificDayIndex(now);
   const rpdHistory: number[] = [];
   for (let i = 6; i >= 0; i--) {
     rpdHistory.push(dayGroups[currentDay - i] || 0);

@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import { useQuotaLogs } from './quota/useQuotaLogs';
-import { getModelLimits, computeCurrentUsage, computePeakTrends, formatQuotaNumber } from './quota/quotaStats';
+import { getModelLimits, computeCurrentUsage, computePeakTrends, formatQuotaNumber, quotaLogsFor } from './quota/quotaStats';
 import { QuotaMiniProgress } from './quota/QuotaMiniProgress';
 import { PeakUsageChart } from './quota/PeakUsageChart';
+import { DEFAULT_MODEL } from '../../constants/aiModels';
 
 interface QuotaMonitorProps {
   isDark: boolean;
@@ -11,9 +12,11 @@ interface QuotaMonitorProps {
 }
 
 export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang }) => {
-  const { logs, activeModel, tick } = useQuotaLogs();
+  const { logs: allLogs, activeModel, activeKeyTail, tick } = useQuotaLogs();
+  // Only the active model's requests on the active key count against this quota
+  const logs = useMemo(() => quotaLogsFor(allLogs, activeModel, activeKeyTail), [allLogs, activeModel, activeKeyTail]);
 
-  const limits = getModelLimits(activeModel || 'gemini-3.5-flash');
+  const limits = getModelLimits(activeModel || DEFAULT_MODEL);
   const usage = computeCurrentUsage(logs, limits, Date.now());
 
   // Recompute when logs change, and on every refresh tick so the time windows move forward

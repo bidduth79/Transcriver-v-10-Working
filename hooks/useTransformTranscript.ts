@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { GoogleGenAI } from "@google/genai";
 import { getActiveProvider, incrementTotalCalls } from '../services/ApiKeyManager';
+import { createGeminiClient } from '../services/apiKeys/geminiClient';
 
 export const useTransformTranscript = (
   transcript: string,
@@ -19,7 +19,7 @@ export const useTransformTranscript = (
         const provider = await getActiveProvider();
         if (!provider) throw new Error("No API Key");
         
-        const ai = new GoogleGenAI({ apiKey: provider.key });
+        const ai = createGeminiClient(provider.key);
         let prompt = "";
         
         if (type === 'translate') {
