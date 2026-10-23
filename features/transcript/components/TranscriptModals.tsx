@@ -5,6 +5,7 @@ import { FullscreenAnalysis } from '../../../components/modals/FullscreenAnalysi
 import { SpeakerProfileSidebar } from '../../../components/modals/SpeakerProfileSidebar';
 
 import { FileMeta, HistoryItem } from '../../../types';
+import { loadHistoryTranscript } from '../../../hooks/history/useHistoryTranscript';
 
 export interface TranscriptModalsProps {
   isSummaryOpen: boolean;
@@ -127,8 +128,9 @@ export const TranscriptModals: React.FC<TranscriptModalsProps> = ({
               onSpeakerClick={openProfile} 
             />
           )}
-          loadHistoryItem={(h) => {
-            setTranscript(h.transcript);
+          loadHistoryItem={async (h) => {
+            // List items are light; the saved transcript is read from IndexedDB
+            setTranscript(h.transcript ?? await loadHistoryTranscript(h.id));
             setStatus('completed');
             setIsAnalysisOpen(false);
             addToast(appLang === 'bn' ? "হিস্টোরি লোড হয়েছে" : "History loaded", 'info');

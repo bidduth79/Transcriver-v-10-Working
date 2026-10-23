@@ -1,5 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { useHistoryItemCard } from './hooks/useHistoryItemCard';
+import { useHistoryTranscript } from '../../hooks/history/useHistoryTranscript';
 import { getHistoryCardClass } from './utils/historyCardClass';
 import { HoldToDeleteProgress } from './components/HoldToDeleteProgress';
 import { SensitiveMatchBadge } from './components/SensitiveMatchBadge';
@@ -17,9 +18,11 @@ export const HistoryItemCard = memo(({
   isDuplicate,
   toggleFavorite
 }: any) => {
+  // Saved transcripts are read from IndexedDB only for cards that are rendered
+  const transcript = useHistoryTranscript(item.id, !!getSensitiveMatches, item.transcript);
   const sensitiveMatches = useMemo(
-    () => (getSensitiveMatches ? getSensitiveMatches(item.transcript) : []),
-    [item.transcript, getSensitiveMatches]
+    () => (getSensitiveMatches ? getSensitiveMatches(transcript) : []),
+    [transcript, getSensitiveMatches]
   );
   const isSensitive = sensitiveMatches && sensitiveMatches.length > 0;
   const isActive = activeHistoryId === item.id;

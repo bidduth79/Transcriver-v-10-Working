@@ -9,12 +9,13 @@ export const loadAudioFromStore = async (
   fileUrlRef?: string // Pass current fileUrl to revoke
 ) => {
   try {
-    const { getFromStore, addToStore } = await import('../services/db');
+    const { getFromStore } = await import('../services/db');
     
-    // Update history opened state if needed
-    if (!item.hasBeenOpened && item.transcript) { // only for history items, youtube items might not have hasBeenOpened
-      const updatedItem = { ...item, hasBeenOpened: true };
-      await addToStore('studio_history', updatedItem);
+    // Mark a history item as opened in its saved record (merged there, so the stored transcript is kept;
+    // YouTube monitor items have a videoId and no history record)
+    if (!item.hasBeenOpened && !item.videoId && item.id) {
+      const { updateHistoryRecord } = await import('../services/historyRecords');
+      await updateHistoryRecord(item.id, { hasBeenOpened: true });
     }
     
     // Use item.id for history, or item.videoId for youtube monitor

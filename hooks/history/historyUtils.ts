@@ -8,8 +8,16 @@ export interface HistoryFilters {
   sentiment: string;
 }
 
+// Transcript text is not kept in memory: `transcriptMatchIds` holds the ids whose saved transcript matched
+export const matchesTranscript = (item: HistoryItem, searchRegex: RegExp, transcriptMatchIds?: Set<string> | null) =>
+  item.transcript !== undefined || item.text !== undefined
+    ? searchRegex.test(item.transcript || item.text || '')
+    : !!transcriptMatchIds?.has(item.id);
+
 // Search (file name or transcript), exact-day, favorites and BGB sentiment filters
-export const filterHistoryItems = (history: HistoryItem[], { search, date, favoritesOnly, sentiment }: HistoryFilters) => {
+export const filterHistoryItems = (
+  history: HistoryItem[], { search, date, favoritesOnly, sentiment }: HistoryFilters, transcriptMatchIds?: Set<string> | null
+) => {
   if (!search && !date && !favoritesOnly && sentiment === 'All') return history;
   const searchRegex = search.trim() ? new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') : null;
 
@@ -20,7 +28,7 @@ export const filterHistoryItems = (history: HistoryItem[], { search, date, favor
       const displayFileName = rawFileName.replace(/_/g, ' ').replace(/#/g, '').replace(/\s+/g, ' ').trim();
       matchesSearch = searchRegex.test(rawFileName) || 
                       searchRegex.test(displayFileName) || 
-                      searchRegex.test(item.transcript || item.text || '');
+                      matchesTranscript(item, searchRegex, transcriptMatchIds);
     }
     const matchesDate = date ? (item.date && typeof item.date === 'string' ? item.date.startsWith(date) : false) : true;
     const matchesFavorite = favoritesOnly ? !!item?.isFavorite : true;

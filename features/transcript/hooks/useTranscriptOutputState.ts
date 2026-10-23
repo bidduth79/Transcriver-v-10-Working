@@ -35,6 +35,8 @@ export const useTranscriptOutputState = ({
         if (item) {
           item.transcript = updatedTranscript;
           await addToStore(STORES.HISTORY, item);
+          const { rememberHistoryTranscript } = await import('../../../hooks/history/useHistoryTranscript');
+          rememberHistoryTranscript(activeHistoryId, updatedTranscript);
         }
       }
     }

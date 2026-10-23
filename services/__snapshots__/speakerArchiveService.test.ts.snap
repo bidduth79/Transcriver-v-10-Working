@@ -1,0 +1,86 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`scanDatabaseForSpeaker > collects appearances, BGB mentions with sentiment, and co-speakers in list order > mention order 1`] = `
+[
+  "current_session",
+  "3",
+  "2",
+  "2",
+  "1",
+  "4",
+]
+`;
+
+exports[`scanDatabaseForSpeaker > collects appearances, BGB mentions with sentiment, and co-speakers in list order 1`] = `
+{
+  "bgbMentionCount": 6,
+  "coSpeakers": [
+    {
+      "count": 1,
+      "name": "করিম",
+    },
+    {
+      "count": 1,
+      "name": "সালাম",
+    },
+  ],
+  "filesAppeared": [
+    "a.mp3",
+    "d.mp3",
+  ],
+  "mentions": [
+    {
+      "context": "**রহিম:** বর্ডার গার্ড ধন্যবাদ পাওয়ার যোগ্য",
+      "date": "২৩/১০/২০২৬",
+      "fileName": "বর্তমান অডিও/ভিডিও ফাইল",
+      "historyId": "current_session",
+      "quote": "**রহিম:** বর্ডার গার্ড ধন্যবাদ পাওয়ার যোগ্য",
+      "sentiment": "neutral",
+    },
+    {
+      "context": "[00:01] **রহিম:** সীমান্তে বিজিবি সাহসী কাজ করছে",
+      "date": "2026-10-03",
+      "fileName": "c.mp3",
+      "historyId": "3",
+      "quote": "[00:01] **রহিম:** সীমান্তে বিজিবি সাহসী কাজ করছে",
+      "sentiment": "neutral",
+    },
+    {
+      "context": "**রহিম:** বিএসএফ গুলি চালিয়েছে, অভিযোগ আছে",
+      "date": "2026-10-02",
+      "fileName": "b.mp3",
+      "historyId": "2",
+      "quote": "**রহিম:** বিএসএফ গুলি চালিয়েছে, অভিযোগ আছে",
+      "sentiment": "neutral",
+    },
+    {
+      "context": "রহিম বলেন সীমান্ত খোলা",
+      "date": "2026-10-02",
+      "fileName": "b.mp3",
+      "historyId": "2",
+      "quote": "রহিম বলেন সীমান্ত খোলা",
+      "sentiment": "neutral",
+    },
+    {
+      "context": "[00:02] **রহিম**: বিজিবি দুর্নীতি করেছে বলে অভিযোগ",
+      "date": "2026-10-01",
+      "fileName": "a.mp3",
+      "historyId": "1",
+      "quote": "বিজিবি দুর্নীতি করেছে বলে অভিযোগ",
+      "sentiment": "critical",
+      "timestamp": "00:02",
+    },
+    {
+      "context": "**রহিম**: সীমান্ত পাহারায় বিজিবি সাহসী",
+      "date": "2026-10-04",
+      "fileName": "d.mp3",
+      "historyId": "4",
+      "quote": "সীমান্ত পাহারায় বিজিবি সাহসী",
+      "sentiment": "supportive",
+      "timestamp": undefined,
+    },
+  ],
+  "overallStance": "neutral",
+  "totalAppearances": 2,
+}
+`;

@@ -22,11 +22,15 @@ export type TranscriptionHistoryItem = ReturnType<typeof buildHistoryItem>;
 
 // Update in-memory history together with the completion state, so there is no
 // surprise full-app re-render wave a few seconds later while reading/scrolling.
+// The list keeps a light item; the transcript is saved to IndexedDB and kept in the small transcript cache.
 export const addToInMemoryHistory = async (item: TranscriptionHistoryItem) => {
   try {
     const { useHistoryStore } = await import('../useHistoryStore');
+    const { toLightHistoryItem } = await import('../../services/historyRecords');
+    const { rememberHistoryTranscript } = await import('../history/useHistoryTranscript');
+    rememberHistoryTranscript(item.id, item.transcript);
     const currentHistory = useHistoryStore.getState().history;
-    useHistoryStore.getState().setHistory([item, ...currentHistory]);
+    useHistoryStore.getState().setHistory([toLightHistoryItem(item) as any, ...currentHistory]);
   } catch (e) {
     console.warn("In-memory history update notice:", e);
   }

@@ -1,3 +1,5 @@
+import { matchesTranscript } from '../../../hooks/history/historyUtils';
+
 // Fast M/D/YYYY key (avoids slow toLocaleDateString in tight loops)
 export const toDateKey = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 
@@ -10,14 +12,14 @@ export const buildDuplicateCounts = (history: any[]) => {
   return counts;
 };
 
-// Search file names and transcript content, then group the matches by date
-export const searchAndGroupHistory = (sourceArray: any[], query: string) => {
+// Search file names and transcript content (saved transcripts via `transcriptMatchIds`), then group by date
+export const searchAndGroupHistory = (sourceArray: any[], query: string, transcriptMatchIds?: Set<string> | null) => {
   const searchRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
   const filtered = sourceArray.filter((item: any) => {
     const rawFileName = item.fileName || '';
     const displayFileName = rawFileName.replace(/_/g, ' ').replace(/#/g, '').replace(/\s+/g, ' ').trim();
     const fileNameMatch = searchRegex.test(rawFileName) || searchRegex.test(displayFileName);
-    const transcriptMatch = searchRegex.test(item.transcript || item.text || '');
+    const transcriptMatch = matchesTranscript(item, searchRegex, transcriptMatchIds);
     return fileNameMatch || transcriptMatch;
   });
 

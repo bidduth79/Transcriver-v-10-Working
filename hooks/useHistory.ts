@@ -1,10 +1,13 @@
 import { useEffect, useCallback, useMemo } from 'react';
-import { getAllFromStore, deleteFromStore, addToStore, STORES } from '../services/db';
+import { getAllFromStore, deleteFromStore, STORES } from '../services/db';
+import { loadLightHistory, updateHistoryRecord } from '../services/historyRecords';
 import { HistoryItem } from '../types';
 import { useHistoryStore } from './useHistoryStore';
 import { useBroadcastSync, broadcastHistoryUpdate } from './useBroadcastSync';
 import { scheduleGentleFirebasePull } from '../services/firebaseThrottledQueue';
 import { filterHistoryItems, downloadHistoryBackup, restoreHistoryFromFile } from './history/historyUtils';
+import { forgetHistoryTranscripts } from './history/useHistoryTranscript';
+import { useTranscriptSearchIds } from './history/useTranscriptSearchIds';
 
 export const useHistory = (
   appLang: 'en' | 'bn',
@@ -62,7 +65,9 @@ export const useHistory = (
       setIsLoadingHistory(true);
     }
     try {
-      const allHistory = (await getAllFromStore(STORES.HISTORY)) as HistoryItem[];
+      // Light items only: transcripts stay in IndexedDB and are read when needed
+      const allHistory = await loadLightHistory();
+      forgetHistoryTranscripts();
       const sorted = allHistory.sort((a: HistoryItem, b: HistoryItem) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setHistory(sorted);
       updateSessionCache(sorted);
@@ -123,14 +128,22 @@ export const useHistory = (
           : (appLang === 'bn' ? 'বুকমার্ক থেকে সরানো হয়েছে' : 'Removed from favorites'), 
         'success'
       );
-      await addToStore(STORES.HISTORY, updatedItem);
+      await updateHistoryRecord(id, { isFavorite: updatedItem.isFavorite });
       broadcastHistoryUpdate();
     }
   }, [appLang, addToast, setHistory, updateSessionCache]);
 
-  const backupHistory = () => {
-    downloadHistoryBackup(history);
-    addToast(appLang === 'bn' ? 'ব্যাকআপ ডাউনলোড শুরু হয়েছে' : 'Backup download started', 'info');
+  const backupHistory = async () => {
+    // Full records (with transcripts) are read from IndexedDB, in the same order as the list
+    try {
+      const order = new Map(history.map((h, i) => [h.id, i]));
+      const records = (await getAllFromStore(STORES.HISTORY)) as HistoryItem[];
+      downloadHistoryBackup(records.sort((a, b) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity)));
+      addToast(appLang === 'bn' ? 'ব্যাকআপ ডাউনলোড শুরু হয়েছে' : 'Backup download started', 'info');
+    } catch (e) {
+      console.error("Failed to back up history", e);
+      addToast(appLang === 'bn' ? 'ব্যাকআপ করতে সমস্যা হয়েছে' : 'Failed to back up history', 'error');
+    }
   };
 
   const restoreHistory = async (file: File) => {
@@ -145,9 +158,10 @@ export const useHistory = (
     }
   };
 
+  const transcriptMatchIds = useTranscriptSearchIds(debouncedHistSearch, history.length);
   const filteredHistory = useMemo(
-    () => filterHistoryItems(history, { search: debouncedHistSearch, date: histDateFilter, favoritesOnly: showFavoritesOnly, sentiment: histSentimentFilter }),
-    [history, debouncedHistSearch, histDateFilter, showFavoritesOnly, histSentimentFilter]
+    () => filterHistoryItems(history, { search: debouncedHistSearch, date: histDateFilter, favoritesOnly: showFavoritesOnly, sentiment: histSentimentFilter }, transcriptMatchIds),
+    [history, debouncedHistSearch, histDateFilter, showFavoritesOnly, histSentimentFilter, transcriptMatchIds]
   );
 
   return {

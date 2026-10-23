@@ -38,7 +38,8 @@ export const useSidebar = (appLang: string, handleFileChange: any, audioRef: any
       }
     }
     const result = matches.length > 0 ? matches : EMPTY_MATCHES;
-    if (matchCacheRef.current.size > 2000) {
+    // Keys are transcript texts read from IndexedDB, so keep only a few in memory
+    if (matchCacheRef.current.size > 200) {
       matchCacheRef.current.clear();
     }
     matchCacheRef.current.set(text, result);

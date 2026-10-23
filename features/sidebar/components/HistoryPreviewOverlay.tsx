@@ -1,4 +1,5 @@
 import React from 'react';
+import { useHistoryTranscript } from '../../../hooks/history/useHistoryTranscript';
 
 interface Props {
   item: any;
@@ -10,7 +11,10 @@ interface Props {
 }
 
 // Hover popup with a scrollable transcript preview; sensitive words are clickable highlights
-export const HistoryPreviewOverlay = ({ item, isSensitive, sensitiveMatches, isDark, activeColors, loadHistoryItem }: Props) => (
+export const HistoryPreviewOverlay = ({ item, isSensitive, sensitiveMatches, isDark, activeColors, loadHistoryItem }: Props) => {
+  // The saved transcript is read from IndexedDB when the preview opens
+  const transcript = useHistoryTranscript(item.id, true, item.transcript);
+  return (
                     <div 
                       className={`absolute inset-0 z-20 p-6 backdrop-blur-xl transition-all animate-in fade-in duration-300 overflow-hidden flex flex-col ${isDark ? 'bg-slate-900/95' : 'bg-white/95'}`}
                       onClick={(e) => e.stopPropagation()} // Prevent triggering load when interacting with popup text
@@ -24,7 +28,7 @@ export const HistoryPreviewOverlay = ({ item, isSensitive, sensitiveMatches, isD
                       <div className="overflow-y-auto custom-scrollbar flex-1 pr-2">
                         <p className={`text-[11px] font-mono leading-relaxed whitespace-pre-wrap ${isDark ? 'text-white/80' : 'text-slate-700'}`}>
                           {(() => {
-                             const textContent = item.transcript || "No transcript content...";
+                             const textContent = transcript || "No transcript content...";
                              if (!isSensitive) return textContent;
 
                              const escapeRegExp = (string: string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -48,3 +52,4 @@ export const HistoryPreviewOverlay = ({ item, isSensitive, sensitiveMatches, isD
                       </div>
                     </div>
 );
+};

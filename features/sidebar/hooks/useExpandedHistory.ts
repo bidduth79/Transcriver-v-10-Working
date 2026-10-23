@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getSensitiveKeywords } from '../../../utils/sensitiveKeywords';
+import { loadHistoryTranscript } from '../../../hooks/history/useHistoryTranscript';
 
 export const useExpandedHistory = (
   filteredHistory: any[],
@@ -39,12 +40,16 @@ export const useExpandedHistory = (
   const [sensitiveMatchesMap, setSensitiveMatchesMap] = useState<Map<string, string[]>>(new Map());
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    let alive = true;
+    const timer = setTimeout(async () => {
       const map = new Map<string, string[]>();
       const visibleHistory = filteredHistory.slice(0, historyLimit);
-      visibleHistory.forEach(item => {
-         if (item.transcript) {
-           const lower = item.transcript.toLowerCase();
+      for (const item of visibleHistory) {
+         // Saved transcripts are read from IndexedDB one at a time
+         const transcript = item.transcript ?? await loadHistoryTranscript(item.id).catch(() => '');
+         if (!alive) return;
+         if (transcript) {
+           const lower = transcript.toLowerCase();
            const matches = sensitiveKeywords
              .filter(kw => kw && kw.trim().length > 0 && lower.includes(kw.toLowerCase()))
              .sort((a, b) => b.length - a.length);
@@ -52,10 +57,10 @@ export const useExpandedHistory = (
          } else {
            map.set(item.id, []);
          }
-      });
+      }
       setSensitiveMatchesMap(map);
     }, 10);
-    return () => clearTimeout(timer);
+    return () => { alive = false; clearTimeout(timer); };
   }, [filteredHistory, historyLimit, sensitiveKeywords]);
 
   const getSensitiveMatches = useCallback((id: string) => {

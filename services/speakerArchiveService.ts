@@ -1,19 +1,7 @@
-import { getAllFromStore, STORES } from './db';
+import { forEachHistoryRecord } from './historyRecords';
+import { scanTranscriptForSpeaker, type SpeakerScanRecord } from './speakerArchiveScan';
 import { SpeakerBgbMention, SpeakerDatabaseStats, SpeakerCustomNote } from '../types/speaker';
 import { useHistoryStore } from '../hooks/useHistoryStore';
-
-const BGB_KEYWORDS = [
-  'বিজিবি', 'বর্ডার গার্ড', 'বর্ডার গার্ড বাংলাদেশ', 'bgb', 'border guard',
-  'সীমান্ত', 'সীমান্তে', 'সীমান্তবর্তী', 'সীমান্ত হত্যা', 'ফেলানী',
-  'বিডিআর', 'পিলখানা', 'বিএসএফ', 'bsf', 'চোরাচালান', 'অনুপ্রবেশ'
-];
-
-const LOWER_BGB_KEYWORDS = BGB_KEYWORDS.map(kw => kw.toLowerCase());
-const POSITIVE_WORDS = ['সাহসী', 'বীরত্ব', 'ধন্যবাদ', 'প্রশংসা', 'পাহারায়', 'নিরাপত্তা', 'সতর্ক', 'শক্তিশালী', 'গর্ব'];
-const CRITICAL_WORDS = ['ব্যর্থ', 'অসহায়', 'হত্যা', 'গুলি', 'দুর্নীতি', 'নিষ্ক্রিয়', 'দায়িত্বজ্ঞানহীন', 'অভিযোগ', 'বর্বরোচিত', 'অন্যায়'];
-
-const SPEAKER_BOLD_REGEX = /^(\[[0-9০-৯]{1,2}:[0-9০-৯]{2}(?::[0-9০-৯]{2})?\])?\s*\*\*([^*]+)\*\*:\s*(.*)$/;
-const SPEAKER_PLAIN_REGEX = /^(\[[0-9০-৯]{1,2}:[0-9০-৯]{2}(?::[0-9০-৯]{2})?\])?\s*([A-Za-z0-9\u0980-\u09FF\s._-]+):\s*(.*)$/;
 
 const CUSTOM_NOTES_STORE_KEY = 'speaker_custom_dossier_notes';
 
@@ -42,108 +30,49 @@ export const scanDatabaseForSpeaker = async (
 ): Promise<SpeakerDatabaseStats> => {
   const normTarget = speakerName.trim().toLowerCase();
   
-  // 1. Prefer already-loaded in-memory history from Zustand store to avoid redundant IndexedDB full-table reads
-  let historyItems: any[] = useHistoryStore.getState().history;
-  if (!Array.isArray(historyItems) || historyItems.length === 0) {
-    try {
-      historyItems = await getAllFromStore(STORES.HISTORY) as any[];
-    } catch (e) {
-      console.warn('Could not load history items for speaker scan:', e);
-    }
-  }
+  const scan = (rec: SpeakerScanRecord) => ({ rec, result: scanTranscriptForSpeaker(rec, normTarget) });
+  const scanned: ReturnType<typeof scan>[] = [];
 
   // Also include the current transcript if not already in history
-  const allTranscriptsToScan: { id: string; fileName: string; date: string; transcript: string }[] = [];
-  
   if (currentTranscript && currentTranscript.trim().length > 0) {
-    allTranscriptsToScan.push({
+    scanned.push(scan({
       id: 'current_session',
       fileName: 'বর্তমান অডিও/ভিডিও ফাইল',
       date: new Date().toLocaleDateString('bn-BD'),
       transcript: currentTranscript
-    });
+    }));
   }
 
-  if (Array.isArray(historyItems)) {
-    historyItems.forEach((item) => {
+  // Saved transcripts are read from IndexedDB one at a time, then ordered like the history list
+  const fromHistory = new Map<string, ReturnType<typeof scan>>();
+  try {
+    await forEachHistoryRecord((item: any) => {
       if (item && item.transcript) {
-        allTranscriptsToScan.push({
+        const rec = {
           id: String(item.id || item.timestamp || Math.random()),
           fileName: item.fileName || item.title || 'নামবিহীন রেকর্ড',
           date: item.date || (item.timestamp ? new Date(item.timestamp).toLocaleDateString('bn-BD') : 'অজানা তারিখ'),
           transcript: item.transcript
-        });
+        };
+        fromHistory.set(rec.id, scan(rec));
       }
     });
+  } catch (e) {
+    console.warn('Could not load history items for speaker scan:', e);
   }
+  useHistoryStore.getState().history.forEach(h => {
+    const found = fromHistory.get(String(h.id));
+    if (found) { scanned.push(found); fromHistory.delete(String(h.id)); }
+  });
+  scanned.push(...fromHistory.values());
 
   let totalAppearances = 0;
   const filesAppeared = new Set<string>();
   const coSpeakerMap = new Map<string, number>();
   const mentions: SpeakerBgbMention[] = [];
 
-  allTranscriptsToScan.forEach((rec) => {
-    const lines = rec.transcript.split('\n');
-    let speakerFoundInThisFile = false;
-    const speakersInThisFile = new Set<string>();
-
-    lines.forEach((line) => {
-      // Regex to capture timestamp and speaker: [00:15] **Speaker Name:** or **Speaker Name:** or Speaker Name:
-      const speakerMatch = line.match(SPEAKER_BOLD_REGEX) || line.match(SPEAKER_PLAIN_REGEX);
-
-      if (speakerMatch) {
-        const timestamp = speakerMatch[1] ? speakerMatch[1].replace(/[\[\]]/g, '') : '';
-        const detectedSpeaker = speakerMatch[2].trim();
-        const speechText = speakerMatch[3] ? speakerMatch[3].trim() : '';
-
-        const normDetected = detectedSpeaker.toLowerCase();
-        speakersInThisFile.add(detectedSpeaker);
-
-        // Check if this dialogue belongs to the target speaker
-        if (normDetected === normTarget || normDetected.includes(normTarget) || normTarget.includes(normDetected)) {
-          speakerFoundInThisFile = true;
-
-          // Check if speechText contains BGB keywords
-          const lowerSpeech = speechText.toLowerCase();
-          const hasBgbKeyword = LOWER_BGB_KEYWORDS.some(kw => lowerSpeech.includes(kw));
-
-          if (hasBgbKeyword && speechText.length > 5) {
-            // Sentiment estimation
-            let sentiment: 'supportive' | 'neutral' | 'critical' = 'neutral';
-
-            const hasPos = POSITIVE_WORDS.some(w => speechText.includes(w));
-            const hasCrit = CRITICAL_WORDS.some(w => speechText.includes(w));
-
-            if (hasCrit && !hasPos) sentiment = 'critical';
-            else if (hasPos && !hasCrit) sentiment = 'supportive';
-
-            mentions.push({
-              historyId: rec.id,
-              fileName: rec.fileName,
-              date: rec.date,
-              timestamp: timestamp || undefined,
-              quote: speechText,
-              context: line,
-              sentiment
-            });
-          }
-        }
-      } else {
-        // Line without direct speaker header, but if target speaker was found or transcript is raw
-        const lowerLine = line.toLowerCase();
-        if ((lowerLine.includes(normTarget)) && LOWER_BGB_KEYWORDS.some(kw => lowerLine.includes(kw))) {
-          mentions.push({
-            historyId: rec.id,
-            fileName: rec.fileName,
-            date: rec.date,
-            quote: line.trim(),
-            context: line.trim(),
-            sentiment: 'neutral'
-          });
-        }
-      }
-    });
-
+  scanned.forEach(({ rec, result: { speakerFoundInThisFile, speakersInThisFile, mentions: fileMentions } }) => {
+    mentions.push(...fileMentions);
     if (speakerFoundInThisFile) {
       totalAppearances++;
       filesAppeared.add(rec.fileName);

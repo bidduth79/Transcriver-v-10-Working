@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const m = vi.hoisted(() => ({ loadAudio: vi.fn(async (..._a: any[]) => {}), setHistory: vi.fn() }));
 vi.mock('../utils/audioUtils', () => ({ loadAudioFromStore: m.loadAudio }));
+vi.mock('./history/useHistoryTranscript', () => ({ loadHistoryTranscript: async (id: string) => `SAVED:${id}` }));
 vi.mock('./useHistoryStore', () => ({ useHistoryStore: { getState: () => ({ setHistory: m.setHistory }) } }));
 
 import { getSidebarProps, getAppModalsProps, getExpandedHistoryProps, getTranscriptOutputProps } from './useAppProps';
@@ -70,6 +71,12 @@ describe('loadHistoryItem', () => {
     expect(core.setSearchTerm).not.toHaveBeenCalled();
     vi.advanceTimersByTime(100);
     expect(core.setSearchTerm).toHaveBeenCalledWith('মাদক');
+  });
+
+  it('reads the transcript of a light list item from IndexedDB', async () => {
+    const core = makeCore();
+    await getSidebarProps(core).loadHistoryItem({ ...item, transcript: undefined });
+    expect(core.setTranscript).toHaveBeenCalledWith('SAVED:h1');
   });
 
   it('skips marking already-opened items and search when no keyword', async () => {

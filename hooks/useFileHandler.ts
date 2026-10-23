@@ -7,6 +7,7 @@ import {
 } from './fileHandlerUtils';
 import { isSupportedMediaFile } from './fileHandler/mediaDuration';
 import { loadNewFileMetadata, loadHistoryFileMetadata } from './fileHandler/loadFileMetadata';
+import { loadHistoryTranscript } from './history/useHistoryTranscript';
 
 const MAX_FILE_SIZE = 70 * 1024 * 1024;
 
@@ -95,7 +96,10 @@ export const useFileHandler = ({
     const url = replaceFileUrl(selectedFile);
     loadHistoryFileMetadata(selectedFile, url, existingHistoryItem, setFileMeta);
 
-    setTranscript(existingHistoryItem.transcript);
+    // List items are light; the saved transcript is read from IndexedDB
+    Promise.resolve(existingHistoryItem.transcript ?? loadHistoryTranscript(existingHistoryItem.id))
+      .then(setTranscript)
+      .catch(() => setTranscript(''));
     setStatus('completed');
     setTranscriptMeta({
       name: existingHistoryItem.fileName,

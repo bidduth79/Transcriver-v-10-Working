@@ -9,6 +9,7 @@ vi.mock('./fileHandlerUtils', () => ({
   showFolderUploadModal: m.folderModal, showNoFilesFoundModal: m.noFilesModal, showFileAlreadyTranscribedModal: m.alreadyModal,
 }));
 vi.mock('music-metadata', () => ({ parseBlob: m.parseBlob }));
+vi.mock('./history/useHistoryTranscript', () => ({ loadHistoryTranscript: async (id: string) => `SAVED:${id}` }));
 vi.mock('./transcription/transcriptionUtils', () => ({ detectAudioMimeType: m.sniff }));
 
 import { renderHook } from '@testing-library/react';
@@ -155,6 +156,7 @@ describe('file already in history', () => {
     pick([file('old.mp3', 'audio/mpeg')]);
     expect(m.alreadyModal.mock.calls[0][0]).toBe('en');
     m.alreadyModal.mock.calls[0][2]();
+    await flush();
     expect(p.setTranscript).toHaveBeenCalledWith('TEXT');
     expect(p.setStatus).toHaveBeenCalledWith('completed');
     expect(p.setTranscriptMeta).toHaveBeenCalledWith({ name: 'old.mp3', duration: '3:00', channelName: 'Ch', date: '2026-01-01' });
@@ -165,6 +167,12 @@ describe('file already in history', () => {
     a.duration = 30;
     a.onloadedmetadata();
     expect(meta(p)).toEqual({ name: 'old.mp3', size: '0.00 MB', duration: '0:30', type: 'audio/mpeg', date: '2026-10-22T10:00:00.000Z' });
+  });
+
+  it('reads the transcript from IndexedDB for a light history item', async () => {
+    const { p, pick } = setup({ history: [{ ...existing, transcript: undefined }] });
+    pick([file('old.mp3', 'audio/mpeg')]); m.alreadyModal.mock.calls[0][2](); await flush();
+    expect(p.setTranscript).toHaveBeenCalledWith('SAVED:h1');
   });
 
   it('falls back to the saved duration on error/timeout, and Unknown for unreadable Opus', async () => {

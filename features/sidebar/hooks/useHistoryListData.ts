@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { buildDuplicateCounts, searchAndGroupHistory, flattenGroups, collectHistoryDates, buildCalendarDays } from '../utils/historyListUtils';
+import { useTranscriptSearchIds } from '../../../hooks/history/useTranscriptSearchIds';
 
 interface Options {
   history: any[];
@@ -40,15 +41,19 @@ export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory
   }, [searchQuery]);
 
   const duplicateFileCounts = useMemo(() => buildDuplicateCounts(history), [history]);
+  const searchSource = useMemo(
+    () => (fullHistory && fullHistory.length > 0 ? fullHistory : (history || [])),
+    [fullHistory, history]
+  );
+  const transcriptMatchIds = useTranscriptSearchIds(debouncedSearchQuery, searchSource.length);
 
   const processedGroupedHistory = useMemo(() => {
     if (!debouncedSearchQuery.trim()) {
       return initialGroupedHistory;
     }
-    // Perform search on the entire history array, including transcript content
-    const sourceArray = fullHistory && fullHistory.length > 0 ? fullHistory : (history || []);
-    return searchAndGroupHistory(sourceArray, debouncedSearchQuery);
-  }, [history, fullHistory, initialGroupedHistory, debouncedSearchQuery]);
+    // Perform search on the entire history array, including saved transcript content
+    return searchAndGroupHistory(searchSource, debouncedSearchQuery, transcriptMatchIds);
+  }, [searchSource, initialGroupedHistory, debouncedSearchQuery, transcriptMatchIds]);
 
   const flatItems = useMemo(
     () => flattenGroups(processedGroupedHistory, duplicateFileCounts),
