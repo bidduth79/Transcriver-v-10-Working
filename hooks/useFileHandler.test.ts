@@ -8,7 +8,7 @@ const m = vi.hoisted(() => ({
 vi.mock('./fileHandlerUtils', () => ({
   showFolderUploadModal: m.folderModal, showNoFilesFoundModal: m.noFilesModal, showFileAlreadyTranscribedModal: m.alreadyModal,
 }));
-vi.mock('music-metadata-browser', () => ({ parseBlob: m.parseBlob }));
+vi.mock('music-metadata', () => ({ parseBlob: m.parseBlob }));
 vi.mock('./transcription/transcriptionUtils', () => ({ detectAudioMimeType: m.sniff }));
 
 import { renderHook } from '@testing-library/react';

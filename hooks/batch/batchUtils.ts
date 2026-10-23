@@ -45,7 +45,7 @@ export const getFileMetadata = (file: File): Promise<any> => {
       // Only parse up to 1MB for small files; for larger files estimate or read header slice to avoid loading entire multi-MB file into JS heap
       const blobToParse = file.size <= 1.5 * 1024 * 1024 ? file : file.slice(0, 512 * 1024, file.type);
       // Loaded on demand so the ~340 KB parser is not part of app startup
-      import('music-metadata-browser').then(musicMetadata => musicMetadata.parseBlob(blobToParse)).then((metadata) => {
+      import('music-metadata').then(musicMetadata => musicMetadata.parseBlob(blobToParse)).then((metadata) => {
           let durationStr = "Unknown";
           if (metadata && metadata.format && metadata.format.duration && file.size <= 1.5 * 1024 * 1024) {
               const duration = metadata.format.duration;

@@ -4,10 +4,11 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    // Tests must not pick up the developer's real key from .env
+    const processKey = mode === 'test' ? '' : (env.GEMINI_API_KEY || env.VITE_API_KEY_1 || process.env.GEMINI_API_KEY || process.env.API_KEY || '');
     return {
       server: {
         port: 3000,
@@ -20,9 +21,6 @@ export default defineConfig(({ mode }) => {
       plugins: [
         react(), 
         tailwindcss(),
-        nodePolyfills({
-          include: ['buffer']
-        }),
         VitePWA({
           registerType: 'autoUpdate',
           includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
@@ -56,8 +54,8 @@ export default defineConfig(({ mode }) => {
         })
       ],
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_API_KEY_1 || process.env.GEMINI_API_KEY || process.env.API_KEY || ''),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.VITE_API_KEY_1 || process.env.GEMINI_API_KEY || process.env.API_KEY || '')
+        'process.env.API_KEY': JSON.stringify(processKey),
+        'process.env.GEMINI_API_KEY': JSON.stringify(processKey)
       },
       build: {
         rollupOptions: {
@@ -68,7 +66,6 @@ export default defineConfig(({ mode }) => {
               'vendor-genai': ['@google/genai'],
               'vendor-ui': ['framer-motion', 'lucide-react'],
               'vendor-supabase': ['@supabase/supabase-js'],
-              'vendor-media': ['music-metadata-browser'],
               'vendor-i18n': ['i18next', 'react-i18next'],
             }
           }

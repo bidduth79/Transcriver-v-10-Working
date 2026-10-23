@@ -29,7 +29,7 @@ export const estimateOpusDuration = (fileSize: number) => formatDuration(Math.ma
 export const readOpusDuration = async (file: File, onParseError: 'estimate' | 'unknown') => {
   try {
     // Loaded on demand so the ~340 KB parser is not part of app startup
-    const musicMetadata = await import('music-metadata-browser');
+    const musicMetadata = await import('music-metadata');
     const metadata = await musicMetadata.parseBlob(file);
     if (metadata && metadata.format && metadata.format.duration) {
       return formatDuration(metadata.format.duration);
