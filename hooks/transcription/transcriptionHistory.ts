@@ -62,6 +62,11 @@ export const scheduleBgbAnalysis = (item: TranscriptionHistoryItem, text: string
         if (result?.remark) {
           itemForBgb.bgbRemark = result.remark as any;
           await addToStore(STORES.HISTORY, itemForBgb);
+          // Show the remark right away instead of waiting for a full history reload
+          const { useHistoryStore } = await import('../useHistoryStore');
+          useHistoryStore.getState().setHistory(prev =>
+            prev.map(h => (h.id === itemForBgb.id ? { ...h, bgbRemark: itemForBgb.bgbRemark } : h))
+          );
         }
       }
     } catch (e) {

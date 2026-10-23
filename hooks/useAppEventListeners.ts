@@ -29,8 +29,9 @@ export const useAppEventListeners = (
     }
   }, [appError, addToast]);
 
+  // History is not reloaded here: new transcriptions are already added to the in-memory list,
+  // and re-reading every saved transcript for each new file (e.g. each batch item) exhausted memory.
   useEffect(() => {
-    loadHistory();
     updateApiStats();
-  }, [fileUrl, loadHistory, updateApiStats]);
+  }, [fileUrl, updateApiStats]);
 };
