@@ -47,7 +47,7 @@ export function useAppCore() {
     histSentimentFilter, setHistSentimentFilter,
     showFavoritesOnly, setShowFavoritesOnly,
     toggleFavorite, backupHistory, restoreHistory,
-    loadHistory, handleDeleteHistoryItem, groupHistory, filteredHistory, isLoadingHistory
+    loadHistory, handleDeleteHistoryItem, filteredHistory, isLoadingHistory
   } = useHistory(appLang, addToast, useCallback((id: string) => {
     onHistoryItemDeletedRef.current(id);
   }, []));
@@ -168,7 +168,7 @@ export function useAppCore() {
     histSentimentFilter, setHistSentimentFilter,
     showFavoritesOnly, setShowFavoritesOnly,
     toggleFavorite, backupHistory, restoreHistory,
-    loadHistory, handleDeleteHistoryItem, groupHistory, filteredHistory, isLoadingHistory,
+    loadHistory, handleDeleteHistoryItem, filteredHistory, isLoadingHistory,
     status, setStatus,
     transcript, setTranscript,
     errorMessage, setErrorMessage,
