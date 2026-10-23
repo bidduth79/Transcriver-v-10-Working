@@ -12,6 +12,8 @@ ini_set('memory_limit', '2048M');
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+// Lets an https page (e.g. AI Studio's preview) call this local server (Chrome Private Network Access)
+header('Access-Control-Allow-Private-Network: true');
 header('Content-Type: application/json');
 
 // Handle Preflight

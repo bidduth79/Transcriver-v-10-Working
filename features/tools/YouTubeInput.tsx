@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
+import { getApiUrl, isLocalServerEnabled } from '../../utils/config';
 
 interface YouTubeInputProps {
   onSuccess: (blob: Blob, fileName: string, mode: string) => void;
   isDark: boolean;
   activeColors: any;
   appLang: 'bn' | 'en';
-  onFolderOpen?: () => void;
-  showFormats?: boolean;
 }
 
 export const YouTubeInput: React.FC<YouTubeInputProps> = ({
@@ -14,8 +13,6 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
   isDark,
   activeColors,
   appLang,
-  onFolderOpen,
-  showFormats = true
 }) => {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,7 +26,8 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
     setError(null);
 
     try {
-      const response = await fetch('/licell_api/youtube.php', {
+      // Downloads run on the local server (XAMPP + yt-dlp) set in Settings, also when the app runs elsewhere
+      const response = await fetch(getApiUrl('youtube.php'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: url.trim(), quality: 'audio' })
@@ -55,7 +53,14 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
       }
     } catch (err: any) {
       console.error('YouTube link error:', err);
-      setError(err.message || (appLang === 'bn' ? 'লিংক প্রসেস করতে ব্যর্থ হয়েছে' : 'Failed to process link'));
+      // A network error means the local server could not be reached
+      if (err instanceof TypeError) {
+        setError(appLang === 'bn'
+          ? 'লোকাল সার্ভারে পৌঁছানো যায়নি। কম্পিউটারে XAMPP চালু আছে কিনা এবং সেটিংসে সার্ভারের ঠিকানা দেখুন।'
+          : 'Could not reach the local server. Check that XAMPP is running and the server address in Settings.');
+      } else {
+        setError(err.message || (appLang === 'bn' ? 'লিংক প্রসেস করতে ব্যর্থ হয়েছে' : 'Failed to process link'));
+      }
     } finally {
       setLoading(false);
     }
@@ -63,6 +68,13 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full">
+      {!isLocalServerEnabled() && (
+        <p className={`text-[10px] font-medium px-1 leading-relaxed ${isDark ? 'text-amber-300/80' : 'text-amber-700'}`}>
+          {appLang === 'bn'
+            ? 'লিংক থেকে অডিও আনতে আপনার কম্পিউটারের লোকাল সার্ভার (XAMPP + yt-dlp) লাগে। সেটিংস → ক্লাউড সিঙ্ক থেকে লোকাল সার্ভার চালু করুন।'
+            : 'Loading audio from a link needs your local server (XAMPP + yt-dlp). Turn it on in Settings → Cloud Sync.'}
+        </p>
+      )}
       <div className="relative flex items-center">
         <input
           type="text"

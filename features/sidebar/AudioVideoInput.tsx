@@ -116,8 +116,6 @@ export const AudioVideoInput = ({
                         isDark={isDark}
                         activeColors={activeColors}
                         appLang={appLang}
-                        onFolderOpen={() => fileInputRef.current?.click()}
-                        showFormats={true} 
                     />
                 </div>
             )}

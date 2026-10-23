@@ -9,6 +9,9 @@ if (isset($_SERVER['HTTP_ORIGIN'])) {
     header("Access-Control-Allow-Origin: *");
 }
 
+// Lets an https page (e.g. AI Studio's preview) call this local server (Chrome Private Network Access)
+header('Access-Control-Allow-Private-Network: true');
+
 // Access-Control headers are received during OPTIONS requests
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
