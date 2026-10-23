@@ -40,8 +40,8 @@ export const analyzeTranscriptForBgb = async (transcript: string, sensitiveMatch
     const response = await ai.models.generateContent({
       model: modelToUse,
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      // Default temperature (1.0), as Google recommends for Gemini 3 models
       config: {
-        temperature: 0.1,
         responseMimeType: "application/json"
       }
     });

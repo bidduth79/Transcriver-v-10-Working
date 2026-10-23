@@ -88,7 +88,7 @@ describe('useTranscription.processTranscription', () => {
     const [key, req] = m.generate.mock.calls[0];
     expect(key).toBe('KEY-AAAA');
     expect(req.model).toBe('gemini-3.8-flash');
-    expect(req.config.temperature).toBe(0.35);
+    expect(req.config).not.toHaveProperty('temperature');
     expect(req.config.safetySettings).toHaveLength(4);
     expect(req.config.thinkingConfig).toBeUndefined();
     expect(req.contents[0].parts[0].inlineData).toEqual({ mimeType: 'audio/mpeg', data: 'BASE64' });
@@ -161,7 +161,7 @@ describe('useTranscription.processTranscription', () => {
     const out = await run();
     expect(out.text).toBe('retry text');
     expect(m.generate).toHaveBeenCalledTimes(2);
-    expect(m.generate.mock.calls[1][1].config.temperature).toBe(0.25);
+    expect(m.generate.mock.calls[1][1].config.systemInstruction).toContain('high-sensitivity');
   });
 
   it('returns a no-speech marker and skips saving when nothing is heard', async () => {

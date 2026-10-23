@@ -41,9 +41,9 @@ export const buildTranscriptionRequest = (
   const systemInstruction = mode === 'normal' ? TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL : TRANSCRIPTION_SYSTEM_INSTRUCTION;
   const promptText = mode === 'normal' ? TRANSCRIPTION_PROMPT_TEXT_NORMAL : TRANSCRIPTION_PROMPT_TEXT;
   const thinkingConfig = buildThinkingConfig(modelName);
+  // No temperature: Google asks to keep Gemini 3 models at the default (1.0); lower values can cause looping
   return buildAudioRequest(modelName, audioPart, promptText, {
     systemInstruction,
-    temperature: 0.35,
     ...(thinkingConfig ? { thinkingConfig } : {}),
   });
 };
@@ -51,7 +51,6 @@ export const buildTranscriptionRequest = (
 export const buildHighSensitivityRequest = (modelName: string, audioPart: Part): any =>
   buildAudioRequest(modelName, audioPart, HIGH_SENSITIVITY_PROMPT, {
     systemInstruction: HIGH_SENSITIVITY_SYSTEM,
-    temperature: 0.25,
   });
 
 // Drop the large base64 audio payload from memory as soon as the request is done
