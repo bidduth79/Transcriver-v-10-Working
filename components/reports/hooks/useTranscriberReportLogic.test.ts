@@ -28,13 +28,9 @@ afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals(); vi.restoreAllMocks(
 describe('useTranscriberReportLogic', () => {
   it('defaults to the current month and groups by day + file type', async () => {
     const { result } = await setup();
-    expect([result.current.fromDate, result.current.toDate]).toEqual([
-      new Date(2026, 9, 1).toISOString().split('T')[0], new Date(2026, 10, 0).toISOString().split('T')[0],
-    ]);
+    expect([result.current.fromDate, result.current.toDate]).toEqual(['2026-10-01', '2026-10-31']);
     expect(result.current.reportData).toMatchSnapshot();
-    // Existing behavior (bug kept as-is): the default range comes from toISOString(), so in UTC+6 it
-    // runs from the last day of the previous month to the second-last day of this month.
-    expect([result.current.totalQty, result.current.totalDurationSecs]).toEqual([6, 90 + 3600 + 30 + 600 + 300]);
+    expect([result.current.totalQty, result.current.totalDurationSecs]).toEqual([5, 90 + 3600 + 30 + 600]);
     expect(result.current.formatSecondsToHrsMin(3725)).toBe('01 Hrs 02 Min');
     expect([result.current.ROWS_FIRST_PAGE, result.current.ROWS_OTHER_PAGES]).toEqual([24, 30]);
   });
@@ -44,7 +40,7 @@ describe('useTranscriberReportLogic', () => {
     expect(result.current.reportData).toEqual([]);
     rerender({ o: true });
     await act(async () => {});
-    expect(result.current.totalQty).toBe(6);
+    expect(result.current.totalQty).toBe(5);
     m.history = [h('2026-10-05T10:00:00', 'mp3', '2:00')];
     await act(async () => { useAppStore.getState().triggerStoreUpdate('studio_history'); });
     expect(result.current.totalQty).toBe(1);
@@ -54,7 +50,7 @@ describe('useTranscriberReportLogic', () => {
     m.history = Array.from({ length: 31 }, (_, i) => h(`2026-10-${String(i + 1).padStart(2, '0')}T10:00:00`, i % 2 ? 'mp4' : 'mp3', '1:00'));
     m.history.push(...Array.from({ length: 31 }, (_, i) => h(`2026-10-${String(i + 1).padStart(2, '0')}T11:00:00`, i % 2 ? 'mp3' : 'mp4', '1:00')));
     const { result } = await setup();
-    expect(result.current.pages.map(p => p.length)).toEqual([24, 30, 6]);
+    expect(result.current.pages.map(p => p.length)).toEqual([24, 30, 8]);
     m.history = [];
     const empty = await setup();
     expect(empty.result.current.pages).toEqual([[]]);

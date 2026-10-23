@@ -34,7 +34,7 @@ export const SpeakerSidebarHeader = ({ profile, speakerName, isLoading, isDark, 
             {profile && (
               <button 
                 onClick={() => {
-                  const summaryText = `${profile.name}\n\nপরিচয়:\n${profile.description}\n\nবিজিবি关于:\n${profile.bgbViews}\n\nডাটাবেজে উল্লেখ: ${dbStats?.bgbMentionCount || 0} বার`;
+                  const summaryText = `${profile.name}\n\nপরিচয়:\n${profile.description}\n\nবিজিবি ও সীমান্ত সংক্রান্ত সার্বিক দৃষ্টিভঙ্গি:\n${profile.bgbViews}\n\nডাটাবেজে উল্লেখ: ${dbStats?.bgbMentionCount || 0} বার`;
                   navigator.clipboard.writeText(summaryText);
                   const btn = document.getElementById('copy-profile-btn');
                   if (btn) {

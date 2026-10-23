@@ -86,6 +86,12 @@ describe('DownloadMenu exports', () => {
     expect(await toText(blobs[0].blob)).toMatchSnapshot();
   });
 
+  it('exports SRT cues from hour timestamps and (MM:SS), without speaker labels', async () => {
+    const { open, pick } = setup({ transcript: '[1:02:03] **Speaker 2:** এক\n(01:59) **বক্তা**: দুই' });
+    open(); pick('Subtitle SRT');
+    expect(await toText(blobs[0].blob)).toBe('1\n01:02:03,000 --> 01:02:08,000\nএক\n\n2\n00:01:59,000 --> 00:02:04,000\nদুই\n\n');
+  });
+
   it('writes a print window for PDF with search and keyword highlights', async () => {
     vi.useRealTimers();
     vi.useFakeTimers();

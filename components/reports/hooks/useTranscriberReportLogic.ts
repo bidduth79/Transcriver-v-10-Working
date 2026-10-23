@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getAllFromStore, STORES } from '../../../services/db';
+import { toLocalIsoDate } from '../../../utils/timeUtils';
 import {
   formatSecondsToHrsMin, buildReportRows, paginateReportRows, printReportElement, buildReportCsv,
   ROWS_FIRST_PAGE, ROWS_OTHER_PAGES,
@@ -16,8 +17,8 @@ export const useTranscriberReportLogic = (isOpen: boolean) => {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    setFromDate(firstDay.toISOString().split('T')[0]);
-    setToDate(lastDay.toISOString().split('T')[0]);
+    setFromDate(toLocalIsoDate(firstDay));
+    setToDate(toLocalIsoDate(lastDay));
   }, []);
 
   const historyUpdates = useAppStore(state => state.storeUpdates['studio_history']);

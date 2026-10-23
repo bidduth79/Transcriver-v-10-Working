@@ -34,7 +34,7 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = (props) => {
         currentMatchIndex={currentMatchIndex} goToPrevMatch={goToPrevMatch} goToNextMatch={goToNextMatch}
         fontSize={fontSize} setFontSize={setFontSize} transformTranscript={transformTranscript}
         transformingType={transformingType} setIsAnalysisOpen={state.setIsAnalysisOpen} setTranscript={setTranscript}
-        setStatus={setStatus} addToast={addToast} setActiveHistoryId={setActiveHistoryId} fileMeta={fileMeta}
+        setStatus={setStatus} addToast={addToast} setActiveHistoryId={setActiveHistoryId} fileMeta={props.activeTranscriptSourceMeta || fileMeta}
         transcript={transcript} sensitiveMatches={keywords.sensitiveMatches}
       />
 

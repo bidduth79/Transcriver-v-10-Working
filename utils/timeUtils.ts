@@ -47,3 +47,7 @@ export const timeToSeconds = (timeStr: string) => {
   if (parts.length !== 3) return 0;
   return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
 };
+
+// "YYYY-MM-DD" in the user's local time zone (toISOString() would shift it to UTC)
+export const toLocalIsoDate = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;

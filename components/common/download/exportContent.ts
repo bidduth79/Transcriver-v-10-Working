@@ -41,31 +41,25 @@ export const buildWordBlob = (transcript: any, keywordRegex: RegExp | null) => {
 const toLatinDigits = (s: string) => s.replace(/[০-৯]/g, m => '0123456789'['০১২৩৪৫৬৭৮৯'.indexOf(m)]);
 const pad = (n: number) => n.toString().padStart(2, '0');
 
-// One cue per line, each lasting 5 seconds from its [MM:SS] timestamp
+// [MM:SS], (MM:SS), [H:MM:SS] or (H:MM:SS) at the start of a cue line, and a **Speaker:** / **Speaker**: label
+const CUE_TIME_REGEX = /[\[\(](?:([0-9০-৯]{1,2}):)?([0-9০-৯]{1,2}):([0-9০-৯]{2})[\]\)]\s*/;
+const SPEAKER_LABEL_REGEX = /\*\*[^*]*?(?::\*\*|\*\*:)\s*/;
+const srtTime = (total: number) => `${pad(Math.floor(total / 3600))}:${pad(Math.floor(total / 60) % 60)}:${pad(total % 60)},000`;
+
+// One cue per line, each lasting 5 seconds from its timestamp (lines without one start at 00:00)
 export const buildSrtBlob = (transcript: any) => {
   let srtContent = "";
   const lines = normalizeTimestamps(transcript).split('\n').filter((l: string) => l && typeof l === 'string' && l.trim() !== "");
   lines.forEach((line: string, index: number) => {
-    const timeMatch = line.match(/\[([0-9০-৯]{1,2}):([0-9০-৯]{2})\]/);
-    let startMins = 0, startSecs = 0;
-    if (timeMatch) {
-      startMins = parseInt(toLatinDigits(timeMatch[1]), 10);
-      startSecs = parseInt(toLatinDigits(timeMatch[2]), 10);
-    }
-    let endMins = startMins;
-    let endSecs = startSecs + 5;
-    if (endSecs >= 60) {
-      endMins += Math.floor(endSecs / 60);
-      endSecs = endSecs % 60;
-    }
-    const startHours = Math.floor(startMins / 60);
-    const startRemMins = startMins % 60;
-    const endHours = Math.floor(endMins / 60);
-    const endRemMins = endMins % 60;
+    const timeMatch = line.match(CUE_TIME_REGEX);
+    const [hours, mins, secs] = timeMatch
+      ? [timeMatch[1] || '0', timeMatch[2], timeMatch[3]].map(v => parseInt(toLatinDigits(v), 10))
+      : [0, 0, 0];
+    const start = hours * 3600 + mins * 60 + secs;
 
     srtContent += `${index + 1}\n`;
-    srtContent += `${pad(startHours)}:${pad(startRemMins)}:${pad(startSecs)},000 --> ${pad(endHours)}:${pad(endRemMins)}:${pad(endSecs)},000\n`;
-    srtContent += `${line.replace(/\*\*.*?\*\*:/, '').replace(/\[[0-9০-৯]{1,2}:[0-9০-৯]{2}\]\s*/, '').trim()}\n\n`;
+    srtContent += `${srtTime(start)} --> ${srtTime(start + 5)}\n`;
+    srtContent += `${line.replace(CUE_TIME_REGEX, '').replace(SPEAKER_LABEL_REGEX, '').trim()}\n\n`;
   });
   return new Blob([srtContent], { type: 'text/srt;charset=utf-8' });
 };

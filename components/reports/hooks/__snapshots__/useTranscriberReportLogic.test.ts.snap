@@ -3,13 +3,6 @@
 exports[`useTranscriberReportLogic > defaults to the current month and groups by day + file type 1`] = `
 [
   {
-    "date": "30/09/2026",
-    "durationSecs": 300,
-    "fileType": "Audio",
-    "method": "File Upload",
-    "qty": 1,
-  },
-  {
     "date": "01/10/2026",
     "durationSecs": 600,
     "fileType": "Video",
@@ -42,12 +35,11 @@ exports[`useTranscriberReportLogic > defaults to the current month and groups by
 
 exports[`useTranscriberReportLogic > exports a CSV with escaped cells and totals 1`] = `
 "Sl No,Transcriber Date,Using Method,File Type,Qty,Duration,Remarks
-1,30/09/2026,File Upload,Audio,1,00 Hrs 05 Min,""
-2,01/10/2026,File Upload,Video,1,00 Hrs 10 Min,""
-3,03/10/2026,File Upload,Audio,2,00 Hrs 02 Min,""
-4,03/10/2026,File Upload,Video,1,01 Hrs 00 Min,""
-5,20/10/2026,File Upload,Audio,1,00 Hrs 00 Min,""
-,,,Total-,6,01 Hrs 17 Min,""
+1,01/10/2026,File Upload,Video,1,00 Hrs 10 Min,""
+2,03/10/2026,File Upload,Audio,2,00 Hrs 02 Min,""
+3,03/10/2026,File Upload,Video,1,01 Hrs 00 Min,""
+4,20/10/2026,File Upload,Audio,1,00 Hrs 00 Min,""
+,,,Total-,5,01 Hrs 12 Min,""
 "
 `;
 
@@ -56,7 +48,7 @@ exports[`useTranscriberReportLogic > prints the report page HTML, or alerts when
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Transcriber_Report_2026-09-30_to_2026-10-30</title>
+          <title>Transcriber_Report_2026-10-01_to_2026-10-31</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
             body {

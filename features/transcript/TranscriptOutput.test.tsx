@@ -95,6 +95,13 @@ describe('TranscriptOutput markup by state', () => {
 });
 
 describe('TranscriptOutput behavior', () => {
+  it('names downloads after the shown transcript (history item without audio), else the file', () => {
+    setup({ fileMeta: null, activeTranscriptSourceMeta: { name: 'old-call.mp3' } });
+    expect(m.props.TranscriptToolbar.fileMeta.name).toBe('old-call.mp3');
+    setup({ activeTranscriptSourceMeta: null });
+    expect(m.props.TranscriptToolbar.fileMeta.name).toBe('a.mp3');
+  });
+
   it('Try Again resets transcript, status, active history and meta', () => {
     const { getByText, props } = setup();
     fireEvent.click(getByText(/নতুন করে চেষ্টা করুন/));

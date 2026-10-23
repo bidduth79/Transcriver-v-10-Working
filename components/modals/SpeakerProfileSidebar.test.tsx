@@ -66,8 +66,7 @@ describe('SpeakerProfileSidebar behavior', () => {
     const btn = container.querySelector('#copy-profile-btn') as HTMLElement;
     const before = btn.innerHTML;
     fireEvent.click(btn);
-    // "关于" is in the original copy text; kept as-is
-    const expected = 'রহিম উদ্দিন\n\nপরিচয়:\nবর্ণনা\n\nবিজিবি关于:\nমতামত\n\nডাটাবেজে উল্লেখ: 3 বার';
+    const expected = 'রহিম উদ্দিন\n\nপরিচয়:\nবর্ণনা\n\nবিজিবি ও সীমান্ত সংক্রান্ত সার্বিক দৃষ্টিভঙ্গি:\nমতামত\n\nডাটাবেজে উল্লেখ: 3 বার';
     expect(writeText.mock.calls[0][0].normalize('NFC')).toBe(expected.normalize('NFC'));
     expect(btn.innerHTML).toContain('text-green-500');
     act(() => { vi.advanceTimersByTime(1999); });
