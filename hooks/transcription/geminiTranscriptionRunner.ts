@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import type { AudioSource } from './geminiAudioSource';
 import { getFallbackProviders, setActiveApiKey } from '../../services/ApiKeyManager';
 import { detectAudioMimeType, convertAudioToWav, blobToBase64 } from './transcriptionUtils';
 import { isKeyOrProjectBlockedError } from './transcriptionErrors';
@@ -33,22 +34,28 @@ export const prepareAudio = async (inputFile: Blob, fileName: string) => {
   return { effectiveFile, effectiveMimeType };
 };
 
+// Builds the request for a given key (large audio is uploaded per key)
+export type BuildRequest = (ai: GoogleGenAI, apiKey: string) => Promise<any>;
+
 interface RecoveryOptions {
   provider: { key: string; source: string };
-  request: any;
+  buildRequest: BuildRequest;
   lang: Lang;
   setStage: (stage: string) => void;
   addToast: Toast;
 }
 
 // Calls Gemini; on blocked/quota errors tries fallback keys, and drops thinkingConfig if a model rejects it.
-export const generateWithRecovery = async ({ provider, request, lang, setStage, addToast }: RecoveryOptions) => {
+export const generateWithRecovery = async ({ provider, buildRequest, lang, setStage, addToast }: RecoveryOptions) => {
   let ai = new GoogleGenAI({ apiKey: provider.key });
+  let apiKey = provider.key;
+  let request: any = null;
   let source = provider.source;
   let keyLabel = keyLabelOf(provider.source, provider.key);
   let response: any = null;
 
   try {
+    request = await buildRequest(ai, provider.key);
     response = await ai.models.generateContent(request);
   } catch (err: any) {
     console.error("Transcription generation failed on primary key:", err);
@@ -64,8 +71,11 @@ export const generateWithRecovery = async ({ provider, request, lang, setStage, 
             ? `বিকল্প এপিআই কি (${fb.source}) দিয়ে পুনরায় চেষ্টা করা হচ্ছে...`
             : `Retrying with alternate API Key (${fb.source})...`);
           const fbAi = new GoogleGenAI({ apiKey: fb.key });
+          releaseRequestAudio(request);
+          request = await buildRequest(fbAi, fb.key);
           response = await fbAi.models.generateContent(request);
           ai = fbAi;
+          apiKey = fb.key;
           source = fb.source;
           keyLabel = keyLabelOf(fb.source, fb.key);
           if (fb.id && fb.id !== 'env' && fb.id !== 'local_server') {
@@ -87,7 +97,7 @@ export const generateWithRecovery = async ({ provider, request, lang, setStage, 
       if (!recoveredWithFallback) {
         throw err;
       }
-    } else if (request.config?.thinkingConfig) {
+    } else if (request?.config?.thinkingConfig) {
       // Safe fallback if a specific preview model rejected thinkingConfig
       try {
         const classicOptions = { ...request, config: { ...request.config } };
@@ -104,31 +114,30 @@ export const generateWithRecovery = async ({ provider, request, lang, setStage, 
     releaseRequestAudio(request);
   }
 
-  return { response, ai, source, keyLabel };
+  return { response, ai, apiKey, source, keyLabel };
 };
 
 interface RetryOptions {
   ai: GoogleGenAI;
+  apiKey: string;
+  audio: AudioSource;
   modelName: string;
   inputFile: Blob;
-  effectiveFile: Blob;
   effectiveMimeType: string;
 }
 
 // Second attempt with a high-sensitivity prompt when the first answer had no text
-export const retryHighSensitivity = async ({ ai, modelName, inputFile, effectiveFile, effectiveMimeType }: RetryOptions) => {
+export const retryHighSensitivity = async ({ ai, apiKey, audio, modelName, inputFile, effectiveMimeType }: RetryOptions) => {
   try {
-    let retryBlob = effectiveFile;
-    let retryMime = effectiveMimeType;
-    // If small file wasn't converted to WAV yet, convert and normalize gain now
-    if (inputFile.size <= SMALL_FILE_LIMIT && retryMime !== 'audio/wav') {
+    // If small file wasn't converted to WAV yet, convert and normalize gain now; otherwise reuse the same audio
+    let audioPart = null;
+    if (inputFile.size <= SMALL_FILE_LIMIT && effectiveMimeType !== 'audio/wav') {
       const wavRetry = await convertAudioToWav(inputFile, 16000);
       if (wavRetry?.wavBlob) {
-        retryBlob = wavRetry.wavBlob;
-        retryMime = 'audio/wav';
+        audioPart = { inlineData: { mimeType: 'audio/wav', data: await blobToBase64(wavRetry.wavBlob) } };
       }
     }
-    const request = buildHighSensitivityRequest(modelName, retryMime, await blobToBase64(retryBlob));
+    const request = buildHighSensitivityRequest(modelName, audioPart || await audio.partFor(ai, apiKey));
     try {
       return await ai.models.generateContent(request);
     } finally {
