@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useQuotaLogs } from './quota/useQuotaLogs';
-import { getModelLimits, computeCurrentUsage, computePeakTrends, formatQuotaNumber, quotaLogsFor } from './quota/quotaStats';
+import { getModelLimits, hasCustomLimits, computeCurrentUsage, computePeakTrends, formatQuotaNumber, quotaLogsFor } from './quota/quotaStats';
+import { QuotaLimitsEditor } from './quota/QuotaLimitsEditor';
 import { QuotaMiniProgress } from './quota/QuotaMiniProgress';
 import { PeakUsageChart } from './quota/PeakUsageChart';
 import { DEFAULT_MODEL } from '../../constants/aiModels';
@@ -16,7 +17,11 @@ export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang }) =
   // Only the active model's requests on the active key count against this quota
   const logs = useMemo(() => quotaLogsFor(allLogs, activeModel, activeKeyTail), [allLogs, activeModel, activeKeyTail]);
 
-  const limits = getModelLimits(activeModel || DEFAULT_MODEL);
+  const model = activeModel || DEFAULT_MODEL;
+  const [isEditingLimits, setIsEditingLimits] = useState(false);
+  // Read on every render, so limits saved in the editor apply at once
+  const limits = getModelLimits(model);
+  const isCustom = hasCustomLimits(model);
   const usage = computeCurrentUsage(logs, limits, Date.now());
 
   // Recompute when logs change, and on every refresh tick so the time windows move forward
@@ -32,12 +37,19 @@ export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang }) =
             {appLang === 'bn' ? 'এপিআই রেট লিমিট' : 'API Rate Limit'}
           </h2>
           <span className="px-2 py-0.5 text-[10px] font-bold border border-slate-300 dark:border-slate-600 rounded-full text-slate-500 dark:text-slate-400">
-            Free tier
+            {isCustom ? (appLang === 'bn' ? 'আপনার সীমা' : 'Your limits') : (appLang === 'bn' ? 'আনুমানিক সীমা' : 'Estimated limits')}
           </span>
         </div>
+        <button
+          onClick={() => setIsEditingLimits(v => !v)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${isDark ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+        >
+          {appLang === 'bn' ? 'সীমা বদলান' : 'Edit limits'}
+        </button>
       </div>
 
-      <div className={`rounded-xl border flex flex-col overflow-hidden ${isDark ? 'bg-[#1e1e1e] border-slate-700/50' : 'bg-white border-slate-200'}`}>
+      {/* shrink-0: inside the scrolling settings panel the table must keep its height, or its rows get cut off */}
+      <div className={`rounded-xl border flex flex-col overflow-hidden shrink-0 ${isDark ? 'bg-[#1e1e1e] border-slate-700/50' : 'bg-white border-slate-200'}`}>
 
         {/* Table Header */}
         <div className={`px-4 py-3 border-b flex gap-4 ${isDark ? 'border-slate-700/50 bg-[#252525]' : 'border-slate-200 bg-slate-50'}`}>
@@ -52,6 +64,7 @@ export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang }) =
         <div className={`px-4 py-4 flex gap-4 items-center transition-colors ${isDark ? 'hover:bg-slate-800/30' : 'hover:bg-slate-50'}`}>
           <div className={`w-1/3 text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
             {activeModel || 'Gemini Model'}
+            {activeKeyTail && <div className="text-[10px] font-mono text-slate-400 mt-0.5">key ••••{activeKeyTail}</div>}
           </div>
           <div className="w-1/4 text-xs text-slate-500 hidden md:block">Text-out models</div>
           <div className="w-[15%]">
@@ -65,22 +78,9 @@ export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang }) =
           </div>
         </div>
 
-        {/* AntiGravity Row (For completeness/fun based on image) */}
-        <div className={`px-4 py-4 flex gap-4 items-center opacity-40 border-t ${isDark ? 'border-slate-800 hover:bg-slate-800/30' : 'border-slate-100 hover:bg-slate-50'}`}>
-          <div className={`w-1/3 text-sm font-medium ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-            Antigravity
-          </div>
-          <div className="w-1/4 text-xs text-slate-500 hidden md:block">Agents</div>
-          <div className="w-[15%]">
-            <QuotaMiniProgress percent={0} value={0} limit={60} label="RPM" isDark={isDark} />
-          </div>
-          <div className="w-[15%]">
-            <QuotaMiniProgress percent={0} value={0} limit={100000} label="TPM" isDark={isDark} />
-          </div>
-          <div className="w-[15%]">
-            <QuotaMiniProgress percent={0} value={0} limit={100} label="RPD" isDark={isDark} />
-          </div>
-        </div>
+        {isEditingLimits && (
+          <QuotaLimitsEditor key={model} model={model} appLang={appLang} isDark={isDark} onSaved={() => setIsEditingLimits(false)} />
+        )}
       </div>
 
       {/* Peak Usage Trends */}

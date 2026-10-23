@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, act } from '@testing-library/react';
+import { render, act, fireEvent } from '@testing-library/react';
 
 const m = vi.hoisted(() => ({ logs: [] as any[], model: 'gemini-3.8-flash', getLogs: vi.fn() }));
 vi.mock('../../services/ApiKeyManager', () => ({
@@ -30,6 +30,7 @@ const renderAt = async (props: any = {}) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorage.clear();
   vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
   vi.setSystemTime(NOW);
   m.model = 'gemini-3.8-flash';
@@ -58,6 +59,30 @@ describe('QuotaMonitor markup', () => {
     m.model = '';
     const { container } = await renderAt();
     expect(container.textContent).toContain('Gemini Model');
+  });
+});
+
+describe('QuotaMonitor limits', () => {
+  it('uses the limits the user saved from AI Studio, per model, and can go back to the estimate', async () => {
+    m.logs = [at(1000), at(2000)];
+    const { container, getByText, getByRole } = await renderAt({ appLang: 'en' });
+    expect(container.textContent).toContain('Estimated limits');
+    expect(container.textContent).toContain('key ••••ABCD');
+    expect(container.textContent).not.toContain('Antigravity');
+    fireEvent.click(getByText('Edit limits'));
+    expect(getByRole('link').getAttribute('href')).toContain('aistudio.google.com/rate-limit');
+    const [rpm, tpm, rpd] = Array.from(container.querySelectorAll('input[type="number"]')) as HTMLInputElement[];
+    fireEvent.change(rpm, { target: { value: '10' } });
+    fireEvent.change(tpm, { target: { value: '250000' } });
+    fireEvent.change(rpd, { target: { value: '500' } });
+    fireEvent.click(getByText('Save'));
+    expect(container.textContent).toContain('Your limits');
+    expect(container.textContent).toContain('2 / 10');
+    expect(container.textContent).toContain('2 / 500');
+    fireEvent.click(getByText('Edit limits'));
+    fireEvent.change(rpm, { target: { value: '0' } });
+    fireEvent.click(getByText('Back to estimate'));
+    expect(container.textContent).toContain('2 / 15');
   });
 });
 

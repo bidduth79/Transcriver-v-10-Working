@@ -5,12 +5,30 @@ const MINUTE_MS = 60000;
 
 export interface QuotaLimits { rpm: number; tpm: number; rpd: number }
 
-// Free-tier limits: "pro" models are much stricter than flash models
-export const getModelLimits = (modelId: string): QuotaLimits => {
-  if (modelId.includes('pro')) {
-    return { rpm: 2, tpm: 32000, rpd: 50 };
+const CUSTOM_LIMITS_KEY = 'quota_limits_by_model';
+
+// Rough free-tier guesses ("pro" models are much stricter). Google no longer publishes per-model numbers;
+// each project's real limits are shown in AI Studio, and the user can enter them (saveModelLimits).
+export const estimatedLimits = (modelId: string): QuotaLimits =>
+  modelId.includes('pro') ? { rpm: 2, tpm: 32000, rpd: 50 } : { rpm: 15, tpm: 1000000, rpd: 1500 };
+
+const readCustomLimits = (): Record<string, QuotaLimits> => {
+  try {
+    return JSON.parse(localStorage.getItem(CUSTOM_LIMITS_KEY) || '{}');
+  } catch {
+    return {};
   }
-  return { rpm: 15, tpm: 1000000, rpd: 1500 };
+};
+
+export const hasCustomLimits = (modelId: string) => !!readCustomLimits()[modelId];
+
+export const getModelLimits = (modelId: string): QuotaLimits => readCustomLimits()[modelId] ?? estimatedLimits(modelId);
+
+// Saves the user's real limits for a model; null goes back to the estimate
+export const saveModelLimits = (modelId: string, limits: QuotaLimits | null) => {
+  const all = readCustomLimits();
+  if (limits) all[modelId] = limits; else delete all[modelId];
+  localStorage.setItem(CUSTOM_LIMITS_KEY, JSON.stringify(all));
 };
 
 // 1500 → "1.5K", 1000000 → "1M"
