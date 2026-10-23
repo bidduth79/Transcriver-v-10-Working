@@ -1,7 +1,5 @@
-import {
-  collection, getDocs, query, orderBy, limit, startAfter, documentId,
-  Firestore, QueryDocumentSnapshot, QueryConstraint, QuerySnapshot,
-} from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
+import type { QueryDocumentSnapshot, QueryConstraint, QuerySnapshot } from 'firebase/firestore/lite';
 import { syncStats, notifyListeners, sleep } from './syncState';
 
 // Documents fetched per request; only one page is held in memory at a time
@@ -50,6 +48,10 @@ interface PullStoreOptions {
  * Returns how many cloud documents were seen and how many were added locally.
  */
 export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloudCount, onMerged }: PullStoreOptions) => {
+  // Read through the cache-free Lite SDK: the full SDK's memory cache keeps every pulled document
+  // (all transcripts) in memory for the rest of the session. Loaded only when a pull runs.
+  const { getFirestore, collection, getDocs, query, orderBy, limit, startAfter, documentId } = await import('firebase/firestore/lite');
+  const liteDb = getFirestore(db.app);
   let existingKeys: Set<string> | null = null;
   let lastDoc: QueryDocumentSnapshot | null = null;
   let cloudCount = 0;
@@ -59,7 +61,7 @@ export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloud
     const constraints: QueryConstraint[] = lastDoc
       ? [orderBy(documentId()), startAfter(lastDoc), limit(PULL_PAGE_SIZE)]
       : [orderBy(documentId()), limit(PULL_PAGE_SIZE)];
-    const snap: QuerySnapshot = await getDocs(query(collection(db, storeName), ...constraints));
+    const snap: QuerySnapshot = await getDocs(query(collection(liteDb, storeName), ...constraints));
     cloudCount += snap.size;
     onCloudCount(cloudCount);
 

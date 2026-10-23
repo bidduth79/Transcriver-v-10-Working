@@ -6,8 +6,9 @@ const m = vi.hoisted(() => ({
   getDocs: vi.fn(),
 }));
 
-vi.mock('firebase/firestore', () => ({
-  collection: (_db: any, name: string) => name,
+vi.mock('firebase/firestore/lite', () => ({
+  getFirestore: (app: any) => ({ lite: app }),
+  collection: (db: any, name: string) => (db.lite === 'APP' ? name : 'wrong-db'),
   query: (name: string, ...c: any[]) => Object.assign({ name }, ...c),
   orderBy: () => ({}), documentId: () => '__name__', startAfter: (d: any) => ({ after: d.id }), limit: (n: number) => ({ lim: n }),
   getDocs: m.getDocs,
@@ -46,7 +47,7 @@ const cloudDocs = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `id$
 const run = (shouldStop = () => false) => {
   const counts: number[] = [];
   const onMerged = vi.fn();
-  const result = pullStoreInPages({ db: {} as any, idb: fakeIdb, storeName: 'studio_history', shouldStop, onCloudCount: c => counts.push(c), onMerged });
+  const result = pullStoreInPages({ db: { app: 'APP' } as any, idb: fakeIdb, storeName: 'studio_history', shouldStop, onCloudCount: c => counts.push(c), onMerged });
   return { result, counts, onMerged };
 };
 

@@ -15,13 +15,13 @@ vi.mock('./firebase', () => ({
   authPromise: Promise.resolve(),
 }));
 vi.mock('firebase/firestore', () => ({
-  collection: (_db: any, name: string) => name,
-  doc: (_db: any, store: string, id: string) => `${store}/${id}`,
+  doc: (_db: any, store: string, id: string) => `${store}/${id}`, setDoc: m.setDoc, deleteDoc: m.deleteDoc,
+}));
+vi.mock('firebase/firestore/lite', () => ({
+  getFirestore: () => ({}), collection: (_db: any, name: string) => name,
   query: (name: string, ...c: any[]) => Object.assign({ name }, ...c),
   orderBy: () => ({}), documentId: () => '__name__', startAfter: (d: any) => ({ after: d.id }), limit: (n: number) => ({ lim: n }),
   getDocs: m.getDocs,
-  setDoc: m.setDoc,
-  deleteDoc: m.deleteDoc,
 }));
 
 // In-memory IndexedDB stand-in: keys are "store::id"
