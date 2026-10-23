@@ -86,6 +86,32 @@ describe('useBatchProcessor', () => {
     expect(s.r().failedFiles).toEqual([]);
   });
 
+  it('treats a { success: false } result as a failure, retrying after the wait Gemini asked for', async () => {
+    const limit = { isRateLimit: true, isDaily: false, retryAfterMs: 20000 };
+    const process = vi.fn().mockResolvedValueOnce({ success: false, error: 'rate', rateLimit: limit }).mockResolvedValue({ success: false, error: 'bad' });
+    const s = setup(process);
+    await s.queue([file('a.mp3')]);
+    await s.call('startBatch');
+    await act(async () => { await vi.advanceTimersByTimeAsync(20000); });
+    expect(process).toHaveBeenCalledTimes(1);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    await settle();
+    expect(process).toHaveBeenCalledTimes(2);
+    expect(s.r()).toMatchObject({ processedCount: 0, failedFiles: [expect.objectContaining({ reason: 'bad' })] });
+  });
+
+  it('pauses at the file when every key has used its daily quota', async () => {
+    const daily = { isRateLimit: true, isDaily: true, retryAfterMs: null };
+    const s = setup(vi.fn().mockResolvedValue({ success: false, error: 'quota', rateLimit: daily }));
+    await s.queue([file('a.mp3'), file('b.mp3')]);
+    await s.call('startBatch');
+    await act(async () => { await vi.advanceTimersByTimeAsync(60000); });
+    expect(s.process).toHaveBeenCalledTimes(1);
+    expect(s.r()).toMatchObject({ isBatchPaused: true, currentBatchIndex: 0, failedFiles: [] });
+    expect(m.lock).toHaveBeenLastCalledWith('batch', false);
+    expect(toasts(s).at(-1)).toMatch(/^error:/);
+  });
+
   it('reports full success', async () => {
     const s = setup();
     await s.queue([file('a.mp3')]);

@@ -136,7 +136,7 @@ describe('useTranscription.processTranscription', () => {
   it('switches to a fallback key when the primary key is blocked', async () => {
     m.getFallbackProviders.mockResolvedValue([{ id: 'k2', key: 'KEY-BBBB', source: 'Backup' }]);
     m.generate.mockImplementation(async (key: string) => {
-      if (key === 'KEY-AAAA') throw new Error('429 quota exceeded');
+      if (key === 'KEY-AAAA') throw new Error('429 quota exceeded: GenerateRequestsPerDayPerProjectPerModel');
       return resp('ok');
     });
     const { run, addToast } = setup();
@@ -148,7 +148,7 @@ describe('useTranscription.processTranscription', () => {
   });
 
   it('shows quota message with key label when all keys fail', async () => {
-    m.generate.mockRejectedValue(new Error('429 quota exceeded'));
+    m.generate.mockRejectedValue(new Error('429 quota exceeded: GenerateRequestsPerDayPerProjectPerModel'));
     const { run } = setup();
     const out = await run();
     expect(out.error).toContain('কোটা শেষ');

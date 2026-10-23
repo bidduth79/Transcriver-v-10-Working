@@ -67,7 +67,7 @@ describe('generateWithRecovery with large audio', () => {
     const sent: any[] = [];
     const wrap = (ai: any, key: string) => {
       const real = ais[key];
-      ai.models = { generateContent: async (req: any) => { sent.push([key, req.contents[0].parts[0]]); if (key === 'KEY-A') throw new Error('429 quota'); return { ok: 1 }; } };
+      ai.models = { generateContent: async (req: any) => { sent.push([key, req.contents[0].parts[0]]); if (key === 'KEY-A') throw new Error('429 quota: GenerateRequestsPerDayPerProjectPerModel'); return { ok: 1 }; } };
       ai.files = real.files;
       return ai;
     };

@@ -2,6 +2,7 @@ import React from 'react';
 import { TranscriptMeta, FileMeta } from '../../types';
 import { getFileMetadata } from './batchUtils';
 import { setHeavyProcessingActive } from '../../services/firebaseThrottledQueue';
+import { rateLimitWaitMs, type RateLimitInfo } from '../transcription/rateLimit';
 
 export interface FailedFile {
   file: File;
@@ -25,6 +26,8 @@ export interface BatchRunnerContext {
   // Index waiting in the countdown, and index being transcribed right now (null when none)
   pendingNextIndexRef: React.MutableRefObject<number | null>;
   inFlightIndexRef: React.MutableRefObject<number | null>;
+  // Stops the batch at `index` (kept for resume) when every key's daily quota is used up
+  pauseForQuota: (index: number) => void;
   setCurrentBatchIndex: (i: number) => void;
   setIsBatchProcessing: (b: boolean) => void;
   setHasBatchStarted: (b: boolean) => void;
@@ -118,13 +121,27 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
     try {
       const metadata = await getFileMetadata(currentFile);
       ctx.setFileMeta(metadata);
-      await ctx.processTranscription(currentFile, metadata, true);
+      const result = await ctx.processTranscription(currentFile, metadata, true);
+      // processTranscription reports a failure in its result instead of throwing
+      if (result?.success === false) {
+        throw Object.assign(new Error(result.error || 'Transcription failed'), { rateLimit: result.rateLimit });
+      }
       inFlightIndexRef.current = null;
       ctx.setProcessedCount(prev => prev + 1);
       startCountdownForNextFile(queue, index + 1);
     } catch (error: any) {
       inFlightIndexRef.current = null;
       console.error(`Error processing ${currentFile.name}:`, error);
+      const limit: RateLimitInfo | undefined = error?.rateLimit;
+
+      // No key has quota left today: pause here instead of failing (and spending requests on) the rest
+      if (limit?.isDaily) {
+        ctx.pauseForQuota(index);
+        addToast(appLang === 'bn'
+          ? 'সব এপিআই কি-র আজকের কোটা শেষ, তাই ব্যাচ থামানো হয়েছে। নতুন কি যোগ করে বা কোটা রিসেটের পর (বাংলাদেশ সময় দুপুর ১-২টা) আবার চালু করুন।'
+          : 'Daily quota is used up on every API key, so the batch was paused. Add a key or resume after the quota resets (midnight Pacific time).', 'error');
+        return;
+      }
 
       if (retryCount < 1) {
         addToast(appLang === 'bn' ? `${currentFile.name} ব্যর্থ হয়েছে, আবার চেষ্টা করা হচ্ছে...` : `${currentFile.name} failed, retrying...`, 'warning');
@@ -136,7 +153,7 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
           } else {
             ctx.setCurrentBatchIndex(index);
           }
-        }, 3000);
+        }, (limit && rateLimitWaitMs(limit)) || 3000);
       } else {
         addToast(appLang === 'bn' ? `${currentFile.name} ট্রান্সক্রাইব করা যায়নি` : `Failed to transcribe ${currentFile.name}`, 'error');
         ctx.setFailedFiles(prev => [...prev, { file: currentFile, reason: error?.message || 'Transcription failed' }]);

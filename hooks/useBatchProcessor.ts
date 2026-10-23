@@ -39,6 +39,12 @@ export const useBatchProcessor = (
   const { processNextBatchFile, clearRetryTimeout } = createBatchRunner({
     appLang, addToast, setFile, setFileUrl, setActiveHistoryId, setTranscriptMeta, setFileMeta, processTranscription,
     isBatchPausedRef, prevBatchUrlRef, retryTimeoutRef, pendingNextIndexRef, inFlightIndexRef,
+    pauseForQuota: (index: number) => {
+      isBatchPausedRef.current = true;
+      setIsBatchPaused(true);
+      setCurrentBatchIndex(index);
+      setHeavyProcessingActive('batch', false);
+    },
     setCurrentBatchIndex, setIsBatchProcessing, setHasBatchStarted, setFailedFiles, setProcessedCount, setIsBatchSummaryOpen,
     startCountdown,
   });

@@ -9,6 +9,7 @@ import { getDecodingStage, getProgressStage } from './transcription/transcriptio
 import { buildTranscriptionRequest, extractResponseText } from './transcription/geminiRequest';
 import { prepareAudio, generateWithRecovery, retryHighSensitivity, keyLabelOf, type BuildRequest } from './transcription/geminiTranscriptionRunner';
 import { createAudioSource, type AudioSource } from './transcription/geminiAudioSource';
+import { parseRateLimit } from './transcription/rateLimit';
 import { buildHistoryItem, addToInMemoryHistory, persistHistoryItem, scheduleBgbAnalysis } from './transcription/transcriptionHistory';
 import { DEFAULT_MODEL } from '../constants/aiModels';
 
@@ -183,7 +184,7 @@ export const useTranscription = (
       const safeMsg = formatErrorMessage(error, appLang, lastUsedKeyLabel);
       setErrorMessage(safeMsg);
       logSystemActivity('TRANSCRIPTION', 'ERROR', 'Failed', safeMsg);
-      return { success: false, error: safeMsg };
+      return { success: false, error: safeMsg, rateLimit: parseRateLimit(error) };
     } finally {
       audio?.cleanup();
       clearTranscriptionTimer();

@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import type { AudioSource } from './geminiAudioSource';
+import { parseRateLimit, rateLimitWaitMs, sleepMs } from './rateLimit';
 import { getFallbackProviders, setActiveApiKey } from '../../services/ApiKeyManager';
 import { detectAudioMimeType, convertAudioToWav, blobToBase64 } from './transcriptionUtils';
 import { isKeyOrProjectBlockedError } from './transcriptionErrors';
@@ -45,6 +46,20 @@ interface RecoveryOptions {
   addToast: Toast;
 }
 
+// A per-minute rate limit: wait as long as Gemini asks (at most 2 minutes), then try the same key once more
+const generateWaitingOnRateLimit = async (ai: GoogleGenAI, request: any, lang: Lang, setStage: (stage: string) => void) => {
+  try {
+    return await ai.models.generateContent(request);
+  } catch (err) {
+    const waitMs = rateLimitWaitMs(parseRateLimit(err));
+    if (waitMs === null) throw err;
+    const secs = Math.round(waitMs / 1000);
+    setStage(lang === 'bn' ? `রেট লিমিট: ${secs} সেকেন্ড অপেক্ষা করে আবার চেষ্টা করা হচ্ছে...` : `Rate limit: retrying in ${secs}s...`);
+    await sleepMs(waitMs);
+    return await ai.models.generateContent(request);
+  }
+};
+
 // Calls Gemini; on blocked/quota errors tries fallback keys, and drops thinkingConfig if a model rejects it.
 export const generateWithRecovery = async ({ provider, buildRequest, lang, setStage, addToast }: RecoveryOptions) => {
   let ai = new GoogleGenAI({ apiKey: provider.key });
@@ -56,7 +71,7 @@ export const generateWithRecovery = async ({ provider, buildRequest, lang, setSt
 
   try {
     request = await buildRequest(ai, provider.key);
-    response = await ai.models.generateContent(request);
+    response = await generateWaitingOnRateLimit(ai, request, lang, setStage);
   } catch (err: any) {
     console.error("Transcription generation failed on primary key:", err);
     if (err?.message?.includes('RECITATION') || err?.message?.includes('Recitation')) {
@@ -78,7 +93,9 @@ export const generateWithRecovery = async ({ provider, buildRequest, lang, setSt
           apiKey = fb.key;
           source = fb.source;
           keyLabel = keyLabelOf(fb.source, fb.key);
-          if (fb.id && fb.id !== 'env' && fb.id !== 'local_server') {
+          // A per-minute limit passes by itself, so the working key becomes the default only for lasting problems
+          const limit = parseRateLimit(err);
+          if (fb.id && fb.id !== 'env' && fb.id !== 'local_server' && (!limit.isRateLimit || limit.isDaily)) {
             setActiveApiKey(fb.id);
           }
           addToast(
