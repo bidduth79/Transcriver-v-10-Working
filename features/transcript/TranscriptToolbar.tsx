@@ -1,4 +1,5 @@
 import React from 'react';
+import { Expand } from 'lucide-react';
 import { DownloadMenu } from '../../components/common/DownloadMenu';
 import { useTranscriptToolbar } from './hooks/useTranscriptToolbar';
 import { unicodeToBijoy, bijoyToUnicode, isUnicode } from '@abdalgolabs/ansi-unicode-converter';
@@ -6,7 +7,7 @@ import { unicodeToBijoy, bijoyToUnicode, isUnicode } from '@abdalgolabs/ansi-uni
 export const TranscriptToolbar = ({
   t, status, appLang, handleSummaryClick, setIsReportOpen, isDisabled, activeColors,
   searchTerm, handleSearchChange, handleKeyDown, clearSearch, transcriptSearchInputRef, matchCount, currentMatchIndex,
-  fontSize, setFontSize, transformTranscript, transformingType,
+  fontSize, setFontSize, transformTranscript, transformingType, setIsAnalysisOpen,
   transcript, fileMeta, addToast, setTranscript, setStatus, setActiveHistoryId, sensitiveMatches
 }: any) => {
   const { handleDelete } = useTranscriptToolbar(setTranscript, setStatus, setActiveHistoryId);
@@ -43,6 +44,13 @@ export const TranscriptToolbar = ({
             <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
+          </button>
+          <button 
+            onClick={() => setIsAnalysisOpen(true)}
+            className="w-9 h-9 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-95 group/tool shadow-xl cursor-pointer group"
+            title={appLang === 'bn' ? 'ফুল ট্রান্সক্রিপ্ট প্রিভিউ' : 'Full Transcript Preview'}
+          >
+            <Expand className="w-4 h-4 transition-transform group-hover:scale-110" strokeWidth={2.5} />
           </button>
         </div>
 

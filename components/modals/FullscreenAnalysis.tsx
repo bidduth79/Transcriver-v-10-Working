@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 interface FullscreenAnalysisProps {
   isOpen: boolean;
@@ -18,7 +19,8 @@ export const FullscreenAnalysis: React.FC<FullscreenAnalysisProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  return (
+  // Rendered on <body>: inside the main content (z-10) the app sidebar would cover its history panel
+  return createPortal(
     <div className="fixed inset-0 z-[90] flex bg-slate-950 animate-in fade-in duration-500 overflow-hidden">
       {/* Sidebar - Full History */}
       <aside className={`w-[400px] lg:w-[480px] flex flex-col border-r border-white/10 ${isDark ? 'bg-slate-900' : 'bg-slate-900'}`}>
@@ -105,6 +107,7 @@ export const FullscreenAnalysis: React.FC<FullscreenAnalysisProps> = ({
           <div className={`absolute bottom-0 right-0 w-96 h-96 ${activeColors?.primary || 'bg-indigo-600'} opacity-[0.03] blur-[120px] rounded-full pointer-events-none`}></div>
         </div>
       </main>
-    </div>
+    </div>,
+    document.body
   );
 };

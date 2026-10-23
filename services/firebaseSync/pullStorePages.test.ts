@@ -7,6 +7,7 @@ const m = vi.hoisted(() => ({
 }));
 
 vi.mock('firebase/firestore/lite', () => ({
+  setLogLevel: vi.fn(),
   getFirestore: (app: any) => ({ lite: app }),
   collection: (db: any, name: string) => (db.lite === 'APP' ? name : 'wrong-db'),
   query: (name: string, ...c: any[]) => Object.assign({ name }, ...c),

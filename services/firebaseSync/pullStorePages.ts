@@ -50,7 +50,8 @@ interface PullStoreOptions {
 export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloudCount, onMerged }: PullStoreOptions) => {
   // Read through the cache-free Lite SDK: the full SDK's memory cache keeps every pulled document
   // (all transcripts) in memory for the rest of the session. Loaded only when a pull runs.
-  const { getFirestore, collection, getDocs, query, orderBy, limit, startAfter, documentId } = await import('firebase/firestore/lite');
+  const { getFirestore, collection, getDocs, query, orderBy, limit, startAfter, documentId, setLogLevel } = await import('firebase/firestore/lite');
+  setLogLevel('silent'); // Same as the full SDK in services/firebase.ts: errors are handled here
   const liteDb = getFirestore(db.app);
   let existingKeys: Set<string> | null = null;
   let lastDoc: QueryDocumentSnapshot | null = null;

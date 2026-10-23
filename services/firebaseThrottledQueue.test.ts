@@ -18,7 +18,7 @@ vi.mock('firebase/firestore', () => ({
   doc: (_db: any, store: string, id: string) => `${store}/${id}`, setDoc: m.setDoc, deleteDoc: m.deleteDoc,
 }));
 vi.mock('firebase/firestore/lite', () => ({
-  getFirestore: () => ({}), collection: (_db: any, name: string) => name,
+  setLogLevel: vi.fn(), getFirestore: () => ({}), collection: (_db: any, name: string) => name,
   query: (name: string, ...c: any[]) => Object.assign({ name }, ...c),
   orderBy: () => ({}), documentId: () => '__name__', startAfter: (d: any) => ({ after: d.id }), limit: (n: number) => ({ lim: n }),
   getDocs: m.getDocs,
