@@ -2,6 +2,7 @@ import { db, authPromise, isFirebaseConfigured } from '../firebase';
 import { FIREBASE_SYNCED_STORES, STORES } from '../../constants/storeNames';
 import { runtime, syncStats, notifyListeners, isHeavyProcessingActive, sleep } from './syncState';
 import { pullStoreInPages } from './pullStorePages';
+import { removeCloudSecretCopies } from './secretCleanup';
 import { SYNC_STAMP_FIELD } from './syncStamp';
 import { startOfYesterday, getPullCheckpoint, savePullCheckpoint, countCloudDocs } from './pullWindow';
 
@@ -56,6 +57,12 @@ export const scheduleGentleFirebasePull = (
         const { initDB } = await import('../db');
         const idb = await initDB();
         const cloudDb = db;
+        try {
+          const removed = await removeCloudSecretCopies(cloudDb, idb);
+          if (removed) console.debug(`[Firebase Gentle Pull] Removed ${removed} API key copies from the cloud`);
+        } catch (cleanupErr: any) {
+          console.warn('[Firebase Gentle Pull] API key cleanup notice:', cleanupErr?.message || cleanupErr);
+        }
         const pullStartedAt = Date.now();
         const shouldStop = () => !navigator.onLine || (!forceManual && isHeavyProcessingActive());
 

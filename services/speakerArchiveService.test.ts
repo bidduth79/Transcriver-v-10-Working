@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const m = vi.hoisted(() => ({ records: [] as any[] }));
 vi.mock('./db', () => ({ STORES: { HISTORY: 'studio_history' }, getAllFromStore: vi.fn(async () => m.records) }));
@@ -11,6 +11,9 @@ import { useHistoryStore } from '../hooks/useHistoryStore';
 const rec = (id: string, fileName: string, transcript: string) => ({ id, fileName, date: `2026-10-0${id}`, transcript });
 
 beforeEach(() => {
+  // The current transcript is dated today; keep "today" fixed so the snapshot does not change daily
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-10-23T12:00:00'));
   m.records = [
     rec('3', 'c.mp3', '[00:01] **রহিম:** সীমান্তে বিজিবি সাহসী কাজ করছে\n[00:05] **করিম:** হ্যাঁ'),
     rec('2', 'b.mp3', '**রহিম:** বিএসএফ গুলি চালিয়েছে, অভিযোগ আছে\n**সালাম:** ঠিক\nরহিম বলেন সীমান্ত খোলা'),
@@ -20,6 +23,8 @@ beforeEach(() => {
   ];
   useHistoryStore.setState({ history: m.records as any });
 });
+
+afterEach(() => vi.useRealTimers());
 
 describe('scanDatabaseForSpeaker', () => {
   it('collects appearances, BGB mentions with sentiment, and co-speakers in list order', async () => {
