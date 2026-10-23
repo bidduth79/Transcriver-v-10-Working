@@ -18,6 +18,7 @@ vi.mock('./firebase', () => ({
 }));
 vi.mock('firebase/firestore', () => ({
   doc: (_db: any, store: string, id: string) => `${store}/${id}`, setDoc: m.setDoc, deleteDoc: m.deleteDoc,
+  serverTimestamp: () => 'SERVER_TIME', Bytes: { fromUint8Array: (u: Uint8Array) => ({ gz: u.length }) },
 }));
 vi.mock('firebase/firestore/lite', () => ({
   setLogLevel: vi.fn(), getFirestore: () => ({}), collection: (_db: any, name: string) => name,
@@ -44,12 +45,19 @@ const fakeIdb = {
     return tx;
   },
 };
+vi.mock('./historyRecords', () => ({
+  forEachHistoryRecord: async (visit: any) => [...m.local].filter(([k]) => k.startsWith('studio_history::')).forEach(([, v]) => visit(v)),
+}));
 vi.mock('./db', () => ({
   getFromStore: vi.fn(async (store: string, id: string) => m.local.get(`${store}::${id}`)),
   initDB: vi.fn(async () => fakeIdb),
 }));
 
-const load = async () => import('./firebaseThrottledQueue');
+// Captured before fake timers: gzip runs on Node's zlib threads, which need real time
+const realSetTimeout = globalThis.setTimeout;
+const realWait = (ms: number) => new Promise(r => realSetTimeout(r, ms));
+// cloudRepair is imported lazily during a manual sync; load it first so fake timers keep pace
+const load = async () => { await import('./firebaseSync/cloudRepair'); return import('./firebaseThrottledQueue'); };
 // Compare Bengali status text after NFC normalization (source and test may encode "য়" differently)
 const stats = (q: any) => { const s = q.getFirebaseSyncStats(); return { ...s, statusMessageBn: s.statusMessageBn.normalize('NFC') }; };
 // One page of a collection; where(field, '>=', min) compares timestamps ({ ms }) or strings
@@ -135,6 +143,22 @@ describe('gentle pull', () => {
     expect(m.local.get('studio_history::old9')).toMatchObject({ fileName: 'o9' });
     expect(m.counts).toBe(0);
     expect(await runPull(q, undefined, true)).toEqual({ pulledCount: 0, cloudTotal: 12 });
+  });
+
+  it('a manual sync re-sends long plain cloud transcripts compressed, and huge ones the cloud lacks', async () => {
+    seed();
+    const long = 'ক'.repeat(8000);
+    const huge = 'খ'.repeat(320000);
+    m.cloud.studio_history.push({ id: 'big', data: { fileName: 'big', transcript: long } });
+    m.local.set('studio_history::big', { id: 'big', fileName: 'big', transcript: long });
+    m.local.set('studio_history::huge', { id: 'huge', fileName: 'huge', transcript: huge });
+    m.local.set('studio_history::gone', { id: 'gone', fileName: 'deleted elsewhere', transcript: 'short' });
+    const q = await load();
+    await runPull(q, undefined, true);
+    // The push queue sends one document every 2.5s; gzip itself runs on real time
+    for (let i = 0; i < 20 && m.setDoc.mock.calls.length < 2; i++) { await vi.advanceTimersByTimeAsync(3000); await realWait(20); }
+    const sent = m.setDoc.mock.calls.map(c => [c[0], 'transcript' in c[1], c[1].transcriptGz?.gz > 0, c[1]._syncedAt]);
+    expect(sent.sort()).toEqual([['studio_history/big', false, true, 'SERVER_TIME'], ['studio_history/huge', false, true, 'SERVER_TIME']]);
   });
 
   it('skips while processing unless forced, and reports connection errors', async () => {

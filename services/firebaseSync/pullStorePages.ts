@@ -2,6 +2,7 @@ import type { Firestore } from 'firebase/firestore';
 import type { QueryDocumentSnapshot, QueryConstraint, QuerySnapshot } from 'firebase/firestore/lite';
 import { syncStats, notifyListeners, sleep } from './syncState';
 import { withoutSyncStamp } from './syncStamp';
+import { unpackFromCloud } from './transcriptCompression';
 
 // Documents fetched per request; only one page is held in memory at a time
 export const PULL_PAGE_SIZE = 50;
@@ -43,6 +44,8 @@ interface PullStoreOptions {
   onMerged: (count: number) => void;
   // Only documents whose `field` is at least `min` (a Date is compared as a Firestore timestamp)
   since?: { field: string; min: string | Date };
+  // Sees every cloud document read (also ones already stored locally)
+  onCloudDoc?: (id: string, data: Record<string, any>) => void;
 }
 
 /**
@@ -50,7 +53,7 @@ interface PullStoreOptions {
  * never sits in memory at once. Stops between pages when `shouldStop` turns true.
  * Returns how many cloud documents were seen, how many were added locally, and whether it read to the end.
  */
-export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloudCount, onMerged, since }: PullStoreOptions) => {
+export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloudCount, onMerged, since, onCloudDoc }: PullStoreOptions) => {
   // Read through the cache-free Lite SDK: the full SDK's memory cache keeps every pulled document
   // (all transcripts) in memory for the rest of the session. Loaded only when a pull runs.
   const { getFirestore, collection, getDocs, query, orderBy, limit, startAfter, documentId, setLogLevel, where, Timestamp } = await import('firebase/firestore/lite');
@@ -77,13 +80,16 @@ export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloud
     if (!existingKeys) existingKeys = await getLocalKeys(idb, storeName);
 
     // শুধুমাত্র যে ডকুমেন্টগুলো লোকালে নেই সেগুলো আলাদা করুন (যাতে অযথা ডুপ্লিকেট রাইট না হয়)
-    const missingDocs: any[] = [];
+    const packedDocs: any[] = [];
     snap.forEach((docSnap) => {
       const docId = String(docSnap.id);
+      onCloudDoc?.(docId, docSnap.data());
       if (!existingKeys!.has(docId)) {
-        missingDocs.push({ id: docId, ...withoutSyncStamp(docSnap.data()) });
+        packedDocs.push({ id: docId, ...withoutSyncStamp(docSnap.data()) });
       }
     });
+    // Long transcripts are stored gzipped in the cloud
+    const missingDocs = await Promise.all(packedDocs.map(item => unpackFromCloud(item)));
 
     if (missingDocs.length > 0) {
       syncStats.statusMessageBn = `${storeName} থেকে ${missingDocs.length}টি নতুন ডাটা ধীরে ধীরে যুক্ত হচ্ছে...`;

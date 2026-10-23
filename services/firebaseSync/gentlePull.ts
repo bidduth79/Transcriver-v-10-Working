@@ -64,8 +64,10 @@ export const scheduleGentleFirebasePull = (
 
           try {
             const isHistory = storeName === STORES.HISTORY;
+            // A manual sync reads every history document, so it also re-sends long ones in compressed form
+            const repair = isHistory && forceManual ? (await import('./cloudRepair')).createHistoryRepair() : null;
             const pull = (since?: { field: string; min: string | Date }) => pullStoreInPages({
-              db: cloudDb, idb, storeName, shouldStop, since,
+              db: cloudDb, idb, storeName, shouldStop, since, onCloudDoc: repair?.onCloudDoc,
               onCloudCount: (count) => {
                 if (!isHistory || !forceManual) return;
                 cloudHistoryTotal = count;
@@ -85,7 +87,11 @@ export const scheduleGentleFirebasePull = (
             if (isHistory && !forceManual && !shouldStop()) {
               parts.push(await pull({ field: 'date', min: startOfYesterday().toISOString() }));
             }
-            if (parts.every(part => part.completed)) savePullCheckpoint(storeName, pullStartedAt);
+            if (parts.every(part => part.completed)) {
+              savePullCheckpoint(storeName, pullStartedAt);
+              const resent = await repair?.finish();
+              if (resent) console.debug(`[Firebase Gentle Pull] Re-sending ${resent} history items compressed`);
+            }
 
             if (isHistory && !forceManual) {
               cloudHistoryTotal = await countCloudDocs(cloudDb, storeName);
