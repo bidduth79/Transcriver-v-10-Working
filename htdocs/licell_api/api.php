@@ -17,16 +17,7 @@ $tableMap = [
     'studio_reports' => 'studio_reports',
     'studio_analysis' => 'studio_analysis',
     'user_api_keys' => 'user_api_keys',
-    'system_master_keys' => 'system_master_keys',
-    'activity_logs' => 'activity_logs',
-    'gemini_call_logs' => 'gemini_call_logs',
-    'global_stats' => 'global_stats',
-    'assistant_chat_history' => 'assistant_chat_history',
-    'youtube_channels' => 'youtube_channels',
-    'youtube_api_keys' => 'youtube_api_keys',
-    'youtube_queue' => 'youtube_queue',
-    'youtube_transcripts' => 'youtube_transcripts',
-    'youtube_links' => 'youtube_links'
+    'activity_logs' => 'activity_logs'
 ];
 
 if (!array_key_exists($store, $tableMap) && $store !== '') {
