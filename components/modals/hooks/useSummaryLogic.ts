@@ -1,8 +1,10 @@
 import { useState, useMemo } from 'react';
-import { GenerateContentResponse } from "@google/genai";
+import { GenerateContentResponse, Type } from "@google/genai";
 import { getActiveProvider, incrementTotalCalls } from '../../../services/ApiKeyManager';
 import { logSystemActivity } from '../../../services/SystemLogger';
 import { createGeminiClient } from '../../../services/apiKeys/geminiClient';
+import { buildSearchContext, parseJsonAnswer } from '../../../utils/aiAnswer';
+import { buildThinkingConfig } from '../../../hooks/transcription/geminiRequest';
 
 export function useSummaryAnalysis(
   searchTerm: string, 
@@ -37,11 +39,21 @@ export function useSummaryAnalysis(
       SENTIMENT: [Positive/Negative/Neutral]
       REMARK: [Explanation in Bengali]
       
-      Transcript segment: ${transcript.substring(0, 10000)}`;
+      Transcript segment: ${buildSearchContext(transcript, searchTerm)}`;
       
       const response: GenerateContentResponse = await ai.models.generateContent({
         model: provider.model,
-        contents: prompt
+        contents: prompt,
+        // A fixed JSON shape, so the answer can always be read
+        config: {
+          ...(buildThinkingConfig(provider.model) ? { thinkingConfig: buildThinkingConfig(provider.model) } : {}),
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: { sentiment: { type: Type.STRING, enum: ['Positive', 'Negative', 'Neutral'] }, remark: { type: Type.STRING } },
+            required: ['sentiment', 'remark'],
+          },
+        },
       });
       await incrementTotalCalls('সার্চ এনালাইসিস', provider.model, provider.source);
       if (onModelUpdate) onModelUpdate();
@@ -49,7 +61,9 @@ export function useSummaryAnalysis(
     };
 
     try {
-      const text = await executeAnalysis() || "";
+      const raw = await executeAnalysis() || "";
+      const json = parseJsonAnswer(raw);
+      const text = json ? `SENTIMENT: ${json.sentiment}\nREMARK: ${json.remark}` : raw;
       const sentimentMatch = text.match(/SENTIMENT:\s*(Positive|Negative|Neutral|ইতিবাচক|নেতিবাচক|নিউট্রাল)/i);
       const remarkMatch = text.match(/REMARK:\s*(.*)/i);
       

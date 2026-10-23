@@ -27,7 +27,8 @@ const buildAudioRequest = (model: string, audioPart: Part, text: string, config:
 });
 
 // Optional thinkingConfig for Fast/Balanced models when Speed Boost is enabled
-const buildThinkingConfig = (modelName: string): any => {
+// Also used by the short AI analyses (search analysis, report, BGB), which do not need deep thinking
+export const buildThinkingConfig = (modelName: string): any => {
   if (!isSpeedOptimizationEnabled() || getModelDefinition(modelName).category === 'thinking') return undefined;
   if (modelName.startsWith('gemini-3') && !modelName.includes('transcribe')) return { thinkingLevel: ThinkingLevel.LOW };
   return undefined;

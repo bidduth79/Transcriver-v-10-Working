@@ -1,9 +1,11 @@
 import { useState, useCallback } from 'react';
-import { GenerateContentResponse } from "@google/genai";
+import { GenerateContentResponse, Type } from "@google/genai";
 import { addToStore, getAllFromStore, deleteFromStore, STORES } from '../../../services/db';
 import { getActiveProvider, incrementTotalCalls } from '../../../services/ApiKeyManager';
 import { logSystemActivity } from '../../../services/SystemLogger';
 import { createGeminiClient } from '../../../services/apiKeys/geminiClient';
+import { parseJsonAnswer } from '../../../utils/aiAnswer';
+import { buildThinkingConfig } from '../../../hooks/transcription/geminiRequest';
 
 export interface ReportItem {
   id: string;
@@ -61,7 +63,17 @@ export const useReportActions = (
 
       const response: GenerateContentResponse = await ai.models.generateContent({
         model: provider.model,
-        contents: prompt
+        contents: prompt,
+        // A fixed JSON shape, so the answer can always be read
+        config: {
+          ...(buildThinkingConfig(provider.model) ? { thinkingConfig: buildThinkingConfig(provider.model) } : {}),
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: { summary: { type: Type.STRING }, sentiment: { type: Type.STRING } },
+            required: ['summary', 'sentiment'],
+          },
+        },
       });
       await incrementTotalCalls('রিপোর্ট জেনারেশন', provider.model, provider.source);
       if (onModelUpdate) onModelUpdate();
@@ -69,7 +81,9 @@ export const useReportActions = (
     };
 
     try {
-      const aiText = await executeAI() || "";
+      const raw = await executeAI() || "";
+      const json = parseJsonAnswer(raw);
+      const aiText = json ? `SUMMARY: ${json.summary}\nSENTIMENT: ${json.sentiment}` : raw;
       const summaryMatch = aiText.match(/SUMMARY:\s*(.*)/i);
       const sentimentMatch = aiText.match(/SENTIMENT:\s*(.*)/i);
       

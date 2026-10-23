@@ -1,7 +1,10 @@
 import { BgbRemarkType, BgbAnalysisResult } from '../types/bgb';
 import { getActiveProvider } from './ApiKeyManager';
 import { DEFAULT_MODEL } from '../constants/aiModels';
+import { Type } from '@google/genai';
 import { createGeminiClient } from './apiKeys/geminiClient';
+import { parseJsonAnswer } from '../utils/aiAnswer';
+import { buildThinkingConfig } from '../hooks/transcription/geminiRequest';
 
 export const analyzeTranscriptForBgb = async (transcript: string, sensitiveMatches: string[]): Promise<BgbAnalysisResult | null> => {
   if (!transcript || sensitiveMatches.length === 0) {
@@ -42,13 +45,17 @@ export const analyzeTranscriptForBgb = async (transcript: string, sensitiveMatch
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       // Default temperature (1.0), as Google recommends for Gemini 3 models
       config: {
-        responseMimeType: "application/json"
+        ...(buildThinkingConfig(modelToUse) ? { thinkingConfig: buildThinkingConfig(modelToUse) } : {}),
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: { remark: { type: Type.STRING, enum: ['Positive', 'Negative', 'Neutral'] }, details: { type: Type.STRING } },
+          required: ['remark', 'details'],
+        },
       }
     });
 
-    const text = response.text || "{}";
-    const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    const parsed = JSON.parse(cleanJson);
+    const parsed: any = parseJsonAnswer(response.text || "{}") ?? {};
 
     return {
       remark: parsed.remark || 'Neutral',
