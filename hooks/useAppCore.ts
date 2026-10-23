@@ -114,25 +114,9 @@ export function useAppCore() {
   );
 
   const { handleFileChange } = useFileHandler({
-    appLang,
-    addToast,
-    setFile,
-    setFileUrl,
-    fileUrl,
-    setActiveHistoryId,
-    setTranscriptMeta,
-    setTranscript,
-    setStatus,
-    setFileMeta,
-    processTranscription,
-    history,
-    setBatchQueue,
-    setCurrentBatchIndex,
-    setIsBatchProcessing,
-    setHasBatchStarted,
-    setIsBatchPaused,
-    setBatchCountdown,
-    fileInputRef
+    appLang, addToast, setFile, setFileUrl, fileUrl, setActiveHistoryId, setTranscriptMeta, setTranscript, setStatus,
+    setFileMeta, processTranscription, history, setBatchQueue, setCurrentBatchIndex, setIsBatchProcessing,
+    setHasBatchStarted, setIsBatchPaused, setBatchCountdown, fileInputRef
   });
 
   const { isRecording, recordingTime, startRecording, stopRecording } = useAudioRecorder(
