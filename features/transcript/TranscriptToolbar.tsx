@@ -4,34 +4,10 @@ import { useTranscriptToolbar } from './hooks/useTranscriptToolbar';
 import { unicodeToBijoy, bijoyToUnicode, isUnicode } from '@abdalgolabs/ansi-unicode-converter';
 
 export const TranscriptToolbar = ({
-  t,
-  status,
-  appLang,
-  handleSummaryClick,
-  setIsReportOpen,
-  isDisabled,
-  activeColors,
-  searchTerm,
-  handleSearchChange,
-  handleKeyDown,
-  clearSearch,
-  transcriptSearchInputRef,
-  matchCount,
-  currentMatchIndex,
-  goToPrevMatch,
-  goToNextMatch,
-  fontSize,
-  setFontSize,
-  transformTranscript,
-  transformingType,
-  setIsAnalysisOpen,
-  transcript,
-  fileMeta,
-  addToast,
-  setTranscript,
-  setStatus,
-  setActiveHistoryId,
-  sensitiveMatches
+  t, status, appLang, handleSummaryClick, setIsReportOpen, isDisabled, activeColors,
+  searchTerm, handleSearchChange, handleKeyDown, clearSearch, transcriptSearchInputRef, matchCount, currentMatchIndex,
+  fontSize, setFontSize, transformTranscript, transformingType,
+  transcript, fileMeta, addToast, setTranscript, setStatus, setActiveHistoryId, sensitiveMatches
 }: any) => {
   const { handleDelete } = useTranscriptToolbar(setTranscript, setStatus, setActiveHistoryId);
 
