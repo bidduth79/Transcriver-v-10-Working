@@ -3,6 +3,7 @@ import { TranscriptMeta, FileMeta } from '../../types';
 import { getFileMetadata } from './batchUtils';
 import { setHeavyProcessingActive } from '../../services/firebaseThrottledQueue';
 import { rateLimitWaitMs, type RateLimitInfo } from '../transcription/rateLimit';
+import { notifyWhenHidden } from '../../services/browserNotification';
 
 export interface FailedFile {
   file: File;
@@ -57,11 +58,15 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
     ctx.setFailedFiles(prevFailed => {
       ctx.setProcessedCount(prevProcessed => {
         if (prevFailed.length > 0) {
-          addToast(appLang === 'bn'
+          const message = appLang === 'bn'
             ? `ব্যাচ সম্পন্ন। ${prevProcessed}টি সফল, ${prevFailed.length}টি ব্যর্থ।`
-            : `Batch completed. ${prevProcessed} succeeded, ${prevFailed.length} failed.`, 'warning');
+            : `Batch completed. ${prevProcessed} succeeded, ${prevFailed.length} failed.`;
+          addToast(message, 'warning');
+          notifyWhenHidden('LI CELL Studio', message);
         } else {
-          addToast(appLang === 'bn' ? 'ব্যাচ প্রসেসিং সফলভাবে সম্পন্ন হয়েছে' : 'Batch processing completed successfully', 'success');
+          const message = appLang === 'bn' ? 'ব্যাচ প্রসেসিং সফলভাবে সম্পন্ন হয়েছে' : 'Batch processing completed successfully';
+          addToast(message, 'success');
+          notifyWhenHidden('LI CELL Studio', message);
         }
         ctx.setIsBatchSummaryOpen(true);
         return prevProcessed;

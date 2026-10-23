@@ -4,6 +4,7 @@ import { useBatchMetrics } from './batch/useBatchMetrics';
 import { useBatchTimer } from './batch/useBatchTimer';
 import { createBatchRunner, FailedFile } from './batch/batchRunner';
 import { setHeavyProcessingActive } from '../services/firebaseThrottledQueue';
+import { requestNotificationPermission } from '../services/browserNotification';
 
 export type { FailedFile } from './batch/batchRunner';
 
@@ -68,6 +69,7 @@ export const useBatchProcessor = (
   }, []);
 
   const startBatch = () => {
+    requestNotificationPermission();
     clearRetryTimeout();
     setHeavyProcessingActive('batch', true);
     setHasBatchStarted(true);
