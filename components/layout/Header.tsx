@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useFullScreen } from '../../hooks/useFullScreen';
 
 interface HeaderProps {
   t: any;
@@ -29,26 +29,8 @@ export const Header: React.FC<HeaderProps> = ({
   appLang, setAppLang, activeColors, setIsReportOpen, setIsSettingsOpen,
   transcriptionMode, setTranscriptionMode
 }) => {
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  const { isFullScreen, toggleFullScreen } = useFullScreen();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleFullScreenChange = () => {
-      setIsFullScreen(!!document.fullscreenElement);
-    };
-    document.addEventListener('fullscreenchange', handleFullScreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullScreenChange);
-  }, []);
-
-  const toggleFullScreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
 
   return (
     <header className="px-4 md:px-8 py-4 md:py-5 bg-slate-950 border-b border-white/10 flex items-center justify-between z-40 shrink-0">
