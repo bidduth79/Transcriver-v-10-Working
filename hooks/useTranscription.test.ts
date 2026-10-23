@@ -191,10 +191,10 @@ describe('useTranscription.processTranscription', () => {
     expect(out.text).toBe('plain');
   });
 
-  it('maps 503 errors to the high-demand message', async () => {
-    m.generate.mockRejectedValue(new Error('503 UNAVAILABLE'));
-    const { run } = setup();
-    const out = await run();
-    expect(out.error).toContain('High Demand');
+  it('maps 503 errors to the high-demand message (after the busy-model retries)', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] }); m.generate.mockRejectedValue(new Error('503 UNAVAILABLE'));
+    const pending = setup().run();
+    await vi.advanceTimersByTimeAsync(9000);
+    expect((await pending).error).toContain('High Demand'); vi.useRealTimers();
   });
 });

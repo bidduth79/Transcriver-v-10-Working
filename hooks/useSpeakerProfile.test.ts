@@ -42,7 +42,7 @@ describe('useSpeakerProfile', () => {
     await open(result);
     const [req] = m.generate.mock.calls[0];
     expect(req.model).toBe('gemini-3.8-flash');
-    expect(req.config).toEqual({ tools: [{ googleSearch: {} }] });
+    expect(req.config.tools).toEqual([{ googleSearch: {} }]);
     expect(req.contents).toContain('public figure: "রহিম"');
     expect(req.contents).toContain('x'.repeat(2000) + '"\n');
     expect(req.contents).toMatchSnapshot();
@@ -73,7 +73,7 @@ describe('useSpeakerProfile', () => {
     m.generate.mockRejectedValueOnce(new Error('no search')).mockRejectedValueOnce(new Error('busy')).mockResolvedValueOnce({ text: 'noise ' + JSON.stringify({ ...aiProfile, imageUrl: 'given.jpg', wikipediaTitle: '' }) + ' tail' });
     const { result } = setup();
     await open(result);
-    expect(m.generate.mock.calls.map(c => [c[0].model, !!c[0].config])).toEqual([['gemini-3.5-flash', true], ['gemini-3.5-flash', false], ['gemini-3.5-flash-lite', false]]);
+    expect(m.generate.mock.calls.map(c => [c[0].model, !!c[0].config?.tools])).toEqual([['gemini-3.5-flash', true], ['gemini-3.5-flash', false], ['gemini-3.5-flash-lite', false]]);
     expect(m.increment).toHaveBeenCalledWith('Speaker Profile', 'gemini-3.5-flash-lite', 'S');
     expect(result.current.profile?.imageUrl).toBe('given.jpg');
     expect(m.wikiImg).not.toHaveBeenCalled();
