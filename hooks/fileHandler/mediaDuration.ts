@@ -1,5 +1,3 @@
-import * as musicMetadata from 'music-metadata-browser';
-
 const SUPPORTED_EXTENSIONS = ['.mp3', '.wav', '.m4a', '.mp4', '.webm', '.ogg', '.aac', '.opus', '.flac'];
 
 export const isSupportedMediaFile = (file: File) => {
@@ -30,6 +28,8 @@ export const estimateOpusDuration = (fileSize: number) => formatDuration(Math.ma
 // Reads Opus/Ogg duration from container metadata; `onParseError` decides the fallback text
 export const readOpusDuration = async (file: File, onParseError: 'estimate' | 'unknown') => {
   try {
+    // Loaded on demand so the ~340 KB parser is not part of app startup
+    const musicMetadata = await import('music-metadata-browser');
     const metadata = await musicMetadata.parseBlob(file);
     if (metadata && metadata.format && metadata.format.duration) {
       return formatDuration(metadata.format.duration);
