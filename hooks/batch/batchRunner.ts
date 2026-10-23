@@ -22,6 +22,9 @@ export interface BatchRunnerContext {
   isBatchPausedRef: React.MutableRefObject<boolean>;
   prevBatchUrlRef: React.MutableRefObject<string | null>;
   retryTimeoutRef: React.MutableRefObject<number | null>;
+  // Index waiting in the countdown, and index being transcribed right now (null when none)
+  pendingNextIndexRef: React.MutableRefObject<number | null>;
+  inFlightIndexRef: React.MutableRefObject<number | null>;
   setCurrentBatchIndex: (i: number) => void;
   setIsBatchProcessing: (b: boolean) => void;
   setHasBatchStarted: (b: boolean) => void;
@@ -33,7 +36,7 @@ export interface BatchRunnerContext {
 
 // Processes one queue item at a time: transcribe → countdown → next, with one retry per failed file
 export const createBatchRunner = (ctx: BatchRunnerContext) => {
-  const { appLang, addToast, isBatchPausedRef, prevBatchUrlRef, retryTimeoutRef } = ctx;
+  const { appLang, addToast, isBatchPausedRef, prevBatchUrlRef, retryTimeoutRef, pendingNextIndexRef, inFlightIndexRef } = ctx;
 
   const clearRetryTimeout = () => {
     if (retryTimeoutRef.current !== null) {
@@ -70,11 +73,13 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
       setHeavyProcessingActive('batch', false);
       return;
     }
+    pendingNextIndexRef.current = nextIndex < queue.length ? nextIndex : null;
     ctx.startCountdown(nextIndex, queue.length, () => processNextBatchFile(queue, nextIndex), finishProcessing);
   };
 
   const processNextBatchFile = async (queue: File[], index: number, retryCount = 0): Promise<void> => {
     clearRetryTimeout();
+    pendingNextIndexRef.current = null;
     if (index >= queue.length) {
       startCountdownForNextFile(queue, index);
       return;
@@ -109,13 +114,16 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
     ctx.setActiveHistoryId(null);
     ctx.setTranscriptMeta(null);
 
+    inFlightIndexRef.current = index;
     try {
       const metadata = await getFileMetadata(currentFile);
       ctx.setFileMeta(metadata);
       await ctx.processTranscription(currentFile, metadata, true);
+      inFlightIndexRef.current = null;
       ctx.setProcessedCount(prev => prev + 1);
       startCountdownForNextFile(queue, index + 1);
     } catch (error: any) {
+      inFlightIndexRef.current = null;
       console.error(`Error processing ${currentFile.name}:`, error);
 
       if (retryCount < 1) {

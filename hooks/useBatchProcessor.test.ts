@@ -93,20 +93,32 @@ describe('useBatchProcessor', () => {
     expect(toasts(s)).toEqual(['success:ব্যাচ প্রসেসিং সফলভাবে সম্পন্ন হয়েছে']);
   });
 
-  // Existing behavior (bug kept as-is): resuming during the countdown re-runs the file that just finished
-  it('pauses during the countdown and resumes from the current index', async () => {
+  it('pauses during the countdown and resumes with the next file, not the finished one', async () => {
     const s = setup();
     await s.queue([file('a.mp3'), file('b.mp3')]);
     await s.call('startBatch');
     await s.call('pauseBatch');
     expect(m.clearTimer).toHaveBeenCalled();
-    expect(s.r().isBatchPaused).toBe(true);
+    expect(s.r()).toMatchObject({ isBatchPaused: true, currentBatchIndex: 1 });
     await tick();
     expect(s.process).toHaveBeenCalledTimes(1);
     await s.call('resumeBatch');
-    expect(s.process).toHaveBeenCalledTimes(2);
-    expect((s.process.mock.calls[1] as any[])[0].name).toBe('a.mp3');
+    expect(s.process.mock.calls.map((c: any[]) => c[0].name)).toEqual(['a.mp3', 'b.mp3']);
     expect(s.r().isBatchPaused).toBe(false);
+  });
+
+  it('pause and resume while a file is transcribing does not start it a second time', async () => {
+    let finish: () => void = () => {};
+    const s = setup(vi.fn(() => new Promise<any>(r => { finish = () => r({}); })));
+    await s.queue([file('a.mp3'), file('b.mp3')]);
+    await s.call('startBatch');
+    await s.call('pauseBatch');
+    await s.call('resumeBatch');
+    expect(s.process).toHaveBeenCalledTimes(1);
+    await act(async () => { finish(); });
+    await settle();
+    await tick();
+    expect(s.process.mock.calls.map((c: any[]) => c[0].name)).toEqual(['a.mp3', 'b.mp3']);
   });
 
   it('skips, jumps, removes files and cancels', async () => {

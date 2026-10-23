@@ -28,6 +28,8 @@ export const useBatchProcessor = (
   const isBatchPausedRef = useRef(false);
   const prevBatchUrlRef = useRef<string | null>(null);
   const retryTimeoutRef = useRef<number | null>(null);
+  const pendingNextIndexRef = useRef<number | null>(null);
+  const inFlightIndexRef = useRef<number | null>(null);
 
   const { progress, etaSeconds, resetMetrics } =
     useBatchMetrics(isBatchProcessing, isBatchPaused, hasBatchStarted, batchQueue.length, currentBatchIndex);
@@ -36,7 +38,7 @@ export const useBatchProcessor = (
 
   const { processNextBatchFile, clearRetryTimeout } = createBatchRunner({
     appLang, addToast, setFile, setFileUrl, setActiveHistoryId, setTranscriptMeta, setFileMeta, processTranscription,
-    isBatchPausedRef, prevBatchUrlRef, retryTimeoutRef,
+    isBatchPausedRef, prevBatchUrlRef, retryTimeoutRef, pendingNextIndexRef, inFlightIndexRef,
     setCurrentBatchIndex, setIsBatchProcessing, setHasBatchStarted, setFailedFiles, setProcessedCount, setIsBatchSummaryOpen,
     startCountdown,
   });
@@ -76,11 +78,18 @@ export const useBatchProcessor = (
     setHeavyProcessingActive('batch', false);
     clearTimer();
     clearRetryTimeout();
+    // Paused during the countdown: the finished file must not run again on resume
+    if (pendingNextIndexRef.current !== null) {
+      setCurrentBatchIndex(pendingNextIndexRef.current);
+      pendingNextIndexRef.current = null;
+    }
   };
 
   const resumeBatch = () => {
     setIsBatchPaused(false);
     setHeavyProcessingActive('batch', true);
+    // A file still being transcribed continues the queue by itself when it finishes
+    if (inFlightIndexRef.current !== null) return;
     processNextBatchFile(batchQueue, currentBatchIndex);
   };
 
