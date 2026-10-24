@@ -15,7 +15,7 @@ interface QuotaMonitorProps {
 }
 
 export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang }) => {
-  const { logs: allLogs, activeModel, activeKeyTail, tick } = useQuotaLogs();
+  const { logs: allLogs, activeModel, activeKeyTail, refreshedAt } = useQuotaLogs();
   // Only the active model's requests on the active key count against this quota
   const logs = useMemo(() => quotaLogsFor(allLogs, activeModel, activeKeyTail), [allLogs, activeModel, activeKeyTail]);
 
@@ -26,8 +26,8 @@ export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang }) =
   const isCustom = hasCustomLimits(model);
   const usage = computeCurrentUsage(logs, limits, Date.now());
 
-  // Recompute when logs change, and on every refresh tick so the time windows move forward
-  const { peakRpm, peakTpm, peakRpd, rpmHistory, tpmHistory, rpdHistory } = useMemo(() => computePeakTrends(logs, Date.now()), [logs, tick]);
+  // Recompute when logs change, and on every refresh so the time windows move forward
+  const { peakRpm, peakTpm, peakRpd, rpmHistory, tpmHistory, rpdHistory } = useMemo(() => computePeakTrends(logs, refreshedAt), [logs, refreshedAt]);
 
   return (
     <div className="flex flex-col h-full space-y-6">

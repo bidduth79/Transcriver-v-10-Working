@@ -60,7 +60,7 @@ export const notifyListeners = () => {
   syncStats.isPulling = runtime.isPullRunning;
   syncStats.isPausedForProcessing = activeProcessingLocks.size > 0;
   listeners.forEach(fn => {
-    try { fn(); } catch (e) {}
+    try { fn(); } catch (e) { console.warn('[Firebase sync] A status listener failed:', e); }
   });
 };
 

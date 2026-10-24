@@ -365,5 +365,7 @@
   "syncPausedProcessing": "প্রসেসিং শুরু হওয়ায় ফায়ারবেইজ সিঙ্ক পজ করা হয়েছে (বাকি: {count}টি)",
   "syncUpToDate": "ফায়ারবেইজ সিঙ্ক সম্পূর্ণ আপ-টু-ডেট আছে",
   "idleReady": "প্রস্তুত (Idle)",
-  "firebaseNotConfigured": "ফায়ারবেইজ কনফিগার করা নেই"
+  "firebaseNotConfigured": "ফায়ারবেইজ কনফিগার করা নেই",
+  "pleaseConfirm": "নিশ্চিত করুন",
+  "renameSpeakerTitle": "স্পীকারের নাম বদলান"
 }

@@ -27,10 +27,6 @@ window.addEventListener('error', (event) => {
       event.preventDefault();
       return;
   }
-  console.log('GLOBAL_ERROR:', event.message, event.filename, event.lineno, event.colno);
-  if (event.error) {
-    console.log('GLOBAL_ERROR_STACK:', event.error.stack);
-  }
   reportAppError('window', event.error ?? event.message);
 });
 

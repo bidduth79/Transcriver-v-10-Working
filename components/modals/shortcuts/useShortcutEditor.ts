@@ -7,6 +7,8 @@ export const useShortcutEditor = (isOpen: boolean) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [customMap, setCustomMap] = useState<Record<string, string>>({});
   const [editingId, setEditingId] = useState<string | null>(null);
+  // A question waiting for the in-app confirm dialog (instead of the browser's confirm())
+  const [pendingConfirm, setPendingConfirm] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -37,10 +39,10 @@ export const useShortcutEditor = (isOpen: boolean) => {
   }, [filteredShortcuts]);
 
   const handleResetAll = () => {
-    if (confirm('Are you sure you want to reset all shortcuts to default?')) {
-      resetShortcuts();
-      setCustomMap({});
-    }
+    setPendingConfirm({
+      message: 'Are you sure you want to reset all shortcuts to default?',
+      onConfirm: () => { resetShortcuts(); setCustomMap({}); },
+    });
   };
 
   const startEditing = (id: string) => {
@@ -83,9 +85,10 @@ export const useShortcutEditor = (isOpen: boolean) => {
     });
 
     if (conflict) {
-       if (!confirm(`Shortcut "${keyStr}" is already used by "${conflict.label}". Overwrite?`)) {
-         return;
-       }
+      // Declining keeps the key capture open, so another combination can be pressed
+      const id = editingId;
+      setPendingConfirm({ message: `Shortcut "${keyStr}" is already used by "${conflict.label}". Overwrite?`, onConfirm: () => saveEdit(id, keyStr) });
+      return;
     }
 
     saveEdit(editingId, keyStr);
@@ -93,7 +96,7 @@ export const useShortcutEditor = (isOpen: boolean) => {
 
   return {
     activeTab, setActiveTab, searchTerm, setSearchTerm, customMap, editingId, setEditingId,
-    groupedShortcuts, handleResetAll, startEditing, handleKeyDown,
+    groupedShortcuts, handleResetAll, startEditing, handleKeyDown, pendingConfirm, setPendingConfirm,
   };
 };
 

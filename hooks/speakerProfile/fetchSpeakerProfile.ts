@@ -53,7 +53,9 @@ export const parseProfileJson = (text: string): SpeakerProfile | null => {
     if (jsonMatch) {
       try {
         parsedProfile = JSON.parse(jsonMatch[1] || jsonMatch[0]);
-      } catch (err) {}
+      } catch {
+        // Not JSON either: treated below as an unreadable answer
+      }
     }
   }
   return parsedProfile;

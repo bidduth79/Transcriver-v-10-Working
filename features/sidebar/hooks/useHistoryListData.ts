@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useEffectEvent } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { buildDuplicateCounts, searchAndGroupHistory, flattenGroups, collectHistoryDates, buildCalendarDays } from '../utils/historyListUtils';
 import { useTranscriptSearchIds } from '../../../hooks/history/useTranscriptSearchIds';
@@ -109,6 +109,18 @@ export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory
 
   // Smoothly scroll to active item to prevent layout jump when FileInfoSection mounts
   const prevActiveIdRef = React.useRef(activeHistoryId);
+  // Reads the current list without making the effect below run again when the list changes
+  const scrollToActiveSoon = useEffectEvent((id: string) => {
+    const index = flatItems.findIndex(i => i.type === 'item' && i.item?.id === id);
+    if (index === -1) return null;
+    return setTimeout(() => {
+      try {
+        rowVirtualizer.scrollToIndex(index, { align: 'auto', behavior: 'smooth' });
+      } catch {
+        // The list may have changed meanwhile; not scrolling is harmless
+      }
+    }, 150);
+  });
   useEffect(() => {
     if (!activeHistoryId) {
       prevActiveIdRef.current = null;
@@ -116,17 +128,8 @@ export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory
     }
     if (activeHistoryId !== prevActiveIdRef.current) {
       prevActiveIdRef.current = activeHistoryId;
-      const index = flatItems.findIndex(i => i.type === 'item' && i.item?.id === activeHistoryId);
-      if (index !== -1) {
-        const timer = setTimeout(() => {
-          try {
-            rowVirtualizer.scrollToIndex(index, { align: 'auto', behavior: 'smooth' });
-          } catch (e) {
-            // ignore
-          }
-        }, 150);
-        return () => clearTimeout(timer);
-      }
+      const timer = scrollToActiveSoon(activeHistoryId);
+      if (timer !== null) return () => clearTimeout(timer);
     }
   }, [activeHistoryId]);
 

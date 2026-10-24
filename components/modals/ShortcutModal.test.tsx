@@ -3,7 +3,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import { ShortcutModal } from './ShortcutModal';
 import { getSavedShortcuts, saveShortcut } from '../../services/ShortcutConfig';
+import { uiText } from '../../utils/uiText';
 
+const OK = uiText('bn', 'ok');
+const CANCEL = uiText('bn', 'cancel');
 const setup = (over: any = {}) => {
   const props = { isOpen: true, onClose: vi.fn(), isDark: true, activeColors: { primary: 'bg-p' }, appLang: 'bn' as const, ...over };
   return { ...render(<ShortcutModal {...props} />), props };
@@ -58,34 +61,37 @@ describe('ShortcutModal behavior', () => {
     expect(keyOf(container, 'File Upload')).toBe('Ctrl+Shift+Alt+Meta+K');
     expect(getSavedShortcuts()['file.upload']).toBe('Ctrl+Shift+Alt+Meta+K');
     expect(capture(container)).toBeNull();
-    // Space is Play/Pause's default, so saving it asks to overwrite
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    // Space is Play/Pause's default, so saving it asks (in the app's own dialog) to overwrite
     fireEvent.click(editRow(container, 'File Upload'));
     fireEvent.keyDown(capture(container), { key: ' ' });
-    expect(confirm).toHaveBeenCalledWith('Shortcut "Space" is already used by "Play / Pause". Overwrite?');
+    expect(getByText('Shortcut "Space" is already used by "Play / Pause". Overwrite?')).toBeTruthy();
+    fireEvent.click(getByText(OK));
     expect(keyOf(container, 'File Upload')).toBe('Space');
   });
 
   it('asks before overwriting a conflicting shortcut', () => {
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
     const { container, getByText } = setup();
     fireEvent.click(getByText('Customize'));
     fireEvent.click(editRow(container, 'File Upload'));
     fireEvent.keyDown(capture(container), { key: 'd', ctrlKey: true });
-    expect(confirm).toHaveBeenCalledWith('Shortcut "Ctrl+D" is already used by "Day/Night Mode". Overwrite?');
+    expect(getByText('Shortcut "Ctrl+D" is already used by "Day/Night Mode". Overwrite?')).toBeTruthy();
+    expect(capture(container)).toBeNull();
+    fireEvent.click(getByText(CANCEL));
     expect(keyOf(container, 'File Upload')).toBe('Ctrl+U');
     fireEvent.keyDown(capture(container), { key: 'd', ctrlKey: true });
+    fireEvent.click(getByText(OK));
     expect(keyOf(container, 'File Upload')).toBe('Ctrl+D');
   });
 
   it('resets defaults after confirmation, cancels capture and closes', () => {
     saveShortcut('file.upload', 'Alt+Q');
-    vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
     const { container, getByText, props } = setup();
     fireEvent.click(getByText('Customize'));
     fireEvent.click(getByText('Reset Defaults'));
+    fireEvent.click(getByText(CANCEL));
     expect(keyOf(container, 'File Upload')).toBe('Alt+Q');
     fireEvent.click(getByText('Reset Defaults'));
+    fireEvent.click(getByText(OK));
     expect(keyOf(container, 'File Upload')).toBe('Ctrl+U');
     expect(getSavedShortcuts()).toEqual({});
     fireEvent.click(editRow(container, 'File Upload'));

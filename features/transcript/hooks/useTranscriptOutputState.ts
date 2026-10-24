@@ -22,9 +22,13 @@ export const useTranscriptOutputState = ({
 
   const logo = useLogoAnimation();
 
-  const handleRenameSpeaker = React.useCallback(async (oldName: string) => {
-    const newName = window.prompt(uiText(appLang, 'renameSpeakerPrompt', { oldName }), oldName);
-    if (newName && newName.trim() !== '' && newName !== oldName) {
+  // The speaker whose new name is being asked for in the app's own dialog
+  const [renamingSpeaker, setRenamingSpeaker] = useState<string | null>(null);
+  const handleRenameSpeaker = React.useCallback((oldName: string) => setRenamingSpeaker(oldName), []);
+
+  const submitRename = React.useCallback(async (newName: string) => {
+    const oldName = renamingSpeaker;
+    if (oldName && newName.trim() !== '' && newName !== oldName) {
       // Find occurrences of **oldName** or **oldName:** and replace with newName
       const regex = new RegExp(`\\*\\*\\s*${escapeRegExp(oldName)}\\s*(:?)\\s*\\*\\*`, 'gi');
       const updatedTranscript = transcript.replace(regex, `**${newName}$1**`);
@@ -42,7 +46,7 @@ export const useTranscriptOutputState = ({
         }
       }
     }
-  }, [appLang, transcript, setTranscript, addToast, activeHistoryId]);
+  }, [appLang, renamingSpeaker, transcript, setTranscript, addToast, activeHistoryId]);
 
   const scroll = useTranscriptScroll(matchCount, searchTerm, currentMatchIndex);
   const keywords = useSensitiveKeywords(transcript);
@@ -68,7 +72,7 @@ export const useTranscriptOutputState = ({
   return {
     isSummaryOpen, setIsSummaryOpen, isReportOpen, setIsReportOpen, isAnalysisOpen, setIsAnalysisOpen,
     logo, scroll, keywords, bgb, speaker,
-    handleRenameSpeaker, clearSearch, handleSummaryClick, handleKeyDown,
+    handleRenameSpeaker, renamingSpeaker, setRenamingSpeaker, submitRename, clearSearch, handleSummaryClick, handleKeyDown,
     isDisabled: status !== 'completed',
   };
 };

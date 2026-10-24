@@ -40,7 +40,7 @@ export const processQueue = async () => {
     const isAnyActive = isLocalServerEnabled() || AUTO_SYNC_SUPABASE_ENABLED || AUTO_SYNC_FIREBASE_ENABLED;
     if (!isAnyActive) {
         // Clear stale queue if all sync targets are disabled
-        try { await set(QUEUE_KEY, []); } catch (e) {}
+        try { await set(QUEUE_KEY, []); } catch (e) { console.warn('Could not clear the sync queue:', e); }
         return;
     }
 

@@ -54,7 +54,9 @@ export const watchMediaDuration = (media: HTMLMediaElement, onResult: (duration:
       media.onerror = null;
       media.src = '';
       media.load();
-    } catch {}
+    } catch {
+      // An element that already failed may throw while being released; nothing is left to clean up
+    }
   };
   const finish = (duration: number | null) => {
     if (resolved) return;

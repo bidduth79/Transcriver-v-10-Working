@@ -36,7 +36,9 @@ export const searchAndGroupHistory = (sourceArray: HistoryItem[], query: string,
         if (!isNaN(dateObj.getTime())) {
           d = toDateKey(dateObj);
         }
-      } catch(e) {}
+      } catch {
+        // An unreadable date leaves the item without a day group
+      }
     }
     if (!groups[d]) groups[d] = [];
     groups[d].push(item);
@@ -72,7 +74,9 @@ export const historyDateKey = (dateStr: string): string | null => {
     if (!isNaN(dateObj.getTime())) {
       return toDateKey(dateObj);
     }
-  } catch(e) {}
+  } catch {
+    // An unreadable date is shown as it was saved
+  }
   return null;
 };
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { useShortcutEditor } from './shortcuts/useShortcutEditor';
 import { ShortcutCaptureOverlay } from './shortcuts/ShortcutCaptureOverlay';
 import { ShortcutCategoryList } from './shortcuts/ShortcutCategoryList';
+import { ConfirmModal } from './ConfirmModal';
 import type { ActiveColors } from '../../hooks/useAppTheme';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
@@ -17,7 +18,7 @@ interface ShortcutModalProps {
 
 export const ShortcutModal: React.FC<ShortcutModalProps> = ({ isOpen, onClose, isDark, activeColors, appLang }) => {
   const editor = useShortcutEditor(isOpen);
-  const { activeTab, setActiveTab, searchTerm, setSearchTerm, editingId, setEditingId, handleResetAll, handleKeyDown } = editor;
+  const { activeTab, setActiveTab, searchTerm, setSearchTerm, editingId, setEditingId, handleResetAll, handleKeyDown, pendingConfirm, setPendingConfirm } = editor;
 
   const { dialogProps, backdropProps } = useModalBehavior(isOpen, onClose);
   if (!isOpen) return null;
@@ -71,7 +72,18 @@ export const ShortcutModal: React.FC<ShortcutModalProps> = ({ isOpen, onClose, i
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
-           {editingId && <ShortcutCaptureOverlay onKeyDown={handleKeyDown} onCancel={() => setEditingId(null)} />}
+           {editingId && !pendingConfirm && <ShortcutCaptureOverlay onKeyDown={handleKeyDown} onCancel={() => setEditingId(null)} />}
+           <ConfirmModal
+             isOpen={!!pendingConfirm}
+             onClose={() => setPendingConfirm(null)}
+             onConfirm={() => pendingConfirm?.onConfirm()}
+             title={uiText(appLang, 'pleaseConfirm')}
+             message={pendingConfirm?.message ?? ''}
+             confirmText={uiText(appLang, 'ok')}
+             cancelText={uiText(appLang, 'cancel')}
+             isDark={isDark}
+             activeColors={activeColors}
+           />
 
            <ShortcutCategoryList editor={editor} isDark={isDark} />
         </div>

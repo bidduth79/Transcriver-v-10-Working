@@ -9,6 +9,8 @@ import { TranscriptToolbar } from './TranscriptToolbar';
 import { FormattedTranscript } from './TranscriptViewer';
 import { useTranscriptOutputState } from './hooks/useTranscriptOutputState';
 import type { TranscriptOutputProps } from './transcriptOutputTypes';
+import { PromptModal } from '../../components/modals/PromptModal';
+import { uiText } from '../../utils/uiText';
 
 export type { TranscriptOutputProps } from './transcriptOutputTypes';
 
@@ -104,6 +106,12 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = (props) => {
         FormattedTranscript={FormattedTranscript} currentMatchIndex={currentMatchIndex}
         sensitiveMatches={keywords.sensitiveMatches} openProfile={speaker.openProfile}
         setTranscript={setTranscript} setStatus={setStatus}
+      />
+      <PromptModal
+        isOpen={state.renamingSpeaker !== null} onClose={() => state.setRenamingSpeaker(null)} onSubmit={state.submitRename}
+        title={uiText(appLang, 'renameSpeakerTitle')} message={uiText(appLang, 'renameSpeakerPrompt', { oldName: state.renamingSpeaker ?? '' })}
+        defaultValue={state.renamingSpeaker ?? ''} confirmText={uiText(appLang, 'ok')} cancelText={uiText(appLang, 'cancel')}
+        isDark={isDark} activeColors={activeColors}
       />
     </section>
   );

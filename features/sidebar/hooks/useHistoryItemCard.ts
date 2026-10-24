@@ -82,7 +82,7 @@ export const useHistoryItemCard = (item: HistoryItem, onDeleteHistoryItem: Delet
       const deleteFn = onDeleteRef.current;
       if (deleteFn && currentItem?.id) {
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          try { navigator.vibrate(150); } catch {}
+          try { navigator.vibrate(150); } catch { /* vibration is optional */ }
         }
         deleteFn(currentItem.id);
       }

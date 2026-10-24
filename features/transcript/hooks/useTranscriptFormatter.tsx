@@ -28,16 +28,15 @@ export const useTranscriptFormatter = (
     );
   }, [sensitiveMatches]);
 
-  // Precompile sensitive keywords regex once per sensitiveMatches change (NOT per paragraph)
-  const sensitiveRegex = useMemo(() => {
-    if (sensitiveSet.size === 0) return null;
+  // Precompile sensitive keywords regex once per sensitiveMatches change (NOT per paragraph), with a
+  // bounded cache for sensitive-only highlighting that starts empty with each new regex
+  const { sensitiveRegex, sensitiveHighlightCache } = useMemo(() => {
     const cleanMatches = Array.from(sensitiveSet).map(escapeRegExp);
-    if (cleanMatches.length === 0) return null;
-    return new RegExp(`(${cleanMatches.join('|')})`, 'gi');
+    return {
+      sensitiveRegex: cleanMatches.length === 0 ? null : new RegExp(`(${cleanMatches.join('|')})`, 'gi'),
+      sensitiveHighlightCache: new Map<string, (string | React.ReactNode)[]>(),
+    };
   }, [sensitiveSet]);
-
-  // Bounded cache for sensitive-only highlighting (avoids re-allocating React elements on re-renders)
-  const sensitiveHighlightCache = useMemo(() => new Map<string, (string | React.ReactNode)[]>(), [sensitiveRegex]);
 
   const formatText = useCallback((text: string, matchIndexRef: { current: number }) => {
     if (!text) return [];

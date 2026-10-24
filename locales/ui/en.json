@@ -365,5 +365,7 @@
   "syncPausedProcessing": "Firebase sync paused because processing started (left: {count})",
   "syncUpToDate": "Firebase sync is fully up to date",
   "idleReady": "Ready (Idle)",
-  "firebaseNotConfigured": "Firebase is not configured"
+  "firebaseNotConfigured": "Firebase is not configured",
+  "pleaseConfirm": "Please confirm",
+  "renameSpeakerTitle": "Rename speaker"
 }

@@ -48,17 +48,14 @@ export const ReportModal: React.FC<ReportModalProps> = ({
 
   const analysisData = useReportAnalysis(transcript, searchTerm, fileMeta);
 
+  const matchCount = analysisData?.matchCount ?? 0;
   useEffect(() => {
     if (isOpen) {
       loadReportsFromDB();
       setIsMinimized(false);
-      if (!analysisData || analysisData.matchCount === 0) {
-        setViewMode('history');
-      } else {
-        setViewMode('generate');
-      }
+      setViewMode(matchCount === 0 ? 'history' : 'generate');
     }
-  }, [isOpen, analysisData?.matchCount, loadReportsFromDB]);
+  }, [isOpen, matchCount, loadReportsFromDB, setIsMinimized]);
 
   const reportUpdates = useAppStore(state => state.storeUpdates['studio_reports']);
   useEffect(() => {

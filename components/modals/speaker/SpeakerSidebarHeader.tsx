@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SpeakerProfile } from '../../../types/speaker';
 import { uiText } from '../../../utils/uiText';
 
@@ -14,6 +14,7 @@ interface Props {
 
 // Name/role, copy-summary, refresh and close buttons
 export const SpeakerSidebarHeader = ({ profile, speakerName, isLoading, isDark, appLang, onRefresh, onClose }: Props) => {
+  const [copied, setCopied] = useState(false);
   const dbStats = profile?.databaseStats;
   return (
         <div className={`p-4 flex justify-between items-center border-b shrink-0 ${isDark ? 'border-slate-800 bg-slate-900/90' : 'border-slate-100 bg-white/90'} backdrop-blur-md`}>
@@ -37,18 +38,19 @@ export const SpeakerSidebarHeader = ({ profile, speakerName, isLoading, isDark, 
                 onClick={() => {
                   const summaryText = `${profile.name}\n\nপরিচয়:\n${profile.description}\n\nবিজিবি ও সীমান্ত সংক্রান্ত সার্বিক দৃষ্টিভঙ্গি:\n${profile.bgbViews}\n\nডাটাবেজে উল্লেখ: ${dbStats?.bgbMentionCount || 0} বার`;
                   navigator.clipboard.writeText(summaryText);
-                  const btn = document.getElementById('copy-profile-btn');
-                  if (btn) {
-                    const original = btn.innerHTML;
-                    btn.innerHTML = `<svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
-                    setTimeout(() => { btn.innerHTML = original; }, 2000);
-                  }
+                  // A check mark replaces the copy icon for two seconds
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
                 }}
                 id="copy-profile-btn"
                 className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-600'}`}
                 title={uiText(appLang, 'copy')}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                {copied ? (
+                  <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                )}
               </button>
             )}
             {onRefresh && (

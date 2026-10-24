@@ -52,7 +52,7 @@ export const logSystemActivity = async (
 
   try {
     await addToStore(STORES.SYSTEM_ACTIVITY_LOGS, logEntry);
-    console.log(`[SystemLog] ${category}: ${message}`);
+    console.debug(`[SystemLog] ${category}: ${message}`);
     writesSinceLastPrune++;
     if (writesSinceLastPrune >= 15) {
       writesSinceLastPrune = 0;

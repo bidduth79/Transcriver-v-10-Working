@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useEffectEvent } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { SearchAnalysisItem, saveSearchAnalysis, getSearchAnalysisHistory, deleteSearchAnalysisAction } from '../../../services/SearchAnalysisHistory';
 import { logSystemActivity } from '../../../services/SystemLogger';
@@ -66,26 +66,23 @@ export const useSummaryHistory = ({
     }
   };
 
-  useEffect(() => {
-    let saveTimer: number | null = null;
-    const loadHistory = async () => {
-      const data = await getSearchAnalysisHistory();
-      setHistory(data);
-    };
-    if (isOpen) {
-      loadHistory();
-      setIsMinimized(false);
-      if (!searchTerm || !transcript) {
-        setViewMode('history');
-      } else {
-        setAiAnalysis(null);
-        saveTimer = window.setTimeout(() => handleSave(false), 500);
-      }
+  // On opening (or a new search term): load the archive, then show it or save the live analysis.
+  // An effect event reads the latest values without re-running the effect when they change.
+  const startOnOpen = useEffectEvent(() => {
+    getSearchAnalysisHistory().then(setHistory);
+    setIsMinimized(false);
+    if (!searchTerm || !transcript) {
+      setViewMode('history');
+      return null;
     }
+    setAiAnalysis(null);
+    return window.setTimeout(() => handleSave(false), 500);
+  });
+  useEffect(() => {
+    if (!isOpen) return;
+    const saveTimer = startOnOpen();
     return () => {
-      if (saveTimer !== null) {
-        clearTimeout(saveTimer);
-      }
+      if (saveTimer !== null) clearTimeout(saveTimer);
     };
   }, [isOpen, searchTerm]);
 
@@ -96,10 +93,12 @@ export const useSummaryHistory = ({
     }
   }, [analysisUpdates, isOpen]);
 
+  // A new AI analysis is saved with the current stats
+  const saveNewAnalysis = useEffectEvent(() => {
+    if (aiAnalysis && currentStats && !isAnalyzing) handleSave(true);
+  });
   useEffect(() => {
-    if (aiAnalysis && currentStats && !isAnalyzing) {
-      handleSave(true);
-    }
+    saveNewAnalysis();
   }, [aiAnalysis]);
 
   const confirmDelete = async (e: React.MouseEvent, id: string) => {

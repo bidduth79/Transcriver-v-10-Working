@@ -98,7 +98,9 @@ export const playSuccessSound = () => {
           try {
             osc.disconnect();
             gain.disconnect();
-          } catch {}
+          } catch {
+            // Already disconnected
+          }
         };
         osc.start(startTime);
         osc.stop(startTime + 0.6);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent, act } from '@testing-library/react';
+import { render, fireEvent, act, waitFor } from '@testing-library/react';
 
 const m = vi.hoisted(() => ({
   props: {} as Record<string, any>,
@@ -136,21 +136,33 @@ describe('TranscriptOutput behavior', () => {
     expect(m.props.TranscriptModals).toMatchObject({ isSummaryOpen: false, isReportOpen: true, isAnalysisOpen: true });
   });
 
+  // The new name is asked for in the app's own dialog
+  const askRename = (answer?: string) => {
+    act(() => m.props.TranscriptContent.onRenameSpeaker('Speaker 1'));
+    const input = document.getElementById('prompt-modal-input') as HTMLInputElement;
+    expect(input.value).toBe('Speaker 1');
+    if (answer === undefined) return void fireEvent.click(input.form!.querySelector('button[type=button]')!);
+    fireEvent.change(input, { target: { value: answer } });
+    fireEvent.submit(input.form!);
+  };
+
   it('renames a speaker in the transcript and saved history', async () => {
     m.db.set('h1', { id: 'h1', transcript: 'old' });
-    vi.spyOn(window, 'prompt').mockReturnValue('রহিম');
     const { props } = setup({ activeHistoryId: 'h1' });
-    await act(async () => { await m.props.TranscriptContent.onRenameSpeaker('Speaker 1'); });
+    askRename('রহিম');
     const expected = '**রহিম:** হ্যালো। **রহিম:** আবার';
     expect(props.setTranscript).toHaveBeenCalledWith(expected);
     expect(props.addToast).toHaveBeenCalledWith(bn('স্পীকারের নাম পরিবর্তন করা হয়েছে'), 'success');
-    expect(m.db.get('h1').transcript).toBe(expected);
+    await waitFor(() => expect(m.db.get('h1').transcript).toBe(expected));
+    expect(document.getElementById('prompt-modal-input')).toBeNull();
   });
 
   it('ignores cancelled or unchanged rename', async () => {
-    vi.spyOn(window, 'prompt').mockReturnValueOnce(null).mockReturnValueOnce('Speaker 1').mockReturnValueOnce('  ');
     const { props } = setup();
-    for (let i = 0; i < 3; i++) await act(async () => { await m.props.TranscriptContent.onRenameSpeaker('Speaker 1'); });
+    askRename();
+    askRename('Speaker 1');
+    askRename('  ');
+    expect(document.getElementById('prompt-modal-input')).toBeNull();
     expect(props.setTranscript).not.toHaveBeenCalled();
     expect(m.addToStore).not.toHaveBeenCalled();
   });

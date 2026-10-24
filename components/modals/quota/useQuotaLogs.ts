@@ -3,13 +3,13 @@ import { useAppStore } from '@/hooks/useAppStore';
 import { getApiCallLogs, getActiveModel, getActiveProvider, ApiCallLog } from '../../../services/ApiKeyManager';
 
 // API call logs + active model, refreshed every 5s (paused while the tab is hidden) and on store events.
-// `tick` changes on every refresh so time-based stats are recomputed even when logs are unchanged.
+// `refreshedAt` changes on every refresh so time-based stats move forward even when logs are unchanged.
 export const useQuotaLogs = () => {
   const [logs, setLogs] = useState<ApiCallLog[]>([]);
   const [activeModel, setActiveModel] = useState<string>('');
   // Last 4 characters of the key in use: quota is counted per key (per project)
   const [activeKeyTail, setActiveKeyTail] = useState<string>('');
-  const [tick, setTick] = useState(0);
+  const [refreshedAt, setRefreshedAt] = useState(() => Date.now());
 
   const fetchLogs = useCallback(async () => {
     if (typeof document !== 'undefined' && document.hidden) return;
@@ -27,7 +27,7 @@ export const useQuotaLogs = () => {
     setActiveModel(prev => (prev === currentModel ? prev : currentModel));
     const keyTail = (await getActiveProvider().catch(() => null))?.key?.slice(-4) ?? '';
     setActiveKeyTail(prev => (prev === keyTail ? prev : keyTail));
-    setTick(t => t + 1);
+    setRefreshedAt(Date.now());
   }, []);
 
   useEffect(() => {
@@ -54,5 +54,5 @@ export const useQuotaLogs = () => {
     fetchLogs();
   }, [apiCallLogged, activeApiKeyChanged, fetchLogs]);
 
-  return { logs, activeModel, activeKeyTail, tick };
+  return { logs, activeModel, activeKeyTail, refreshedAt };
 };

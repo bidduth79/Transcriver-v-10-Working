@@ -24,7 +24,7 @@ export const useInformationModal = ({ addToast, appLang }: Options) => {
         }
         try {
             const url = getApiUrl('setup.php');
-            console.log("Attempting to DB Setup at URL:", url);
+            console.debug("Attempting to DB Setup at URL:", url);
             const res = await fetch(url);
             const text = await res.text();
             let data;

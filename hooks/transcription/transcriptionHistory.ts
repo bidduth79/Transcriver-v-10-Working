@@ -47,7 +47,9 @@ export const persistHistoryItem = async (item: TranscriptionHistoryItem) => {
     try {
       const { broadcastHistoryUpdate } = await import('../useBroadcastSync');
       broadcastHistoryUpdate();
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Could not tell other tabs about the new history item:', e);
+    }
   } catch (e) {
     console.warn("Local history persistence notice:", e);
   }
