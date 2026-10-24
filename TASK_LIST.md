@@ -21,8 +21,8 @@
 | 8 | লম্বা অডিও ভাগ করে একসাথে transcribe | মাঝারি | বড় | ☑ |
 | 9 | `gemini-3.5-transcribe` model যাচাই ও ব্যবহার | মাঝারি | ছোট | ☑ |
 | 10 | এক ডিভাইসে মুছলে অন্য ডিভাইসেও মোছা | মাঝারি | মাঝারি | ☑ |
-| 11 | লম্বা transcript Cloud Storage-এ রাখা | নিম্ন | বড় | ☐ |
-| 12 | Server-এ batch queue (ব্রাউজার বন্ধ হলেও চলবে) | নিম্ন | খুব বড় | ☐ |
+| 11 | লম্বা transcript Cloud Storage-এ রাখা | নিম্ন | বড় | ⛔ দরকার নেই এখন; Storage চালু নেই (নিচে দেখুন) |
+| 12 | Server-এ batch queue (ব্রাউজার বন্ধ হলেও চলবে) | নিম্ন | খুব বড় | ⛔ server + billing + task 1 লাগবে (নিচে দেখুন) |
 | 13 | অডিও waveform ও লাইনে ক্লিক করে সেখানে যাওয়া | নিম্ন | মাঝারি | ☑ |
 | 14 | আসল `.docx` (Word) export | নিম্ন | ছোট | ☑ |
 | 15 | GitHub-এ স্বয়ংক্রিয় test/build (CI) | নিম্ন | ছোট | ☑ (push করলে চালু হবে) |
@@ -66,3 +66,12 @@ Memory ৪–৫ গুণ বেড়ে যায়, যা আগের "�
 বানাতে গেলে Google প্রতিবার `400 FAILED_PRECONDITION` ফেরত দিয়েছে — অর্থাৎ এই project-এ Batch API চালু নেই
 (সাধারণত Google Cloud-এ billing/paid tier চালু না থাকলে এমন হয়)। কাজ না করা ও পরীক্ষা করা যায় না এমন কোড রাখা হয়নি।
 **যা লাগবে:** AI Studio → key-এর project-এ billing চালু করা। চালু হলে জানাবেন, তখন এটা করা যাবে।
+
+**11. লম্বা transcript Cloud Storage-এ** (২০২৬-১০-২৪): আপনার Firebase project-এর Storage bucket শুধু-পড়ার request-এ `404 Not Found` দিয়েছে —
+Storage চালু নেই (নতুন project-এ Storage চালু করতে এখন Blaze/paid plan লাগে)। তাছাড়া দরকারও কম: লম্বা transcript এখন gzip হয়ে
+Firestore-এ যায়; আপনার ~১৬.৬ কোটি অক্ষরের সব history compress করে আনুমানিক ~৯০ MB — ফ্রি ১ GB-র অনেক নিচে, আর প্রতি document-এর
+১ MB সীমার আগেই compress হয়। history ৫–১০ গুণ বাড়লে তখন বিবেচনা করা যাবে।
+
+**12. Server-এ batch queue** (২০২৬-১০-২৪): ব্রাউজার বন্ধ থাকলেও চলতে হলে একটা server (যেমন Cloud Run), ফাইল রাখার storage ও
+queue লাগবে — Google Cloud billing ও deploy অনুমতি দরকার, আর Gemini key server-এ রাখতে হবে (task 1, আপনার সিদ্ধান্তে স্থগিত)।
+তাই এখন করা যায়নি। এর মধ্যে যা করা হয়েছে: batch শেষ হলে browser notification (task 5) আর লম্বা অডিও ভাগ করে দ্রুত transcribe (task 8)।
