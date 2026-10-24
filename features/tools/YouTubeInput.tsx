@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getApiUrl, isLocalServerEnabled } from '../../utils/config';
+import { messageOf } from '../../utils/errorMessage';
 
 interface YouTubeInputProps {
   onSuccess: (blob: Blob, fileName: string, mode: string) => void;
@@ -51,7 +52,7 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
       } else {
         throw new Error(appLang === 'bn' ? 'অডিও ডাউনলোড করা যায়নি' : 'Failed to download audio');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('YouTube link error:', err);
       // A network error means the local server could not be reached
       if (err instanceof TypeError) {
@@ -59,7 +60,7 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
           ? 'লোকাল সার্ভারে পৌঁছানো যায়নি। কম্পিউটারে XAMPP চালু আছে কিনা এবং সেটিংসে সার্ভারের ঠিকানা দেখুন।'
           : 'Could not reach the local server. Check that XAMPP is running and the server address in Settings.');
       } else {
-        setError(err.message || (appLang === 'bn' ? 'লিংক প্রসেস করতে ব্যর্থ হয়েছে' : 'Failed to process link'));
+        setError(messageOf(err) || (appLang === 'bn' ? 'লিংক প্রসেস করতে ব্যর্থ হয়েছে' : 'Failed to process link'));
       }
     } finally {
       setLoading(false);

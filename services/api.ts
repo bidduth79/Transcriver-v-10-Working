@@ -38,8 +38,8 @@ export const fetchConfigDual = async (docName: string) => {
         if (docSnap.exists()) {
             return docSnap.data();
         }
-    } catch (e: any) {
-        if (e.code !== 'permission-denied') {
+    } catch (e) {
+        if ((e as { code?: string }).code !== 'permission-denied') {
             console.warn("Config fetch failed", e);
         }
     }
@@ -75,7 +75,7 @@ export const performMasterSync = async (onProgress: (msg: string, p: number) => 
                     try {
                         const tx = idb.transaction([store], 'readwrite');
                         const st = tx.objectStore(store);
-                        chunk.forEach((item: any) => st.put(item));
+                        chunk.forEach(item => st.put(item));
                         tx.oncomplete = () => res();
                         tx.onerror = () => res();
                     } catch (e) {
@@ -89,14 +89,14 @@ export const performMasterSync = async (onProgress: (msg: string, p: number) => 
             const batchSize = 5;
             for (let j = 0; j < allData.length; j += batchSize) {
                 const batch = allData.slice(j, j + batchSize);
-                await Promise.all(batch.map((item: any) => saveDataDual(store, item, true)));
+                await Promise.all(batch.map(item => saveDataDual(store, item, true)));
                 await new Promise(r => setTimeout(r, 350));
             }
         }
 
         onProgress("সিনক্রোনাইজ সম্পন্ন হয়েছে", 100);
         return true;
-    } catch (e: any) {
+    } catch (e) {
         console.error("Master Sync Failed:", e);
         throw e;
     }

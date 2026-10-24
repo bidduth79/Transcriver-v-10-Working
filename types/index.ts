@@ -25,9 +25,14 @@ export interface HistoryItem {
   bgbRemark?: string;
   summary?: string;
   title?: string;
-  // allow other dynamic fields if necessary
-  [key: string]: any;
+  // Transcript field of records saved by old versions
+  text?: string;
+  // Other fields some features add (BGB analysis, sync flags, ...)
+  [key: string]: unknown;
 }
+
+// A record as kept in IndexedDB and synced to the cloud: an id plus the fields of its store
+export type StoredRecord = Record<string, unknown> & { id?: string | number };
 
 export interface AudioData {
   id: string;

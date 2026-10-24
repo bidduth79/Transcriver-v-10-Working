@@ -7,6 +7,7 @@ import {
 import { withSyncStamp } from './syncStamp';
 import { packForCloud } from './transcriptCompression';
 import { tombstoneFor } from './tombstone';
+import { messageOf } from '../../utils/errorMessage';
 
 /**
  * ট্রান্সক্রিপশন বা ব্যাচ প্রসেসিং শুরু/শেষ হলে এই লক কল করা হয়।
@@ -133,8 +134,8 @@ const startWorker = async () => {
             console.debug(`[Firebase Gentle Sync] Deleted document ${item.storeName}/${item.id}`);
           }
           syncStats.lastSyncTime = new Date().toLocaleTimeString('bn-BD');
-        } catch (itemErr: any) {
-          console.warn(`[Firebase Gentle Sync] Handled non-fatal sync notice for ${item.storeName}:`, itemErr?.message || itemErr);
+        } catch (itemErr) {
+          console.warn(`[Firebase Gentle Sync] Handled non-fatal sync notice for ${item.storeName}:`, messageOf(itemErr) || itemErr);
         }
       }
 
@@ -145,8 +146,8 @@ const startWorker = async () => {
     if (!isHeavyProcessingActive() && queueMap.size === 0) {
       syncStats.statusMessageBn = 'ফায়ারবেইজ সিঙ্ক সম্পূর্ণ আপ-টু-ডেট আছে';
     }
-  } catch (err: any) {
-    console.warn("[Firebase Gentle Sync] Worker notice:", err?.message || err);
+  } catch (err) {
+    console.warn("[Firebase Gentle Sync] Worker notice:", messageOf(err) || err);
   } finally {
     runtime.isWorkerRunning = false;
     notifyListeners();

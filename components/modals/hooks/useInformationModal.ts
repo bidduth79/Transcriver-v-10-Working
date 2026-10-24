@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { getApiUrl } from '../../../services/api';
 import { isLocalServerEnabled } from '../../../utils/config';
+import { messageOf } from '../../../utils/errorMessage';
 
 export const useInformationModal = ({ addToast, appLang }: any) => {
     const [activeTab, setActiveTab] = useState('sidebar');
@@ -33,9 +34,9 @@ export const useInformationModal = ({ addToast, appLang }: any) => {
             } else {
                 if (addToast) addToast('Setup Error: ' + (data.message || 'Unknown'), 'error');
             }
-        } catch (e: any) {
+        } catch (e) {
             console.error("Fetch error:", e);
-            if (addToast) addToast((appLang === 'bn' ? 'সার্ভার কানেকশন ব্যর্থ: ' : 'Server Connection Failed: ') + (e.message || 'Unknown error'), 'error');
+            if (addToast) addToast((appLang === 'bn' ? 'সার্ভার কানেকশন ব্যর্থ: ' : 'Server Connection Failed: ') + (messageOf(e) || 'Unknown error'), 'error');
         }
     };
 

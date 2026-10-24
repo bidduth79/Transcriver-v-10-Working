@@ -152,7 +152,7 @@ export const useTranscription = (
       }
 
       return { success: true, text: fullText };
-    } catch (error: any) {
+    } catch (error) {
       console.error("Transcription Error:", error);
       setStatus('error');
       const safeMsg = formatErrorMessage(error, appLang, lastUsedKeyLabel);

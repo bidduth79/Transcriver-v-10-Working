@@ -5,6 +5,7 @@ import { logSystemActivity } from '../../../services/SystemLogger';
 import { createGeminiClient } from '../../../services/apiKeys/geminiClient';
 import { buildSearchContext, parseJsonAnswer } from '../../../utils/aiAnswer';
 import { buildThinkingConfig } from '../../../hooks/transcription/geminiRequest';
+import { messageOf } from '../../../utils/errorMessage';
 
 export function useSummaryAnalysis(
   searchTerm: string, 
@@ -81,17 +82,17 @@ export function useSummaryAnalysis(
       logSystemActivity('ANALYSIS', 'SUCCESS', 'Sentiment Analysis Completed', `Term: ${searchTerm}, Sentiment: ${sentiment}`);
       
       addToast(appLang === 'bn' ? "এআই বিশ্লেষণ সফল হয়েছে" : "AI analysis successful", 'success');
-    } catch (error: any) {
+    } catch (error) {
       console.error("AI Analysis Error:", error);
       
       // Log Error
-      logSystemActivity('ANALYSIS', 'ERROR', 'Analysis Failed', `Error: ${error.message}`);
+      logSystemActivity('ANALYSIS', 'ERROR', 'Analysis Failed', `Error: ${messageOf(error)}`);
       
       const quotaMsg = appLang === 'bn' 
         ? "API Key সমস্যা বা কোটা শেষ। দয়া করে সেটিংসে গিয়ে কি পরিবর্তন করুন।" 
         : "API Key Error or Quota exceeded. Please change Key in Settings.";
       
-      const errorMsg = error.message?.includes('429') || error.message?.includes('403') ? quotaMsg : (appLang === 'bn' ? 'এআই বিশ্লেষণ ব্যর্থ হয়েছে' : 'AI analysis failed');
+      const errorMsg = messageOf(error)?.includes('429') || messageOf(error)?.includes('403') ? quotaMsg : (appLang === 'bn' ? 'এআই বিশ্লেষণ ব্যর্থ হয়েছে' : 'AI analysis failed');
       addToast(errorMsg, 'error');
     } finally {
       setIsAnalyzing(false);

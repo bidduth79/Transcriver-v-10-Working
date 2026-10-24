@@ -6,16 +6,26 @@ import { supabase } from './supabase';
 import { getApiUrl, isLocalServerEnabled } from '../utils/config';
 import { AUTO_SYNC_SUPABASE_ENABLED, AUTO_SYNC_FIREBASE_ENABLED } from './syncEngine';
 
-// Structure: { target: 'supabase'|'firebase'|'local', action: 'save'|'delete', storeName, id, payload? }
+import type { StoredRecord } from '../types';
+
+interface SyncTask {
+    target: string; // 'supabase' | 'firebase' | 'local'
+    action: string; // 'save' | 'delete'
+    storeName: string;
+    id: string;
+    payload?: StoredRecord;
+    timestamp?: number;
+    retryCount?: number;
+}
 const QUEUE_KEY = 'sync_queue';
 
-export const addToQueue = async (target: string, action: string, storeName: string, id: string, payload?: any) => {
+export const addToQueue = async (target: string, action: string, storeName: string, id: string, payload?: StoredRecord) => {
     if (target === 'local' && !isLocalServerEnabled()) return;
     if (target === 'supabase' && !AUTO_SYNC_SUPABASE_ENABLED) return;
     if (target === 'firebase' && !AUTO_SYNC_FIREBASE_ENABLED) return;
 
     try {
-        const queue: any[] = (await get(QUEUE_KEY)) || [];
+        const queue: SyncTask[] = (await get(QUEUE_KEY)) || [];
         // Keep queue capped at 50 to avoid massive RAM growth
         if (queue.length > 50) queue.shift();
         queue.push({ target, action, storeName, id, payload, timestamp: Date.now() });
@@ -35,10 +45,10 @@ export const processQueue = async () => {
     }
 
     try {
-        const queue: any[] = (await get(QUEUE_KEY)) || [];
+        const queue: SyncTask[] = (await get(QUEUE_KEY)) || [];
         if (queue.length === 0) return;
 
-        const remainingQueue: any[] = [];
+        const remainingQueue: SyncTask[] = [];
 
         for (const task of queue) {
             // Discard tasks for disabled sync targets immediately

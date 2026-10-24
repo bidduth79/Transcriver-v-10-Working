@@ -19,7 +19,7 @@ export const generateProfileResponse = async (ai: GoogleGenAI, prompt: string, p
         tools: [{ googleSearch: {} }]
       }
     });
-  } catch (searchErr: any) {
+  } catch (searchErr) {
     console.warn("Google Search grounding not available or permission denied, falling back to standard AI generation:", searchErr);
     try {
       // Second try: standard model generation without tools
@@ -27,7 +27,7 @@ export const generateProfileResponse = async (ai: GoogleGenAI, prompt: string, p
         model: modelToUse,
         contents: prompt
       });
-    } catch (genErr: any) {
+    } catch (genErr) {
       console.warn(`Primary model generation failed, trying fallback model ${LITE_MODEL}:`, genErr);
       // Third try: fast fallback model
       response = await ai.models.generateContent({

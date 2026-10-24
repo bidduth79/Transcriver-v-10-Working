@@ -1,8 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const defaultSupabaseUrl = 'https://ftrjvvsfjxmxwqvbskic.supabase.co';
 
-export const sanitizeSupabaseUrl = (url: any): string => {
+export const sanitizeSupabaseUrl = (url: unknown): string => {
   if (!url || typeof url !== 'string') return defaultSupabaseUrl;
   let trimmed = url.trim();
   if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return defaultSupabaseUrl;
@@ -46,8 +46,9 @@ export const currentSupabaseUrl = supabaseUrl;
 const notConfiguredError = new Error("Supabase not configured");
 
 // Chainable no-op result for query builder pattern
+type Chainable = { [method: string]: (...args: never[]) => unknown };
 const createChainableResult = () => {
-    const chainable: any = {
+    const chainable: Chainable = {
         select: () => chainable,
         eq: () => chainable,
         neq: () => chainable,
@@ -63,7 +64,7 @@ const createChainableResult = () => {
         range: () => chainable,
         single: () => chainable,
         maybeSingle: () => chainable,
-        then: (resolve: any) => resolve({ data: null, error: notConfiguredError }),
+        then: (resolve: (result: { data: null; error: Error }) => void) => resolve({ data: null, error: notConfiguredError }),
     };
     return chainable;
 };
@@ -79,20 +80,22 @@ const dummyClient = {
     })
 };
 
-let clientInstance: any = dummyClient;
+// The dummy covers only the calls this app makes
+const dummyAsClient = dummyClient as unknown as SupabaseClient;
+let clientInstance: SupabaseClient = dummyAsClient;
 
 if (isConfigValid) {
   try {
     clientInstance = createClient(supabaseUrl, supabaseKey);
   } catch (err) {
     console.warn('Could not initialize Supabase client, falling back to safe dummy client:', err);
-    clientInstance = dummyClient;
+    clientInstance = dummyAsClient;
   }
 } else if (supabaseKey) {
   console.warn('Supabase Anon Key appears invalid (not a valid JWT format). Please update VITE_SUPABASE_ANON_KEY in .env');
 }
 
 /** Whether Supabase is properly configured */
-export const isSupabaseConfigured = isConfigValid && clientInstance !== dummyClient;
+export const isSupabaseConfigured = isConfigValid && clientInstance !== dummyAsClient;
 
 export const supabase = clientInstance;

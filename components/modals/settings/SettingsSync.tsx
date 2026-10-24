@@ -8,6 +8,7 @@ import {
     FirebaseGentleSyncStats 
 } from '../../../services/firebaseThrottledQueue';
 import { useAppStore } from '../../../hooks/useAppStore';
+import { messageOf } from '../../../utils/errorMessage';
 
 interface SettingsSyncProps {
     isDark: boolean;
@@ -83,8 +84,8 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
             });
             useAppStore.getState().triggerStoreUpdate('studio_history');
             addToast(appLang === 'bn' ? 'সকল ডাটাবেইজ সিনক্রোনাইজ সম্পন্ন হয়েছে' : 'All Databases Synced Successfully', 'success');
-        } catch (e: any) {
-            setSyncStatus('Failed: ' + e.message);
+        } catch (e) {
+            setSyncStatus('Failed: ' + messageOf(e));
             addToast(appLang === 'bn' ? 'অপারেশন ব্যর্থ হয়েছে' : 'Operation Failed', 'error');
         } finally {
             setIsSyncing(false);

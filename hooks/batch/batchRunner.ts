@@ -4,6 +4,7 @@ import { getFileMetadata } from './batchUtils';
 import { setHeavyProcessingActive } from '../../services/firebaseThrottledQueue';
 import { rateLimitWaitMs, type RateLimitInfo } from '../transcription/rateLimit';
 import { notifyWhenHidden } from '../../services/browserNotification';
+import { messageOf } from '../../utils/errorMessage';
 
 export interface FailedFile {
   file: File;
@@ -134,10 +135,10 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
       inFlightIndexRef.current = null;
       ctx.setProcessedCount(prev => prev + 1);
       startCountdownForNextFile(queue, index + 1);
-    } catch (error: any) {
+    } catch (error) {
       inFlightIndexRef.current = null;
       console.error(`Error processing ${currentFile.name}:`, error);
-      const limit: RateLimitInfo | undefined = error?.rateLimit;
+      const limit: RateLimitInfo | undefined = (error as { rateLimit?: RateLimitInfo } | undefined)?.rateLimit;
 
       // No key has quota left today: pause here instead of failing (and spending requests on) the rest
       if (limit?.isDaily) {
@@ -161,7 +162,7 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
         }, (limit && rateLimitWaitMs(limit)) || 3000);
       } else {
         addToast(appLang === 'bn' ? `${currentFile.name} ট্রান্সক্রাইব করা যায়নি` : `Failed to transcribe ${currentFile.name}`, 'error');
-        ctx.setFailedFiles(prev => [...prev, { file: currentFile, reason: error?.message || 'Transcription failed' }]);
+        ctx.setFailedFiles(prev => [...prev, { file: currentFile, reason: messageOf(error) || 'Transcription failed' }]);
         startCountdownForNextFile(queue, index + 1);
       }
     }

@@ -6,6 +6,7 @@ import { detectAudioMimeType, convertAudioToWav, blobToBase64 } from './transcri
 import { isKeyOrProjectBlockedError } from './transcriptionErrors';
 import { buildHighSensitivityRequest, releaseRequestAudio } from './geminiRequest';
 import { createGeminiClient } from '../../services/apiKeys/geminiClient';
+import { messageOf } from '../../utils/errorMessage';
 
 type Lang = 'bn' | 'en';
 type Toast = (msg: string, type: 'success' | 'error' | 'info' | 'warning') => void;
@@ -73,9 +74,9 @@ export const generateWithRecovery = async ({ provider, buildRequest, lang, setSt
   try {
     request = await buildRequest(ai, provider.key);
     response = await generateWaitingOnRateLimit(ai, request, lang, setStage);
-  } catch (err: any) {
+  } catch (err) {
     console.error("Transcription generation failed on primary key:", err);
-    if (err?.message?.includes('RECITATION') || err?.message?.includes('Recitation')) {
+    if (messageOf(err)?.includes('RECITATION') || messageOf(err)?.includes('Recitation')) {
       console.warn("Caught recitation in generateContent error");
     } else if (isKeyOrProjectBlockedError(err)) {
       const fallbacks = await getFallbackProviders(provider.key);

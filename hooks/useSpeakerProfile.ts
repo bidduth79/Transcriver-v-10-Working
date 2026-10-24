@@ -79,7 +79,7 @@ export const useSpeakerProfile = (transcriptContext: string) => {
       } else {
         throw new Error("Failed to parse profile data from AI");
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(getSpeakerProfileErrorMessage(err));
     } finally {
       setIsLoading(false);

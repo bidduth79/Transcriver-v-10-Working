@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 import { normalizeTimestamps } from './exportContent';
 import { printHtmlInFrame } from '../print/printHtmlInFrame';
+import { messageOf } from '../../../utils/errorMessage';
 
 const TOAST_ID = 'pdf-export-toast';
 
@@ -90,8 +91,8 @@ export const printTranscriptAsPdf = (options: PdfOptions) => {
       fontWaitMs: 300,
       onBeforePrint: () => toast.success('PDF প্রস্তুত হয়েছে!', { id: TOAST_ID, duration: 1200 }),
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('PDF Export Error:', error);
-    toast.error(`PDF এরর: ${error.message}`, { id: TOAST_ID, duration: 2500 });
+    toast.error(`PDF এরর: ${messageOf(error)}`, { id: TOAST_ID, duration: 2500 });
   }
 };

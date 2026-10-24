@@ -5,14 +5,19 @@ import { supabase, isSupabaseConfigured } from '../supabase';
 import { withoutSyncStamp } from '../firebaseSync/syncStamp';
 import { unpackFromCloud } from '../firebaseSync/transcriptCompression';
 import { isTombstone } from '../firebaseSync/tombstone';
+import type { StoredRecord } from '../../types';
+
+// Local server and Supabase rows wrap the record in `data`
+type WrappedRow = StoredRecord & { data?: StoredRecord };
+const unwrapRow = (row: WrappedRow): StoredRecord => row.data || row;
 
 // Readers for each storage backend. Every reader resolves to [] on failure so one source never blocks the others.
 
-export const fetchFromPrimaryIdb = async (storeName: string): Promise<any[]> => {
+export const fetchFromPrimaryIdb = async (storeName: string): Promise<StoredRecord[]> => {
   try {
     const { initDB } = await import('../db');
     const idb = await initDB();
-    return await new Promise<any[]>((resolve) => {
+    return await new Promise<StoredRecord[]>((resolve) => {
       try {
         const tx = idb.transaction([storeName], 'readonly');
         const st = tx.objectStore(storeName);
@@ -28,10 +33,10 @@ export const fetchFromPrimaryIdb = async (storeName: string): Promise<any[]> => 
   }
 };
 
-export const fetchFromLocalApi = async (storeName: string): Promise<any[]> => {
+export const fetchFromLocalApi = async (storeName: string): Promise<StoredRecord[]> => {
   // If local server is disabled, do not attempt to contact 127.0.0.1
   if (!isLocalServerEnabled()) return [];
-  let allLocalData: any[] = [];
+  let allLocalData: StoredRecord[] = [];
   try {
     let page = 1;
     const limit = 200; // Safe chunk size
@@ -48,7 +53,7 @@ export const fetchFromLocalApi = async (storeName: string): Promise<any[]> => {
         try {
           const data = JSON.parse(text);
           if (Array.isArray(data)) {
-            const items = data.map((row: any) => row.data || row);
+            const items = (data as WrappedRow[]).map(unwrapRow);
             allLocalData = allLocalData.concat(items);
             if (items.length < limit) break; // Reached the end
           } else {
@@ -69,7 +74,7 @@ export const fetchFromLocalApi = async (storeName: string): Promise<any[]> => {
   }
 };
 
-export const fetchFromFirebase = async (storeName: string): Promise<any[]> => {
+export const fetchFromFirebase = async (storeName: string): Promise<StoredRecord[]> => {
   if (!isFirebaseConfigured || !db) return [];
   try {
     await authPromise;
@@ -83,10 +88,10 @@ export const fetchFromFirebase = async (storeName: string): Promise<any[]> => {
   }
 };
 
-export const fetchFromSupabase = async (storeName: string): Promise<any[]> => {
+export const fetchFromSupabase = async (storeName: string): Promise<StoredRecord[]> => {
   if (!isSupabaseConfigured) return [];
   try {
-    let allSupabaseData: any[] = [];
+    let allSupabaseData: WrappedRow[] = [];
     let from = 0;
     const limit = 50;
 
@@ -106,7 +111,7 @@ export const fetchFromSupabase = async (storeName: string): Promise<any[]> => {
         break;
       }
     }
-    return allSupabaseData.map((row: any) => row.data || row);
+    return allSupabaseData.map(unwrapRow);
   } catch (e) {
     return [];
   }

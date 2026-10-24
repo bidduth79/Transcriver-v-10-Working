@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getActiveProvider, incrementTotalCalls } from '../services/ApiKeyManager';
 import { createGeminiClient } from '../services/apiKeys/geminiClient';
+import { messageOf } from '../utils/errorMessage';
 
 export const useTransformTranscript = (
   transcript: string,
@@ -55,8 +56,8 @@ ${transcript}`;
             setTranscript(response.text);
             addToast("Transformation Complete", "success");
         }
-    } catch (e: any) {
-        addToast(e.message || "Transformation Failed", "error");
+    } catch (e) {
+        addToast(messageOf(e) || "Transformation Failed", "error");
     } finally {
         setTransformingType(null);
     }

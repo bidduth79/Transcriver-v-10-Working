@@ -6,6 +6,7 @@ import { logSystemActivity } from '../../../services/SystemLogger';
 import { createGeminiClient } from '../../../services/apiKeys/geminiClient';
 import { parseJsonAnswer } from '../../../utils/aiAnswer';
 import { buildThinkingConfig } from '../../../hooks/transcription/geminiRequest';
+import { messageOf } from '../../../utils/errorMessage';
 
 export interface ReportItem {
   id: string;
@@ -118,13 +119,13 @@ export const useReportActions = (
       logSystemActivity('REPORT', 'SUCCESS', 'Report Generated', `Term: ${searchTerm}, File: ${fileMeta.name}`);
       
       addToast(appLang === 'bn' ? "রিপোর্ট তৈরি হয়েছে" : "Report generated", 'success');
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       
       // Log Error
-      logSystemActivity('REPORT', 'ERROR', 'Report Generation Failed', `Error: ${err.message}`);
+      logSystemActivity('REPORT', 'ERROR', 'Report Generation Failed', `Error: ${messageOf(err)}`);
       
-      const errorMsg = err.message?.includes('API Key') 
+      const errorMsg = messageOf(err)?.includes('API Key') 
         ? (appLang === 'bn' ? 'API Key সিলেক্ট করুন' : 'Select API Key') 
         : (appLang === 'bn' ? "রিপোর্ট তৈরিতে সমস্যা হয়েছে" : "Failed to generate report");
 

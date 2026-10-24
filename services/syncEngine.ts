@@ -9,6 +9,7 @@ import { fetchFromPrimaryIdb, fetchFromLocalApi, fetchFromFirebase, fetchFromSup
 import { withSyncStamp } from './firebaseSync/syncStamp';
 import { tombstoneFor } from './firebaseSync/tombstone';
 import { packForCloud } from './firebaseSync/transcriptCompression';
+import type { StoredRecord } from '../types';
 
 // ============================================================================
 // 🌐 ক্লাউড ও জেম্প সার্ভার ব্যাকগ্রাউন্ড অটো-সেভ নিয়ন্ত্রণ (Auto Cloud Save Toggles)
@@ -21,7 +22,7 @@ export const AUTO_SYNC_FIREBASE_ENABLED = true;   // Firebase ব্যাকগ
 
 // TRIPLE-SYNC READ
 export const fetchDataDual = async (storeName: string, forceAll = false) => {
-  const promises: Promise<any[]>[] = [
+  const promises: Promise<StoredRecord[]>[] = [
     fetchFromPrimaryIdb(storeName),
   ];
 
@@ -42,8 +43,8 @@ export const fetchDataDual = async (storeName: string, forceAll = false) => {
   const allData = results.flat();
   
   // Deduplicate by ID
-  const uniqueDataMap = new Map();
-  allData.forEach((item: any) => {
+  const uniqueDataMap = new Map<string, StoredRecord & { id: string }>();
+  allData.forEach(item => {
     if (item && item.id) {
       const idStr = String(item.id);
       uniqueDataMap.set(idStr, { ...item, id: idStr });
@@ -54,7 +55,7 @@ export const fetchDataDual = async (storeName: string, forceAll = false) => {
 };
 
 // TRIPLE-SYNC WRITE
-export const saveDataDual = async (storeName: string, data: any, forceAll = false) => {
+export const saveDataDual = async (storeName: string, data: StoredRecord, forceAll = false) => {
   const id = String(data.id || Date.now());
   const payload = { ...data, id };
 
@@ -96,9 +97,9 @@ export const saveDataDual = async (storeName: string, data: any, forceAll = fals
     // 3. Supabase Write (with config guard)
     if ((forceAll || AUTO_SYNC_SUPABASE_ENABLED) && isSupabaseConfigured) {
       promises.push(
-        Promise.resolve(supabase.from(storeName).upsert({ id: id, data: payload })).then(({ error }: any) => {
+        Promise.resolve(supabase.from(storeName).upsert({ id: id, data: payload })).then(({ error }) => {
             if (error) throw error;
-        }).catch((e: any) => {
+        }).catch((e: Error) => {
             console.warn("Supabase save failed, queuing...", e.message);
             if (AUTO_SYNC_SUPABASE_ENABLED) {
               addToQueue('supabase', 'save', storeName, id, payload);
@@ -145,9 +146,9 @@ export const deleteDataDual = async (storeName: string, id: string, forceAll = f
     // Supabase delete (with config guard)
     if ((forceAll || AUTO_SYNC_SUPABASE_ENABLED) && isSupabaseConfigured) {
       promises.push(
-        Promise.resolve(supabase.from(storeName).delete().eq('id', id)).then(({ error }: any) => {
+        Promise.resolve(supabase.from(storeName).delete().eq('id', id)).then(({ error }) => {
             if (error) throw error;
-        }).catch((e: any) => {
+        }).catch(() => {
           if (AUTO_SYNC_SUPABASE_ENABLED) {
             addToQueue('supabase', 'delete', storeName, id);
           }

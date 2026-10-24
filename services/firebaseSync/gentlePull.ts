@@ -5,6 +5,7 @@ import { pullStoreInPages } from './pullStorePages';
 import { removeCloudSecretCopies } from './secretCleanup';
 import { SYNC_STAMP_FIELD } from './syncStamp';
 import { startOfYesterday, getPullCheckpoint, savePullCheckpoint, countCloudDocs } from './pullWindow';
+import { messageOf } from '../../utils/errorMessage';
 
 /**
  * কোনোরকম চাপ বা ফ্রিজ ছাড়াই ফায়ারবেইজ থেকে নতুন ডাটা ছোট ছোট চ্যাংকে (Chunk) লোকাল IndexedDB-তে নিয়ে আসে।
@@ -60,8 +61,8 @@ export const scheduleGentleFirebasePull = (
         try {
           const removed = await removeCloudSecretCopies(cloudDb, idb);
           if (removed) console.debug(`[Firebase Gentle Pull] Removed ${removed} API key copies from the cloud`);
-        } catch (cleanupErr: any) {
-          console.warn('[Firebase Gentle Pull] API key cleanup notice:', cleanupErr?.message || cleanupErr);
+        } catch (cleanupErr) {
+          console.warn('[Firebase Gentle Pull] API key cleanup notice:', messageOf(cleanupErr) || cleanupErr);
         }
         const pullStartedAt = Date.now();
         const shouldStop = () => !navigator.onLine || (!forceManual && isHeavyProcessingActive());
@@ -119,8 +120,8 @@ export const scheduleGentleFirebasePull = (
             if (changed > 0 && isHistory && onHistoryUpdated) {
               onHistoryUpdated();
             }
-          } catch (storeErr: any) {
-            console.warn(`[Firebase Gentle Pull] Notice on ${storeName}:`, storeErr?.message || storeErr);
+          } catch (storeErr) {
+            console.warn(`[Firebase Gentle Pull] Notice on ${storeName}:`, messageOf(storeErr) || storeErr);
           }
 
           // পরবর্তী স্টোর চেক করার আগে ১.২ সেকেন্ড বিরতি নিন
@@ -131,8 +132,8 @@ export const scheduleGentleFirebasePull = (
         syncStats.statusMessageBn = totalNewItemsMerged > 0
           ? `ফায়ারবেইজ থেকে ${totalNewItemsMerged}টি নতুন ডাটা সফলভাবে যুক্ত হয়েছে (মোট ক্লাউড হিস্টোরি: ${cloudHistoryTotal}টি)`
           : `ফায়ারবেইজের সকল ডাটা (${cloudHistoryTotal}টি হিস্টোরি) লোকালে আপ-টু-ডেট আছে`;
-      } catch (err: any) {
-        console.warn("[Firebase Gentle Pull] Error:", err?.message || err);
+      } catch (err) {
+        console.warn("[Firebase Gentle Pull] Error:", messageOf(err) || err);
         syncStats.statusMessageBn = 'ফায়ারবেইজ কানেকশন সাময়িকভাবে পাওয়া যায়নি';
       } finally {
         runtime.isPullRunning = false;

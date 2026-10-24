@@ -3,6 +3,7 @@ import { baseFileName, buildKeywordRegex, buildTxtBlob, buildSrtBlob } from './d
 import { buildDocxBlob } from './download/docxExport';
 import { printTranscriptAsPdf } from './download/pdfExport';
 import { DownloadMenuPanel } from './download/DownloadMenuPanel';
+import { messageOf } from '../../utils/errorMessage';
 
 export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMatches = [], addToast, customTrigger }: any) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,9 +35,9 @@ export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMat
       URL.revokeObjectURL(url);
       setIsOpen(false);
       addToast(`${ext.toUpperCase()} ফাইল ডাউনলোড শুরু হয়েছে`, 'success');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Download error:', error);
-      addToast(`ডাউনলোড ত্রুটি: ${error.message || 'Unknown error'}`, 'error');
+      addToast(`ডাউনলোড ত্রুটি: ${messageOf(error) || 'Unknown error'}`, 'error');
     }
   };
 
@@ -44,9 +45,9 @@ export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMat
   const exportAs = (label: string, ext: string, build: () => Blob) => () => {
     try {
       downloadFile(build(), ext);
-    } catch (error: any) {
+    } catch (error) {
       console.error(`${label} Export Error:`, error);
-      addToast(`${label} এরর: ${error.message}`, 'error');
+      addToast(`${label} এরর: ${messageOf(error)}`, 'error');
     }
   };
 
