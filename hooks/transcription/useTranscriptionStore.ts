@@ -1,3 +1,4 @@
+import type { FileMeta } from '../../types';
 import { create } from 'zustand';
 
 interface TranscriptionState {
@@ -16,8 +17,9 @@ interface TranscriptionState {
   fileUrl: string | null;
   setFileUrl: (url: string | null | ((prev: string | null) => string | null)) => void;
   
-  fileMeta: any;
-  setFileMeta: (meta: any | ((prev: any) => any)) => void;
+  // {} until a file is loaded
+  fileMeta: Partial<FileMeta>;
+  setFileMeta: (meta: Partial<FileMeta> | ((prev: Partial<FileMeta>) => Partial<FileMeta>)) => void;
   
   progress: number;
   setProgress: (progress: number | ((prev: number) => number)) => void;

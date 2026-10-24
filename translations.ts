@@ -112,3 +112,5 @@ export const translations = {
     settings: "সেটিংস"
   }
 };
+
+export type Translations = (typeof translations)[keyof typeof translations];

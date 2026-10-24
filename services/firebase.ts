@@ -7,6 +7,7 @@ import { getAnalytics } from "firebase/analytics";
 import { getFirestore, setLogLevel } from "firebase/firestore";
 
 import { getAuth, signInAnonymously } from "firebase/auth";
+import { messageOf } from '../utils/errorMessage';
 
 // Suppress Firestore connection warnings
 setLogLevel('silent');
@@ -34,8 +35,8 @@ const auth = isConfigValid ? getAuth(app!) : null;
 
 // Automatically sign in anonymously to allow access to Firestore data protected by auth rules
 export const authPromise = (isConfigValid && auth) 
-  ? signInAnonymously(auth).catch((error: any) => {
-      console.warn("Firebase Anonymous Auth Failed. Cloud features may be limited.", error.message);
+  ? signInAnonymously(auth).catch((error: unknown) => {
+      console.warn("Firebase Anonymous Auth Failed. Cloud features may be limited.", messageOf(error));
     })
   : Promise.resolve().then(() => {
       console.warn("Firebase API key is missing. Cloud features will be disabled.");

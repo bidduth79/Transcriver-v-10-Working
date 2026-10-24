@@ -7,6 +7,7 @@ export const DB_NAME = 'LiCellStudioDB_v5_Final';
 export const DB_VERSION = 3;
 
 import { STORES, FIREBASE_SYNCED_STORES, ALL_STORES } from '../constants/storeNames';
+import type { StoredRecord } from '../types';
 export { STORES, FIREBASE_SYNCED_STORES, ALL_STORES };
 
 const SYNC_COOLDOWN = 1000 * 60 * 5; // 5 minutes
@@ -74,7 +75,8 @@ export const pruneYoutubeAudioStore = async (maxEntries = 15) => {
   }
 };
 
-export const addToStore = async (storeName: string, data: any) => {
+// Any record with an id: history items, reports, API keys, logs...
+export const addToStore = async (storeName: string, data: object) => {
   const db = await initDB();
   await new Promise((resolve, reject) => {
     const transaction = db.transaction([storeName], 'readwrite');
@@ -90,7 +92,7 @@ export const addToStore = async (storeName: string, data: any) => {
 
   const isAutoSyncActive = AUTO_SYNC_XAMPP_ENABLED || AUTO_SYNC_SUPABASE_ENABLED || AUTO_SYNC_FIREBASE_ENABLED;
   if (storeName !== STORES.YOUTUBE_AUDIO && isAutoSyncActive) {
-    saveDataDual(storeName, data).catch(err => {
+    saveDataDual(storeName, data as StoredRecord).catch(err => {
       console.warn(`Background save failed for ${storeName}:`, err);
     });
   }
@@ -133,7 +135,7 @@ export const getAllFromStore = async (storeName: string, forceSync = false) => {
           const db2 = await initDB();
           const tx = db2.transaction([storeName], 'readwrite');
           const store = tx.objectStore(storeName);
-          cloudData.forEach((item: any) => store.put(item));
+          cloudData.forEach(item => store.put(item));
           tx.oncomplete = () => {
             useAppStore.getState().triggerStoreUpdate(storeName);
           };

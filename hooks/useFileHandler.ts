@@ -11,6 +11,11 @@ import { loadHistoryTranscript } from './history/useHistoryTranscript';
 
 const MAX_FILE_SIZE = 70 * 1024 * 1024;
 
+// An <input type=file> change, or the same shape built by drag & drop and the recorder
+export interface FileChangeEvent {
+  target: { files: FileList | File[] | null; webkitdirectory?: boolean; value?: string };
+}
+
 interface UseFileHandlerProps {
   appLang: string;
   addToast: (msg: string, type: 'success' | 'error' | 'info' | 'warning') => void;
@@ -42,7 +47,7 @@ export const useFileHandler = ({
 }: UseFileHandlerProps) => {
 
   // Multiple files or a folder: confirm, then hand supported files to the batch queue
-  const handleMultipleFiles = (files: FileList) => {
+  const handleMultipleFiles = (files: FileList | File[]) => {
     const supportedFiles = (Array.from(files) as File[]).filter(isSupportedMediaFile);
 
     if (supportedFiles.length === 0) {
@@ -111,11 +116,11 @@ export const useFileHandler = ({
     addToast(appLang === 'bn' ? "হিস্টোরি লোড হয়েছে" : "History loaded", 'info');
   };
 
-  const handleFileChange = (e: any, autoStart: boolean = false) => {
+  const handleFileChange = (e: FileChangeEvent, autoStart: boolean = false) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    if (files.length > 1 || (e.target as HTMLInputElement).webkitdirectory) {
+    if (files.length > 1 || e.target.webkitdirectory) {
       handleMultipleFiles(files);
       return;
     }

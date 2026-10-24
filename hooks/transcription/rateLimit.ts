@@ -14,18 +14,22 @@ export interface RateLimitInfo {
 export const MAX_RATE_LIMIT_WAIT_MS = 120_000;
 const DEFAULT_WAIT_MS = 30_000;
 
-const errorText = (err: any): string => {
+// The parts of an SDK / HTTP error that describe a quota problem
+type ErrorLike = { message?: unknown; status?: unknown; error?: unknown } | null | undefined;
+
+const errorText = (err: unknown): string => {
   if (typeof err === 'string') return err;
+  const e = err as ErrorLike;
   try {
-    return [err?.message, err?.status, JSON.stringify(err?.error ?? '')].filter(Boolean).join(' ');
+    return [e?.message, e?.status, JSON.stringify(e?.error ?? '')].filter(Boolean).join(' ');
   } catch {
-    return String(err?.message ?? '');
+    return String(e?.message ?? '');
   }
 };
 
-export const parseRateLimit = (err: any): RateLimitInfo => {
+export const parseRateLimit = (err: unknown): RateLimitInfo => {
   const text = errorText(err);
-  const isRateLimit = err?.status === 429 || /\b429\b|RESOURCE_EXHAUSTED|rate limit|quota/i.test(text);
+  const isRateLimit = (err as ErrorLike)?.status === 429 || /\b429\b|RESOURCE_EXHAUSTED|rate limit|quota/i.test(text);
   if (!isRateLimit) return { isRateLimit: false, isDaily: false, retryAfterMs: null };
 
   const delay = text.match(/retryDelay["\s:]+"?(\d+(?:\.\d+)?)s/i) || text.match(/retry in (\d+(?:\.\d+)?)\s*s/i);

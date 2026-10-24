@@ -1,12 +1,15 @@
 import { GoogleGenAI } from '@google/genai';
 import { logApiCall } from './apiCallStats';
+import { messageOf } from '../../utils/errorMessage';
 
-const isRateLimited = (err: any) =>
-  err?.status === 429 || /\b429\b|RESOURCE_EXHAUSTED/.test(String(err?.message ?? ''));
+const statusOf = (err: unknown) => (err as { status?: number } | null | undefined)?.status;
+
+const isRateLimited = (err: unknown) =>
+  statusOf(err) === 429 || /\b429\b|RESOURCE_EXHAUSTED/.test(String(messageOf(err) ?? ''));
 
 // 503 "This model is currently experiencing high demand": temporary, worth retrying
-const isOverloaded = (err: any) =>
-  err?.status === 503 || /\b503\b|UNAVAILABLE|high demand|overloaded/i.test(String(err?.message ?? ''));
+const isOverloaded = (err: unknown) =>
+  statusOf(err) === 503 || /\b503\b|UNAVAILABLE|high demand|overloaded/i.test(String(messageOf(err) ?? ''));
 
 // Waits before retrying a busy model (growing, as Google recommends), then one similar model is tried
 export const OVERLOAD_RETRY_DELAYS_MS = [2000, 6000];
@@ -22,7 +25,8 @@ const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, m
 export const TEXT_TIMEOUT_MS = 90_000;
 export const MEDIA_TIMEOUT_MS = 600_000;
 const hasMedia = (contents: unknown) =>
-  (Array.isArray(contents) ? contents : [contents]).some((c: any) => Array.isArray(c?.parts) && c.parts.some((p: any) => p?.inlineData || p?.fileData));
+  (Array.isArray(contents) ? contents : [contents]).some((c: { parts?: unknown } | null | undefined) =>
+    Array.isArray(c?.parts) && c.parts.some((p: { inlineData?: unknown; fileData?: unknown } | null | undefined) => p?.inlineData || p?.fileData));
 
 /**
  * Every Gemini client in the app is created here. Each generateContent request (retries and failures

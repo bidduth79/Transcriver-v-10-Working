@@ -46,12 +46,12 @@ export const scanDatabaseForSpeaker = async (
   // Saved transcripts are read from IndexedDB one at a time, then ordered like the history list
   const fromHistory = new Map<string, ReturnType<typeof scan>>();
   try {
-    await forEachHistoryRecord((item: any) => {
+    await forEachHistoryRecord(item => {
       if (item && item.transcript) {
         const rec = {
           id: String(item.id || item.timestamp || Math.random()),
           fileName: item.fileName || item.title || 'নামবিহীন রেকর্ড',
-          date: item.date || (item.timestamp ? new Date(item.timestamp).toLocaleDateString('bn-BD') : 'অজানা তারিখ'),
+          date: item.date || (item.timestamp ? new Date(item.timestamp as string | number).toLocaleDateString('bn-BD') : 'অজানা তারিখ'),
           transcript: item.transcript
         };
         fromHistory.set(rec.id, scan(rec));

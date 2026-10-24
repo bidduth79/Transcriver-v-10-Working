@@ -1,4 +1,6 @@
-export const getFileMetadata = (file: File): Promise<any> => {
+import type { FileMeta } from '../../types';
+
+export const getFileMetadata = (file: File): Promise<FileMeta> => {
   return new Promise((resolve) => {
     let resolved = false;
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -32,7 +34,7 @@ export const getFileMetadata = (file: File): Promise<any> => {
       }
     };
     
-    const finish = (result: any) => {
+    const finish = (result: FileMeta) => {
       if (resolved) return;
       resolved = true;
       cleanupAudio();

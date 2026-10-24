@@ -55,7 +55,7 @@ export const analyzeTranscriptForBgb = async (transcript: string, sensitiveMatch
       }
     });
 
-    const parsed: any = parseJsonAnswer(response.text || "{}") ?? {};
+    const parsed: { remark?: BgbRemarkType; details?: string } = parseJsonAnswer(response.text || "{}") ?? {};
 
     return {
       remark: parsed.remark || 'Neutral',

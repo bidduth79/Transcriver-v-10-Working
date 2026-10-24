@@ -6,10 +6,10 @@ import { serverTimestamp } from 'firebase/firestore';
  */
 export const SYNC_STAMP_FIELD = '_syncedAt';
 
-export const withSyncStamp = (payload: Record<string, any>) => ({ ...payload, [SYNC_STAMP_FIELD]: serverTimestamp() });
+export const withSyncStamp = (payload: Record<string, unknown>) => ({ ...payload, [SYNC_STAMP_FIELD]: serverTimestamp() });
 
 // The stamp only matters in the cloud; local records are stored without it
-export const withoutSyncStamp = <T extends Record<string, any>>(data: T) => {
+export const withoutSyncStamp = <T extends Record<string, unknown>>(data: T) => {
   const { [SYNC_STAMP_FIELD]: _stamp, ...rest } = data;
   return rest;
 };

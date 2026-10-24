@@ -8,8 +8,15 @@ export const useAudioPlayback = () => {
     // No-op: native <audio controls> manages its own playhead UI without full-app React re-renders
   }, []);
 
-  const handleSeek = useCallback((time: string) => {
+  // A transcript timestamp such as "[01:15]", or seconds (the speaker archive sends numbers)
+  const handleSeek = useCallback((time: string | number) => {
     if (!audioRef.current) return;
+    if (typeof time === 'number') {
+      if (!Number.isFinite(time)) return;
+      audioRef.current.currentTime = time;
+      audioRef.current.play().catch(() => {});
+      return;
+    }
     // Timestamps may be written with Bengali digits
     const cleanTime = time.replace(/[\[\]]/g, '').replace(/[০-৯]/g, d => String('০১২৩৪৫৬৭৮৯'.indexOf(d)));
     const parts = cleanTime.split(/[-:]/).map(s => s.trim()).filter(s => s);

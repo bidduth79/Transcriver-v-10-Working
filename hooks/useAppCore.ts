@@ -13,6 +13,7 @@ import { useAudioPlayback } from './useAudioPlayback';
 import { useAppEventListeners } from './useAppEventListeners';
 import { useTransformTranscript } from './useTransformTranscript';
 import { playSuccessSound } from '../utils/audioUtils';
+import type { TranscriptMeta } from '../types';
 
 export function useAppCore() {
   const {
@@ -68,7 +69,7 @@ export function useAppCore() {
   } = useTranscription(appLang, addToast, loadHistory, updateApiStats, playSuccessSound, transcriptionMode);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [transcriptMeta, setTranscriptMeta] = useState<any>(null);
+  const [transcriptMeta, setTranscriptMeta] = useState<TranscriptMeta | null>(null);
 
   onHistoryItemDeletedRef.current = () => {
     setTranscript('');
@@ -120,7 +121,7 @@ export function useAppCore() {
   });
 
   const { isRecording, recordingTime, startRecording, stopRecording } = useAudioRecorder(
-    appLang, addToast, (recordedFile) => handleFileChange({ target: { files: [recordedFile] } } as any)
+    appLang, addToast, (recordedFile) => handleFileChange({ target: { files: [recordedFile] } })
   );
 
   const { audioRef, audioCurrentTime, handleSeek, handleTimeUpdate } = useAudioPlayback();
@@ -190,3 +191,5 @@ export function useAppCore() {
     transformingType, handleTransformTranscript
   };
 }
+
+export type AppCore = ReturnType<typeof useAppCore>;

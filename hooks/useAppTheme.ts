@@ -9,7 +9,9 @@ const DARK_ACTIVE_COLORS = {
   ring: 'ring-indigo-500'
 };
 
-const LIGHT_ACTIVE_COLORS = {
+export type ActiveColors = typeof DARK_ACTIVE_COLORS;
+
+const LIGHT_ACTIVE_COLORS: ActiveColors = {
   primary: 'bg-indigo-600',
   text: 'text-indigo-600',
   border: 'border-indigo-200',

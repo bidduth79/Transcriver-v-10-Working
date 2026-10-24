@@ -5,6 +5,7 @@ import { useBatchTimer } from './batch/useBatchTimer';
 import { createBatchRunner, FailedFile } from './batch/batchRunner';
 import { setHeavyProcessingActive } from '../services/firebaseThrottledQueue';
 import { requestNotificationPermission } from '../services/browserNotification';
+import type { TranscriptionOutcome } from './useTranscription';
 
 export type { FailedFile } from './batch/batchRunner';
 
@@ -16,7 +17,7 @@ export const useBatchProcessor = (
   setActiveHistoryId: (id: string | null) => void,
   setTranscriptMeta: (meta: TranscriptMeta | null) => void,
   setFileMeta: (meta: FileMeta) => void,
-  processTranscription: (file: File, metadata: FileMeta, isAutoProcess?: boolean) => Promise<any>
+  processTranscription: (file: File, metadata: FileMeta, isAutoProcess?: boolean) => Promise<TranscriptionOutcome | undefined>
 ) => {
   const [batchQueue, setBatchQueue] = useState<File[]>([]);
   const [currentBatchIndex, setCurrentBatchIndex] = useState(0);

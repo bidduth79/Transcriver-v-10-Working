@@ -128,7 +128,8 @@ export const convertAudioToWav = async (
     return null;
   }
 
-  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  // Older Safari only has the prefixed constructor
+  const AudioContextClass = window.AudioContext || (window as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AudioContextClass) return null;
 
   let ctx: AudioContext | null = null;

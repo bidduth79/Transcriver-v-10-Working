@@ -10,16 +10,23 @@ import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT } from '../
 
 const audio = { inlineData: { mimeType: 'audio/wav', data: 'AAA' } };
 
+// The fields these tests look at, read without the SDK's wide union types
+interface RequestView {
+  config: { systemInstruction?: unknown; safetySettings: unknown[]; httpOptions: { extraBody: { generationConfig: { audioTranscriptionConfig: unknown } } } };
+  contents: { parts: unknown[] }[];
+}
+const view = (request: unknown) => request as RequestView;
+
 describe('Gemini transcription requests', () => {
   it('sends the instructions as a system instruction to normal models', () => {
-    const req = buildTranscriptionRequest('gemini-3.8-flash', 'pro', audio);
+    const req = view(buildTranscriptionRequest('gemini-3.8-flash', 'pro', audio));
     expect(req.config.systemInstruction).toBe(TRANSCRIPTION_SYSTEM_INSTRUCTION);
     expect(req.contents[0].parts).toEqual([audio, { text: TRANSCRIPTION_PROMPT_TEXT }]);
     expect(req.config.safetySettings).toHaveLength(4);
   });
 
   it('sends speech-only transcribe models just the audio with diarization turned on', () => {
-    for (const req of [buildTranscriptionRequest('gemini-3.5-transcribe', 'pro', audio), buildHighSensitivityRequest('gemini-3.5-transcribe', audio)]) {
+    for (const req of [buildTranscriptionRequest('gemini-3.5-transcribe', 'pro', audio), buildHighSensitivityRequest('gemini-3.5-transcribe', audio)].map(view)) {
       expect(req.config).not.toHaveProperty('systemInstruction');
       expect(req.contents[0].parts).toEqual([audio]);
       expect(req.config.httpOptions.extraBody.generationConfig.audioTranscriptionConfig).toEqual({ diarization: true, wordTimestamp: true });

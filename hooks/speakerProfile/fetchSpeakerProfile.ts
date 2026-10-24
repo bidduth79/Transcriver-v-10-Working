@@ -1,7 +1,8 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, type GenerateContentResponse } from '@google/genai';
 import { SpeakerProfile } from '../../types/speaker';
 import { fetchWikiSummary, fetchWikiImageByTitle, searchWikiImage, searchCommonsImage } from '../speakerProfileUtils';
 import { DEFAULT_MODEL } from '../../constants/aiModels';
+import { messageOf } from '../../utils/errorMessage';
 
 const LITE_MODEL = 'gemini-3.5-flash-lite';
 
@@ -9,7 +10,7 @@ const LITE_MODEL = 'gemini-3.5-flash-lite';
 export const generateProfileResponse = async (ai: GoogleGenAI, prompt: string, preferredModel: string | undefined) => {
   let modelToUse = preferredModel || DEFAULT_MODEL;
 
-  let response: any;
+  let response: GenerateContentResponse;
   try {
     // First try with Google Search grounding tool
     response = await ai.models.generateContent({
@@ -94,8 +95,8 @@ export const enrichProfileFromWiki = async (parsedProfile: SpeakerProfile, name:
   parsedProfile.wikiSummaryEn = wikiEnSummary || undefined;
 };
 
-export const getSpeakerProfileErrorMessage = (err: any) => {
-  let rawMsg = err?.message || '';
+export const getSpeakerProfileErrorMessage = (err: unknown) => {
+  const rawMsg = messageOf(err) || '';
   let displayError = 'স্পীকারের প্রোফাইল লোড করা সম্ভব হয়নি। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।';
   
   if (rawMsg.includes('PERMISSION_DENIED') || rawMsg.includes('403')) {

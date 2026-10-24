@@ -5,7 +5,7 @@ import type { HistoryItem } from '../types';
  * Saved transcripts live only in IndexedDB. The in-memory history list holds "light" items
  * (every field except the transcript text), so thousands of transcripts never sit in memory.
  */
-export const toLightHistoryItem = <T extends Record<string, any>>(item: T): Omit<T, 'transcript' | 'text'> => {
+export const toLightHistoryItem = <T extends Record<string, unknown>>(item: T): Omit<T, 'transcript' | 'text'> => {
   const { transcript: _transcript, text: _text, ...light } = item;
   return light;
 };

@@ -21,6 +21,15 @@ describe('useAudioPlayback.handleSeek', () => {
     expect(media.play).toHaveBeenCalledTimes(3);
   });
 
+  it('also takes plain seconds, as the speaker archive sends them', () => {
+    const { seek, media } = setup();
+    seek(95);
+    expect(media.currentTime).toBe(95);
+    seek(Number.NaN);
+    expect(media.currentTime).toBe(95);
+    expect(media.play).toHaveBeenCalledTimes(1);
+  });
+
   it('ignores a timestamp it cannot read', () => {
     const { seek, media } = setup();
     seek('[ab:cd]');

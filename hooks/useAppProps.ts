@@ -1,7 +1,8 @@
 import { groupHistoryByDate } from '../features/sidebar/utils/historyListUtils';
 import { createLoadHistoryItem } from './appProps/createLoadHistoryItem';
+import type { AppCore } from './useAppCore';
 
-export function getSidebarProps(core: any) {
+export function getSidebarProps(core: AppCore) {
   return {
     t: core.t,
     isSidebarOpen: core.isSidebarOpen,
@@ -65,7 +66,7 @@ export function getSidebarProps(core: any) {
   };
 }
 
-export function getAppModalsProps(core: any) {
+export function getAppModalsProps(core: AppCore) {
   return {
     isInformationOpen: core.isInformationOpen,
     setIsInformationOpen: core.setIsInformationOpen,
@@ -91,7 +92,7 @@ export function getAppModalsProps(core: any) {
   };
 }
 
-export function getExpandedHistoryProps(core: any) {
+export function getExpandedHistoryProps(core: AppCore) {
   return {
     t: core.t,
     isDark: core.isDark,
@@ -110,7 +111,7 @@ export function getExpandedHistoryProps(core: any) {
   };
 }
 
-export function getTranscriptOutputProps(core: any) {
+export function getTranscriptOutputProps(core: AppCore) {
   return {
     t: core.t,
     status: core.status,

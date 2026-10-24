@@ -7,13 +7,14 @@ export interface TranscriptContentProps {
   fontSize: number;
   isDark: boolean;
   t: any; // translation object
-  activeTranscriptSourceMeta: TranscriptMeta | null;
+  // The saved transcript's source, or the loaded file's info
+  activeTranscriptSourceMeta: Partial<TranscriptMeta> | null;
   appLang: 'bn' | 'en';
   searchTerm: string;
   currentMatchIndex: number;
   transcript: string;
   sensitiveMatches: any[];
-  onSeek: (time: number) => void;
+  onSeek: (time: string | number) => void;
   openProfile: (speakerId: string) => void;
   onRenameSpeaker: (speakerId: string, currentName: string) => void;
   transcriptEndRef: React.RefObject<HTMLDivElement>;

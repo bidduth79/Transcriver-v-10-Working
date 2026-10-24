@@ -14,7 +14,7 @@ export const createHistoryRepair = () => {
   const inCloud = new Set<string>();
   const toResend = new Set<string>();
 
-  const onCloudDoc = (id: string, data: Record<string, any>) => {
+  const onCloudDoc = (id: string, data: Record<string, unknown>) => {
     inCloud.add(id);
     if (isLargePlainTranscript(data)) toResend.add(id);
   };

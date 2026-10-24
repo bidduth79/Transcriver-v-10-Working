@@ -38,7 +38,7 @@ describe('generateWithRecovery on rate limits', () => {
     provider: { key: 'KEY-A', source: 'Primary' },
     buildRequest: async (ai: any, key: string) => {
       ai.models = { generateContent: async () => { calls.push(key); const next = outcomes[key].shift(); if (next instanceof Error) throw next; return next; } };
-      return { config: {} };
+      return { model: 'gemini-3.8-flash', contents: [], config: {} };
     },
     lang: 'en', setStage: vi.fn(), addToast: vi.fn(),
   });

@@ -1,6 +1,10 @@
+import type { FileMeta, HistoryItem } from '../../types';
 import { addToStore, STORES } from '../../services/db';
 
-export const buildHistoryItem = (inputFile: Blob, inputMetadata: any, transcript: string, elapsedSeconds: number) => {
+// File info shown in the sidebar; YouTube downloads add the channel
+type SourceMeta = Partial<FileMeta> & { channelName?: string };
+
+export const buildHistoryItem = (inputFile: Blob, inputMetadata: SourceMeta, transcript: string, elapsedSeconds: number) => {
   const fileName = (inputFile as File).name || inputMetadata.name || "audio_file";
   const fileExtension = fileName.includes('.') ? fileName.split('.').pop() : 'mp3';
   return {
@@ -14,7 +18,7 @@ export const buildHistoryItem = (inputFile: Blob, inputMetadata: any, transcript
     timeTaken: `${elapsedSeconds}s`,
     channelName: inputMetadata.channelName,
     size: inputMetadata.size || `${(inputFile.size / (1024 * 1024)).toFixed(2)} MB`,
-    bgbRemark: undefined as any
+    bgbRemark: undefined as string | undefined
   };
 };
 
@@ -30,7 +34,7 @@ export const addToInMemoryHistory = async (item: TranscriptionHistoryItem) => {
     const { rememberHistoryTranscript } = await import('../history/useHistoryTranscript');
     rememberHistoryTranscript(item.id, item.transcript);
     const currentHistory = useHistoryStore.getState().history;
-    useHistoryStore.getState().setHistory([toLightHistoryItem(item) as any, ...currentHistory]);
+    useHistoryStore.getState().setHistory([toLightHistoryItem(item) as unknown as HistoryItem, ...currentHistory]);
   } catch (e) {
     console.warn("In-memory history update notice:", e);
   }
@@ -64,7 +68,7 @@ export const scheduleBgbAnalysis = (item: TranscriptionHistoryItem, text: string
       if (matches.length > 0) {
         const result = await analyzeTranscriptForBgb(text, matches);
         if (result?.remark) {
-          itemForBgb.bgbRemark = result.remark as any;
+          itemForBgb.bgbRemark = result.remark;
           await addToStore(STORES.HISTORY, itemForBgb);
           // Show the remark right away instead of waiting for a full history reload
           const { useHistoryStore } = await import('../useHistoryStore');

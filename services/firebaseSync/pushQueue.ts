@@ -52,7 +52,7 @@ const enqueue = (storeName: string, id: string, action: 'set' | 'delete') => {
   }
 };
 
-export const enqueueFirebaseWrite = (storeName: string, id: string, _payload?: any) => enqueue(storeName, id, 'set');
+export const enqueueFirebaseWrite = (storeName: string, id: string, _payload?: unknown) => enqueue(storeName, id, 'set');
 
 export const enqueueFirebaseDelete = (storeName: string, id: string) => enqueue(storeName, id, 'delete');
 
@@ -71,12 +71,13 @@ const scheduleWorker = (delayMs = INITIAL_IDLE_WAIT_MS) => {
   }, delayMs);
 };
 
-const sanitizeForFirestore = (obj: any): Record<string, any> => {
-  const clean: Record<string, any> = {};
+const sanitizeForFirestore = (obj: unknown): Record<string, unknown> => {
+  const clean: Record<string, unknown> = {};
   if (obj && typeof obj === 'object') {
-    for (const k of Object.keys(obj)) {
-      if (obj[k] !== undefined) {
-        clean[k] = obj[k];
+    const record = obj as Record<string, unknown>;
+    for (const k of Object.keys(record)) {
+      if (record[k] !== undefined) {
+        clean[k] = record[k];
       }
     }
   }
@@ -122,7 +123,7 @@ const startWorker = async () => {
         try {
           if (item.action === 'set') {
             // লোকাল IndexedDB থেকে ঠিক পাঠানোর মুহূর্তে ডাটাটি পড়ুন এবং পাঠানোর সাথে সাথে মেমোরি মুক্ত করুন
-            let localRecord: any = await getFromStore(item.storeName, item.id);
+            let localRecord: unknown = await getFromStore(item.storeName, item.id);
             if (localRecord) {
               const cleanPayload = sanitizeForFirestore(localRecord);
               localRecord = null; // Free reference immediately

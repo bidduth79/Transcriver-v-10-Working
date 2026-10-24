@@ -28,9 +28,9 @@ export interface TranscriptModalsProps {
   appLang: 'bn' | 'en';
   searchTerm: string;
   matchCount: number;
-  fileMeta: FileMeta | null;
+  fileMeta: Partial<FileMeta>;
   addToast: (msg: string, type: 'success' | 'error' | 'info') => void;
-  onSeek: (time: number) => void;
+  onSeek: (time: string | number) => void;
   onModelUpdate: (models: any) => void;
   setIsAiLoading: (isLoading: boolean) => void;
   history: HistoryItem[];
@@ -39,7 +39,7 @@ export interface TranscriptModalsProps {
   sensitiveMatches: any[];
   openProfile: (speakerId: string) => void;
   setTranscript: (transcript: string) => void;
-  setStatus: (status: string) => void;
+  setStatus: (status: 'idle' | 'processing' | 'completed' | 'error') => void;
 }
 
 export const TranscriptModals: React.FC<TranscriptModalsProps> = ({

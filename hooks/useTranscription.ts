@@ -8,11 +8,16 @@ import { formatErrorMessage, resolveEmptyTranscript } from './transcription/tran
 import { getDecodingStage, getProgressStage } from './transcription/transcriptionStages';
 import { prepareAudio, keyLabelOf } from './transcription/geminiTranscriptionRunner';
 import { transcribeAudio } from './transcription/runTranscription';
-import { parseRateLimit } from './transcription/rateLimit';
+import { parseRateLimit, type RateLimitInfo } from './transcription/rateLimit';
+import type { FileMeta } from '../types';
 import { buildHistoryItem, addToInMemoryHistory, persistHistoryItem, scheduleBgbAnalysis } from './transcription/transcriptionHistory';
 import { DEFAULT_MODEL } from '../constants/aiModels';
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
+
+export type TranscriptionOutcome =
+  | { success: true; text: string }
+  | { success: false; error: string; rateLimit: RateLimitInfo };
 
 export const useTranscription = (
   appLang: 'en' | 'bn',
@@ -54,9 +59,10 @@ export const useTranscription = (
     }, 1000);
   };
 
-  const processTranscription = async (providedFile?: any, providedMetadata?: any, providedAutoProcess?: any) => {
+  // Also used directly as a click handler, so each argument may be something else (an event, a boolean)
+  const processTranscription = async (providedFile?: unknown, providedMetadata?: unknown, providedAutoProcess?: unknown): Promise<TranscriptionOutcome | undefined> => {
     const inputFile = (providedFile instanceof Blob) ? providedFile : file;
-    const inputMetadata = (providedMetadata && !(providedMetadata instanceof Event) && typeof providedMetadata === 'object') ? providedMetadata : fileMeta;
+    const inputMetadata = (providedMetadata && !(providedMetadata instanceof Event) && typeof providedMetadata === 'object') ? providedMetadata as Partial<FileMeta> : fileMeta;
     const isAutoProcess = typeof providedAutoProcess === 'boolean' ? providedAutoProcess : (typeof providedFile === 'boolean' ? providedFile : false);
 
     if (!inputFile) return;

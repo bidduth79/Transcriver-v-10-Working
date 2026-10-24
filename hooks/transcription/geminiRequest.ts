@@ -1,4 +1,4 @@
-import { HarmCategory, HarmBlockThreshold, ThinkingLevel, type Part } from "@google/genai";
+import { HarmCategory, HarmBlockThreshold, ThinkingLevel, type Part, type GenerateContentConfig, type GenerateContentParameters, type ThinkingConfig } from "@google/genai";
 import { getModelDefinition, isSpeedOptimizationEnabled } from '../../services/ApiKeyManager';
 import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL, TRANSCRIPTION_PROMPT_TEXT_NORMAL } from '../../constants/instructions';
 import { isTranscribeModel, TRANSCRIBE_HTTP_OPTIONS, formatAudioTranscription } from './transcribeModel';
@@ -15,7 +15,7 @@ const HIGH_SENSITIVITY_SYSTEM = "You are a high-sensitivity speech-to-text trans
 
 // Speech-only transcribe models reject written instructions ("Developer instruction is not enabled for
 // this model") and do not follow them, so they get only the audio plus their diarization settings
-const buildAudioRequest = (model: string, audioPart: Part, text: string, config: any) => {
+const buildAudioRequest = (model: string, audioPart: Part, text: string, config: GenerateContentConfig): GenerateContentParameters => {
   if (isTranscribeModel(model)) {
     const { systemInstruction: _ignored, ...rest } = config;
     return {
@@ -41,7 +41,7 @@ const buildAudioRequest = (model: string, audioPart: Part, text: string, config:
 
 // Optional thinkingConfig for Fast/Balanced models when Speed Boost is enabled
 // Also used by the short AI analyses (search analysis, report, BGB), which do not need deep thinking
-export const buildThinkingConfig = (modelName: string): any => {
+export const buildThinkingConfig = (modelName: string): ThinkingConfig | undefined => {
   if (!isSpeedOptimizationEnabled() || getModelDefinition(modelName).category === 'thinking') return undefined;
   if (modelName.startsWith('gemini-3') && !modelName.includes('transcribe')) return { thinkingLevel: ThinkingLevel.LOW };
   return undefined;
@@ -51,7 +51,7 @@ export const buildTranscriptionRequest = (
   modelName: string,
   mode: 'normal' | 'pro',
   audioPart: Part
-): any => {
+): GenerateContentParameters => {
   const systemInstruction = mode === 'normal' ? TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL : TRANSCRIPTION_SYSTEM_INSTRUCTION;
   const promptText = mode === 'normal' ? TRANSCRIPTION_PROMPT_TEXT_NORMAL : TRANSCRIPTION_PROMPT_TEXT;
   const thinkingConfig = buildThinkingConfig(modelName);
@@ -62,14 +62,18 @@ export const buildTranscriptionRequest = (
   });
 };
 
-export const buildHighSensitivityRequest = (modelName: string, audioPart: Part): any =>
+export const buildHighSensitivityRequest = (modelName: string, audioPart: Part): GenerateContentParameters =>
   buildAudioRequest(modelName, audioPart, HIGH_SENSITIVITY_PROMPT, {
     systemInstruction: HIGH_SENSITIVITY_SYSTEM,
   });
 
 // Drop the large base64 audio payload from memory as soon as the request is done
-export const releaseRequestAudio = (request: any) => {
-  for (const content of request?.contents || []) {
+// Only the parts of a request this touches; `contents` is always a list in this app's requests
+type ReleasableRequest = { contents?: { parts?: { inlineData?: { data?: string } | null }[] }[] };
+
+export const releaseRequestAudio = (request: object | null | undefined) => {
+  const req = request as ReleasableRequest | null | undefined;
+  for (const content of req?.contents || []) {
     for (const part of content?.parts || []) {
       if (part?.inlineData) {
         part.inlineData.data = '';
@@ -77,10 +81,13 @@ export const releaseRequestAudio = (request: any) => {
       }
     }
   }
-  if (request) request.contents = [];
+  if (req) req.contents = [];
 };
 
-export const extractResponseText = (resp: any): string => {
+type ResponseLike = { candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] } }[]; text?: unknown };
+
+export const extractResponseText = (response: unknown): string => {
+  const resp = response as ResponseLike | null | undefined;
   if (!resp) return '';
   const transcription = formatAudioTranscription(resp);
   if (transcription !== null) return transcription;

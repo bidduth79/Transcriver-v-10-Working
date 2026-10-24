@@ -5,6 +5,7 @@ import { setHeavyProcessingActive } from '../../services/firebaseThrottledQueue'
 import { rateLimitWaitMs, type RateLimitInfo } from '../transcription/rateLimit';
 import { notifyWhenHidden } from '../../services/browserNotification';
 import { messageOf } from '../../utils/errorMessage';
+import type { TranscriptionOutcome } from '../useTranscription';
 
 export interface FailedFile {
   file: File;
@@ -21,7 +22,7 @@ export interface BatchRunnerContext {
   setActiveHistoryId: (id: string | null) => void;
   setTranscriptMeta: (meta: TranscriptMeta | null) => void;
   setFileMeta: (meta: FileMeta) => void;
-  processTranscription: (file: File, metadata: FileMeta, isAutoProcess?: boolean) => Promise<any>;
+  processTranscription: (file: File, metadata: FileMeta, isAutoProcess?: boolean) => Promise<TranscriptionOutcome | undefined>;
   isBatchPausedRef: React.MutableRefObject<boolean>;
   prevBatchUrlRef: React.MutableRefObject<string | null>;
   retryTimeoutRef: React.MutableRefObject<number | null>;

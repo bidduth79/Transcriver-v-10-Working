@@ -4,6 +4,7 @@ import { syncStats, notifyListeners, sleep } from './syncState';
 import { withoutSyncStamp } from './syncStamp';
 import { unpackFromCloud } from './transcriptCompression';
 import { isTombstone } from './tombstone';
+import type { StoredRecord } from '../../types';
 
 // Documents fetched per request; only one page is held in memory at a time
 export const PULL_PAGE_SIZE = 50;
@@ -24,7 +25,7 @@ const getLocalKeys = (idb: IDBDatabase, storeName: string) => new Promise<Set<st
   }
 });
 
-const putChunk = (idb: IDBDatabase, storeName: string, chunk: any[]) => new Promise<void>((res) => {
+const putChunk = (idb: IDBDatabase, storeName: string, chunk: StoredRecord[]) => new Promise<void>((res) => {
   try {
     const tx = idb.transaction([storeName], 'readwrite');
     const st = tx.objectStore(storeName);
@@ -60,7 +61,7 @@ interface PullStoreOptions {
   // Only documents whose `field` is at least `min` and below `max` (a Date is compared as a Firestore timestamp)
   since?: { field: string; min: string | Date; max?: string };
   // Sees every cloud document read (also ones already stored locally)
-  onCloudDoc?: (id: string, data: Record<string, any>) => void;
+  onCloudDoc?: (id: string, data: Record<string, unknown>) => void;
 }
 
 /**
@@ -100,7 +101,7 @@ export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloud
     if (!existingKeys) existingKeys = await getLocalKeys(idb, storeName);
 
     // শুধুমাত্র যে ডকুমেন্টগুলো লোকালে নেই সেগুলো আলাদা করুন (যাতে অযথা ডুপ্লিকেট রাইট না হয়)
-    const packedDocs: any[] = [];
+    const packedDocs: StoredRecord[] = [];
     const deletedIds: string[] = [];
     snap.forEach((docSnap) => {
       const docId = String(docSnap.id);

@@ -1,5 +1,7 @@
-export const isKeyOrProjectBlockedError = (err: any): boolean => {
-  const msg = (typeof err === 'string' ? err : (err?.message || '')).toLowerCase();
+import { messageOf } from '../../utils/errorMessage';
+
+export const isKeyOrProjectBlockedError = (err: unknown): boolean => {
+  const msg = (typeof err === 'string' ? err : (messageOf(err) || '')).toLowerCase();
   return (
     msg.includes('denied access') ||
     msg.includes('permission_denied') ||
@@ -13,8 +15,8 @@ export const isKeyOrProjectBlockedError = (err: any): boolean => {
   );
 };
 
-export const formatErrorMessage = (rawError: any, lang: 'bn' | 'en', keyInfo?: string): string => {
-  let rawMsg = typeof rawError === 'string' ? rawError : (rawError?.message || "Unknown error occurred");
+export const formatErrorMessage = (rawError: unknown, lang: 'bn' | 'en', keyInfo?: string): string => {
+  let rawMsg = typeof rawError === 'string' ? rawError : (messageOf(rawError) || "Unknown error occurred");
 
   try {
     const parsed = JSON.parse(rawMsg);

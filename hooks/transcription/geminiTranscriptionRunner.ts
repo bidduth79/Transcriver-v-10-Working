@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, type GenerateContentParameters, type GenerateContentResponse } from "@google/genai";
 import type { AudioSource } from './geminiAudioSource';
 import { parseRateLimit, rateLimitWaitMs, sleepMs } from './rateLimit';
 import { getFallbackProviders, setActiveApiKey } from '../../services/ApiKeyManager';
@@ -38,7 +38,7 @@ export const prepareAudio = async (inputFile: Blob, fileName: string) => {
 };
 
 // Builds the request for a given key (large audio is uploaded per key)
-export type BuildRequest = (ai: GoogleGenAI, apiKey: string) => Promise<any>;
+export type BuildRequest = (ai: GoogleGenAI, apiKey: string) => Promise<GenerateContentParameters>;
 
 interface RecoveryOptions {
   provider: { key: string; source: string };
@@ -49,7 +49,7 @@ interface RecoveryOptions {
 }
 
 // A per-minute rate limit: wait as long as Gemini asks (at most 2 minutes), then try the same key once more
-const generateWaitingOnRateLimit = async (ai: GoogleGenAI, request: any, lang: Lang, setStage: (stage: string) => void) => {
+const generateWaitingOnRateLimit = async (ai: GoogleGenAI, request: GenerateContentParameters, lang: Lang, setStage: (stage: string) => void) => {
   try {
     return await ai.models.generateContent(request);
   } catch (err) {
@@ -66,10 +66,10 @@ const generateWaitingOnRateLimit = async (ai: GoogleGenAI, request: any, lang: L
 export const generateWithRecovery = async ({ provider, buildRequest, lang, setStage, addToast }: RecoveryOptions) => {
   let ai = createGeminiClient(provider.key);
   let apiKey = provider.key;
-  let request: any = null;
+  let request: GenerateContentParameters | null = null;
   let source = provider.source;
   let keyLabel = keyLabelOf(provider.source, provider.key);
-  let response: any = null;
+  let response: GenerateContentResponse | null = null;
 
   try {
     request = await buildRequest(ai, provider.key);
