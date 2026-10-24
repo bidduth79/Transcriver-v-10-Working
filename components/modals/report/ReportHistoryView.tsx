@@ -1,6 +1,8 @@
 import React from 'react';
 import type { ReportItem } from '../hooks/useReportActions';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
+import { uiText } from '../../../utils/uiText';
+import { useThemeStore } from '../../../hooks/useThemeStore';
 
 interface Props {
   reportHistory: ReportItem[];
@@ -14,11 +16,13 @@ interface Props {
 }
 
 // Saved reports list with the selected report's text and actions
-export const ReportHistoryView = ({ reportHistory, selectedReport, setSelectedReport, isDark, activeColors, onDelete, onCopy, onDownload }: Props) => (
+export const ReportHistoryView = ({ reportHistory, selectedReport, setSelectedReport, isDark, activeColors, onDelete, onCopy, onDownload }: Props) => {
+  const appLang = useThemeStore(state => state.appLang);
+  return (
             <div className="flex-1 flex overflow-hidden">
                <div className="w-1/3 border-r border-white/5 overflow-y-auto custom-scrollbar p-6 space-y-4 bg-black/5">
                  {reportHistory.length === 0 ? (
-                   <p className="text-center py-20 opacity-20 uppercase font-black text-[10px]">খালি</p>
+                   <p className="text-center py-20 opacity-20 uppercase font-black text-[10px]">{uiText(appLang, 'empty')}</p>
                  ) : (
                    reportHistory.map(item => (
                      <div key={item.id} onClick={() => setSelectedReport(item)} className={`p-6 rounded-3xl border transition-all cursor-pointer group relative ${selectedReport?.id === item.id ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
@@ -36,13 +40,14 @@ export const ReportHistoryView = ({ reportHistory, selectedReport, setSelectedRe
                         {selectedReport.content}
                       </div>
                       <div className="flex justify-center gap-4">
-                        <button onClick={onCopy} className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-125 transition-all">কপি করুন</button>
-                        <button onClick={onDownload} className={`flex items-center gap-3 px-8 py-4 ${activeColors.primary} text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg transition-all active:scale-95`}>ডাউনলোড করুন</button>
+                        <button onClick={onCopy} className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-125 transition-all">{uiText(appLang, 'copy')}</button>
+                        <button onClick={onDownload} className={`flex items-center gap-3 px-8 py-4 ${activeColors.primary} text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg transition-all active:scale-95`}>{uiText(appLang, 'download2')}</button>
                       </div>
                     </div>
                   ) : (
-                    <div className="h-full flex items-center justify-center opacity-10 uppercase font-black tracking-[0.4em]">রিপোর্ট সিলেক্ট করুন</div>
+                    <div className="h-full flex items-center justify-center opacity-10 uppercase font-black tracking-[0.4em]">{uiText(appLang, 'selectReport')}</div>
                   )}
                </div>
             </div>
-);
+  );
+};

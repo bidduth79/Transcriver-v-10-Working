@@ -103,7 +103,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
             ) : (
               <div className="h-full flex flex-col items-center justify-center opacity-30 py-40 text-center animate-in fade-in">
                 <div className="w-32 h-32 bg-slate-100 rounded-[3rem] flex items-center justify-center mb-10"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
-                <p className="text-3xl font-black uppercase tracking-[0.3em]">ম্যাচ পাওয়া যায়নি</p>
+                <p className="text-3xl font-black uppercase tracking-[0.3em]">{uiText(appLang, 'noMatchFound')}</p>
               </div>
             )
           ) : (

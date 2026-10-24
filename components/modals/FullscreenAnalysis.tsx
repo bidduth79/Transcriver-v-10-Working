@@ -5,6 +5,7 @@ import type { ActiveColors } from '../../hooks/useAppTheme';
 import type { HistoryItem } from '../../types';
 import { useModalBehavior } from '../../hooks/useModalBehavior';
 import { MODAL_LAYER } from '../../constants/modalLayers';
+import { uiText } from '../../utils/uiText';
 
 interface FullscreenAnalysisProps {
   isOpen: boolean;
@@ -31,19 +32,19 @@ export const FullscreenAnalysis: React.FC<FullscreenAnalysisProps> = ({
       <aside className={`w-[400px] lg:w-[480px] flex flex-col border-r border-white/10 ${isDark ? 'bg-slate-900' : 'bg-slate-900'}`}>
         <header className="p-10 border-b border-white/10 shrink-0">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-black text-white uppercase tracking-tight font-stylish-bn">মেইন হিস্টোরি</h2>
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight font-stylish-bn">{uiText(appLang, 'mainHistory')}</h2>
             <div className="px-4 py-1.5 bg-white/10 rounded-full text-[11px] font-black text-white/70 border border-white/5 shadow-inner">
               {history?.length || 0} FILES
             </div>
           </div>
-          <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">সম্পূর্ণ ট্রান্সক্রিপ্ট আর্কাইভ</p>
+          <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">{uiText(appLang, 'fullTranscriptArchive')}</p>
         </header>
         
         <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-5 bg-black/10">
           {!history || history.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center opacity-20 text-white p-10 text-center">
               <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <p className="text-xs font-black uppercase tracking-widest leading-loose">অতীতের কোনো ট্রান্সক্রিপ্ট খুঁজে পাওয়া যায়নি</p>
+              <p className="text-xs font-black uppercase tracking-widest leading-loose">{uiText(appLang, 'noPastTranscripts')}</p>
             </div>
           ) : (
             history.map(item => (
@@ -77,8 +78,8 @@ export const FullscreenAnalysis: React.FC<FullscreenAnalysisProps> = ({
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
             </div>
             <div>
-              <h1 className="text-3xl font-black text-white uppercase tracking-tight font-stylish-bn">ফুল ট্রান্সক্রিপ্ট প্রিভিউ</h1>
-              <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mt-2">রিভিউ এবং আর্কাইভ ভিউয়ার</p>
+              <h1 className="text-3xl font-black text-white uppercase tracking-tight font-stylish-bn">{uiText(appLang, 'fullTranscriptPreview')}</h1>
+              <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mt-2">{uiText(appLang, 'reviewArchiveViewer')}</p>
             </div>
           </div>
 
@@ -86,7 +87,7 @@ export const FullscreenAnalysis: React.FC<FullscreenAnalysisProps> = ({
             onClick={onClose} 
             className="flex items-center gap-5 bg-red-500/10 border border-red-500/20 text-red-500 px-10 py-5 rounded-[1.5rem] hover:bg-red-500 hover:text-white transition-all active:scale-95 group shadow-2xl"
           >
-            <span className="text-xs font-black uppercase tracking-widest">বন্ধ করুন</span>
+            <span className="text-xs font-black uppercase tracking-widest">{uiText(appLang, 'close')}</span>
             <svg className="w-6 h-6 transition-transform group-hover:rotate-90 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </header>
@@ -96,8 +97,8 @@ export const FullscreenAnalysis: React.FC<FullscreenAnalysisProps> = ({
             {!transcript ? (
               <div className="h-[60vh] flex flex-col items-center justify-center opacity-10 text-white text-center">
                 <svg className="w-32 h-32 mb-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <p className="text-3xl font-black uppercase tracking-[0.4em]">ট্রান্সক্রিপ্ট লোড হয়নি</p>
-                <p className="text-sm mt-4 font-bold uppercase tracking-widest">বামে হিস্টোরি লিস্ট থেকে একটি ফাইল সিলেক্ট করুন</p>
+                <p className="text-3xl font-black uppercase tracking-[0.4em]">{uiText(appLang, 'transcriptNotLoaded')}</p>
+                <p className="text-sm mt-4 font-bold uppercase tracking-widest">{uiText(appLang, 'selectFileFromHistory')}</p>
               </div>
             ) : (
               <div className={`p-16 md:p-24 rounded-[4.5rem] border border-white/10 bg-slate-900/60 shadow-inner text-white backdrop-blur-sm animate-in zoom-in-95 duration-700`}>

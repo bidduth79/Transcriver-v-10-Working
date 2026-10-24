@@ -1,5 +1,7 @@
 import React from 'react';
 import { SpeakerProfile } from '../../types/speaker';
+import { uiText } from '../../utils/uiText';
+import { useThemeStore } from '../../hooks/useThemeStore';
 
 interface SpeakerNotesTabProps {
   profile: SpeakerProfile;
@@ -34,19 +36,20 @@ export const SpeakerNotesTab: React.FC<SpeakerNotesTabProps> = ({
   handleSaveNote,
   isDark
 }) => {
+  const appLang = useThemeStore(state => state.appLang);
   return (
     <div className="p-5 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-bold">টিম নোট ও ডসিয়ার (Custom Notes)</h3>
-          <p className="text-xs text-slate-400">এই স্পীকার সম্পর্কে আপনার নিজস্ব পর্যবেক্ষণ বা রেকর্ড সেভ রাখুন</p>
+          <h3 className="text-sm font-bold">{uiText(appLang, 'teamNotesDossier')}</h3>
+          <p className="text-xs text-slate-400">{uiText(appLang, 'speakerNotesHint')}</p>
         </div>
         {!isEditingNote && (
           <button
             onClick={() => setIsEditingNote(true)}
             className="px-3 py-1 text-xs font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
           >
-            এডিট করুন
+            {uiText(appLang, 'edit')}
           </button>
         )}
       </div>
@@ -54,18 +57,18 @@ export const SpeakerNotesTab: React.FC<SpeakerNotesTabProps> = ({
       {isEditingNote ? (
         <div className={`p-4 rounded-xl border space-y-4 ${isDark ? 'bg-slate-800/40 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
           <div>
-            <label className="block text-xs font-bold text-slate-400 mb-1">পদবি / পেশাগত ভূমিকা</label>
+            <label className="block text-xs font-bold text-slate-400 mb-1">{uiText(appLang, 'designationRole')}</label>
             <input
               type="text"
               value={noteRole}
               onChange={(e) => setNoteRole(e.target.value)}
-              placeholder="যেমন: নিরাপত্তা বিশ্লেষক / সাংবাদিক"
+              placeholder={uiText(appLang, 'designationPlaceholder')}
               className={`w-full px-3 py-2 text-sm rounded-lg border outline-none ${isDark ? 'bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500' : 'bg-white border-slate-300 text-slate-800 focus:border-indigo-600'}`}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-400 mb-1">ট্যাগসমূহ (Tags)</label>
+            <label className="block text-xs font-bold text-slate-400 mb-1">{uiText(appLang, 'tagsLabel')}</label>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {noteTags.map((t: string) => (
                 <span key={t} className="px-2 py-0.5 text-xs rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1">
@@ -80,7 +83,7 @@ export const SpeakerNotesTab: React.FC<SpeakerNotesTabProps> = ({
                 value={newTagInput}
                 onChange={(e) => setNewTagInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
-                placeholder="ট্যাগ লিখে এন্টার চাপুন..."
+                placeholder={uiText(appLang, 'tagInputPlaceholder')}
                 className={`flex-1 px-3 py-1.5 text-xs rounded-lg border outline-none ${isDark ? 'bg-slate-900 border-slate-700 text-slate-200' : 'bg-white border-slate-300 text-slate-800'}`}
               />
               <button
@@ -88,7 +91,7 @@ export const SpeakerNotesTab: React.FC<SpeakerNotesTabProps> = ({
                 onClick={() => handleAddTag()}
                 className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600/30 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600/50"
               >
-                যোগ
+                {uiText(appLang, 'add2')}
               </button>
             </div>
             {/* Quick Suggestions */}
@@ -107,12 +110,12 @@ export const SpeakerNotesTab: React.FC<SpeakerNotesTabProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-400 mb-1">বিস্তারিত নোট</label>
+            <label className="block text-xs font-bold text-slate-400 mb-1">{uiText(appLang, 'detailedNote')}</label>
             <textarea
               rows={4}
               value={noteText}
               onChange={(e) => setNoteText(e.target.value)}
-              placeholder="এই স্পীকার সম্পর্কে গুরুত্বপূর্ণ কোনো মন্তব্য, ব্যাকগ্রাউন্ড বা তথ্য..."
+              placeholder={uiText(appLang, 'speakerNotePlaceholder')}
               className={`w-full px-3 py-2 text-sm rounded-lg border outline-none ${isDark ? 'bg-slate-900 border-slate-700 text-slate-200 focus:border-indigo-500' : 'bg-white border-slate-300 text-slate-800 focus:border-indigo-600'}`}
             />
           </div>
@@ -122,13 +125,13 @@ export const SpeakerNotesTab: React.FC<SpeakerNotesTabProps> = ({
               onClick={() => setIsEditingNote(false)}
               className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 text-slate-400 hover:bg-slate-800"
             >
-              বাতিল
+              {uiText(appLang, 'cancel')}
             </button>
             <button
               onClick={handleSaveNote}
               className="px-4 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 shadow-md"
             >
-              সংরক্ষণ করুন
+              {uiText(appLang, 'save2')}
             </button>
           </div>
         </div>
@@ -138,13 +141,13 @@ export const SpeakerNotesTab: React.FC<SpeakerNotesTabProps> = ({
             <div className={`p-4 rounded-xl border space-y-3 ${isDark ? 'bg-slate-800/30 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
               {profile.customNote.roleOrDesignation && (
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400">পদবি/ভূমিকা</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{uiText(appLang, 'designationShort')}</span>
                   <p className="text-sm font-semibold text-indigo-400">{profile.customNote.roleOrDesignation}</p>
                 </div>
               )}
               {profile.customNote.tags && profile.customNote.tags.length > 0 && (
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400">ক্যাটাগরি ট্যাগ</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{uiText(appLang, 'categoryTags')}</span>
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {profile.customNote.tags.map((t: string) => (
                       <span key={t} className="px-2 py-0.5 text-xs font-medium rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
@@ -156,24 +159,24 @@ export const SpeakerNotesTab: React.FC<SpeakerNotesTabProps> = ({
               )}
               {profile.customNote.notes && (
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400">নোটস</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400">{uiText(appLang, 'notes')}</span>
                   <p className={`text-sm leading-relaxed mt-1 whitespace-pre-wrap ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                     {profile.customNote.notes}
                   </p>
                 </div>
               )}
               <p className="text-[10px] text-slate-500 text-right pt-2 border-t border-slate-800">
-                সর্বশেষ আপডেট: {profile.customNote.updatedAt}
+                {uiText(appLang, 'lastUpdatedAt', { updatedAt: profile.customNote.updatedAt })}
               </p>
             </div>
           ) : (
             <div className={`p-8 rounded-xl border text-center ${isDark ? 'bg-slate-800/20' : 'bg-slate-50'}`}>
-              <p className="text-sm text-slate-400">কোনো কাস্টম নোট এখনো যুক্ত করা হয়নি।</p>
+              <p className="text-sm text-slate-400">{uiText(appLang, 'noCustomNote')}</p>
               <button
                 onClick={() => setIsEditingNote(true)}
                 className="mt-3 px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-500"
               >
-                + নতুন নোট যোগ করুন
+                {uiText(appLang, 'addNewNote')}
               </button>
             </div>
           )}

@@ -72,7 +72,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
     const handleStartSync = async () => {
         if (isSyncing) return;
         setIsSyncing(true);
-        setSyncStatus('ধীরে ধীরে মাস্টার সিঙ্ক শুরু হচ্ছে...');
+        setSyncStatus(uiText(appLang, 'masterSyncStarting'));
         
         try {
             await syncAllLocalToCloud((msg, pct) => {
@@ -114,7 +114,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                             {uiText(appLang, 'localXamppServer')}
                         </h3>
                         <p className="text-[10px] opacity-60">
-                            {xamppEnabled ? '127.0.0.1/licell_api সক্রিয়' : (uiText(appLang, 'completelyPaused'))}
+                            {xamppEnabled ? uiText(appLang, 'localApiActive') : (uiText(appLang, 'completelyPaused'))}
                         </p>
                     </div>
                     <button
@@ -135,17 +135,17 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                 <div className="space-y-1 text-center md:text-left">
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
                         <h4 className="text-xs font-black uppercase tracking-wider text-indigo-400">
-                            🛡️ স্মার্ট ব্যাচ-লক ও চাপমুক্ত ফায়ারবেইজ সিঙ্ক (Zero-RAM Queue)
+                            {uiText(appLang, 'smartBatchLockSync')}
                         </h4>
                         {fbStats.isPausedForProcessing && (
                             <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-black uppercase">
-                                ⏸️ অডিও প্রসেসিং চলছে (সিঙ্ক লকড)
+                                {uiText(appLang, 'syncLockedProcessing')}
                             </span>
                         )}
                     </div>
                     <p className="text-[11px] opacity-75">
-                        ক্লাউড হিস্টোরি: <b>{fbStats.totalCloudHistoryDocs}টি</b> • নতুন যুক্ত: <b>{fbStats.lastPulledCount}টি</b> • কিউতে অপেক্ষমাণ সেভ: <b>{fbStats.pendingWrites}টি</b>
-                        {fbStats.lastSyncTime ? ` • সর্বশেষ সিঙ্ক: ${fbStats.lastSyncTime}` : ''}
+                        {uiText(appLang, 'cloudHistoryLabel')} <b>{uiText(appLang, 'itemCount', { count: fbStats.totalCloudHistoryDocs })}</b> {uiText(appLang, 'newlyAddedLabel')} <b>{uiText(appLang, 'itemCount', { count: fbStats.lastPulledCount })}</b> {uiText(appLang, 'queuedSavesLabel')} <b>{uiText(appLang, 'itemCount', { count: fbStats.pendingWrites })}</b>
+                        {fbStats.lastSyncTime ? uiText(appLang, 'lastSyncSuffix', { lastSyncTime: fbStats.lastSyncTime }) : ''}
                     </p>
                 </div>
                 <button
@@ -153,7 +153,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                     disabled={fbStats.isPulling || isSyncing || fbStats.isPausedForProcessing}
                     className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-[11px] font-black tracking-wide transition-all cursor-pointer shrink-0 shadow-md"
                 >
-                    {fbStats.isPulling ? 'ধীরে ধীরে চেক হচ্ছে...' : '☁️ ফায়ারবেইজ থেকে নতুন ডাটা আনুন'}
+                    {fbStats.isPulling ? uiText(appLang, 'checkingSlowly') : uiText(appLang, 'fetchNewFromFirebase')}
                 </button>
             </div>
 

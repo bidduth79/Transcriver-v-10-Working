@@ -4,6 +4,7 @@ import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { SummaryStats } from '../hooks/useSummaryLogic';
 import type { AiAnalysis } from '../hooks/useSummaryLogic';
 import type { SearchAnalysisItem } from '../../../services/SearchAnalysisHistory';
+import { uiText } from '../../../utils/uiText';
 
 interface SummaryLiveReportProps {
   // Live stats, or a saved analysis (which also carries its sentiment)
@@ -41,35 +42,35 @@ export const SummaryLiveReport: React.FC<SummaryLiveReportProps> = ({
             className="flex items-center gap-2 px-6 py-2.5 bg-slate-900/10 hover:bg-slate-900/20 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest text-slate-800"
           >
             <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            তালিকায় ফিরুন
+            {uiText(appLang, 'backToList')}
           </button>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
         <div className="p-10 rounded-[3rem] border shadow-inner bg-slate-900/5 border-slate-900/5">
-          <p className="text-[11px] font-black opacity-40 uppercase tracking-widest mb-3">ফাইল ডিউরেশন</p>
+          <p className="text-[11px] font-black opacity-40 uppercase tracking-widest mb-3">{uiText(appLang, 'fileDuration')}</p>
           <p className="text-4xl font-black tabular-nums tracking-tighter">{data.duration}</p>
         </div>
         <div className="bg-indigo-500/10 p-10 rounded-[3rem] border border-indigo-500/10 shadow-inner">
-          <p className="text-[11px] font-black text-indigo-600 uppercase tracking-widest mb-3">মোট কতবার</p>
-          <div className="flex items-baseline gap-3"><p className="text-6xl font-black text-indigo-600 tabular-nums tracking-tighter">{data.matchCount}</p><span className="text-sm font-black text-indigo-600/50 uppercase">বার</span></div>
+          <p className="text-[11px] font-black text-indigo-600 uppercase tracking-widest mb-3">{uiText(appLang, 'totalTimes')}</p>
+          <div className="flex items-baseline gap-3"><p className="text-6xl font-black text-indigo-600 tabular-nums tracking-tighter">{data.matchCount}</p><span className="text-sm font-black text-indigo-600/50 uppercase">{uiText(appLang, 'timesUnit')}</span></div>
         </div>
         <div className={`p-10 rounded-[3rem] border shadow-inner flex flex-col justify-center transition-all duration-700 min-h-[160px] ${sentiment === 'positive' ? 'bg-emerald-500/10 border-emerald-500/10' : sentiment === 'negative' ? 'bg-rose-500/10 border-rose-500/10' : 'bg-slate-500/10 border-slate-500/10'}`}>
-          <p className="text-[11px] font-black opacity-40 uppercase tracking-widest mb-3">রিমার্ক (AI)</p>
+          <p className="text-[11px] font-black opacity-40 uppercase tracking-widest mb-3">{uiText(appLang, 'remarkAi')}</p>
           {isAnalyzing ? (
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin"></div>
-              <span className="text-xs font-bold uppercase tracking-widest opacity-40">এআই বিশ্লেষণ...</span>
+              <span className="text-xs font-bold uppercase tracking-widest opacity-40">{uiText(appLang, 'aiAnalyzing')}</span>
             </div>
           ) : (sentiment === 'pending' || isManualMode) ? (
             <div className="space-y-3">
-               <p className="text-[11px] font-bold opacity-30 uppercase tracking-widest">বিশ্লেষণ করা হয়নি</p>
+               <p className="text-[11px] font-bold opacity-30 uppercase tracking-widest">{uiText(appLang, 'notAnalyzed2')}</p>
                <button 
                 onClick={performAIAnalysis}
                 className={`w-fit px-6 py-2.5 ${activeColors.primary} text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all`}
               >
-                বিশ্লেষণ করুন
+                {uiText(appLang, 'analyze')}
               </button>
             </div>
           ) : (

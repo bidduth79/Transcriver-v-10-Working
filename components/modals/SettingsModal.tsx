@@ -86,7 +86,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
       >
         <header className="px-10 py-6 bg-slate-900 text-white flex items-center justify-between shrink-0 cursor-move">
           <div>
-            <h2 className="text-2xl font-black uppercase tracking-tight font-stylish-bn">সিস্টেম সেটিংস</h2>
+            <h2 className="text-2xl font-black uppercase tracking-tight font-stylish-bn">{uiText(appLang, 'systemSettings')}</h2>
             <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mt-1">MANUAL CONFIGURATION</p>
           </div>
           
