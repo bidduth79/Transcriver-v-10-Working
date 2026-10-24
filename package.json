@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "vitest",
     "lint": "tsc --noEmit",
+    "e2e": "vite build && vitest run --config vitest.e2e.config.ts",
     "prepare": "husky"
   },
   "dependencies": {
