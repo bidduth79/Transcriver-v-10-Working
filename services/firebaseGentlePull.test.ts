@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { uiText } from '../utils/uiText';
 
 const m = vi.hoisted(() => ({
   configured: { value: true },
@@ -180,7 +181,7 @@ describe('gentle pull', () => {
     expect(sent.sort()).toEqual([['studio_history/big', false, true, 'SERVER_TIME'], ['studio_history/huge', false, true, 'SERVER_TIME']]);
   });
 
-  it('skips while processing unless forced, and reports connection errors', async () => {
+  it('skips while processing unless forced, and reports connection and quota errors', async () => {
     const q = await load();
     q.setHeavyProcessingActive('batch', true);
     expect(await q.scheduleGentleFirebasePull()).toEqual({ pulledCount: 0, cloudTotal: 0 });
@@ -189,7 +190,11 @@ describe('gentle pull', () => {
     (initDB as any).mockRejectedValueOnce(new Error('idb down'));
     const forced = q.scheduleGentleFirebasePull(undefined, true);
     await vi.advanceTimersByTimeAsync(100);
-    expect(await forced).toEqual({ pulledCount: 0, cloudTotal: 0 });
+    expect(await forced).toEqual({ pulledCount: 0, cloudTotal: 0, failure: 'failed' });
     expect(stats(q).statusMessageBn).toBe('ফায়ারবেইজ কানেকশন সাময়িকভাবে পাওয়া যায়নি');
+    m.getDocs.mockRejectedValueOnce(Object.assign(new Error('Quota exceeded.'), { code: 'resource-exhausted' }));
+    expect(await runPull(q, undefined, true)).toEqual({ pulledCount: 0, cloudTotal: 0, failure: 'quota' });
+    expect(m.getDocs).toHaveBeenCalledTimes(1);
+    expect(stats(q).statusMessageBn).toBe(uiText('bn', 'firebaseQuotaExceeded'));
   });
 });

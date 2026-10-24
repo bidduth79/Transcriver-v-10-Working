@@ -14,3 +14,4 @@ export { subscribeFirebaseSyncStats, getFirebaseSyncStats } from './firebaseSync
 export type { FirebaseGentleSyncStats } from './firebaseSync/syncState';
 export { setHeavyProcessingActive, enqueueFirebaseWrite, enqueueFirebaseDelete } from './firebaseSync/pushQueue';
 export { scheduleGentleFirebasePull } from './firebaseSync/gentlePull';
+export { PULL_FAILURE_TEXT } from './firebaseSync/pullFailure';

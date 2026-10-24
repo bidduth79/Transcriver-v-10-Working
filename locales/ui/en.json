@@ -214,5 +214,7 @@
   "fileTooLargeSkipping": "{name} exceeds 70MB, skipping",
   "fileFailedRetrying": "{name} failed, retrying...",
   "fileTranscribeFailed": "Failed to transcribe {name}",
-  "folderUploadConfirm": "Found {supportedFilesCount} files. Do you want to start batch processing?"
+  "folderUploadConfirm": "Found {supportedFilesCount} files. Do you want to start batch processing?",
+  "firebaseQuotaExceeded": "Today's free Firebase read limit is used up. Try again after it resets (around 1-2 PM Bangladesh time).",
+  "firebasePullFailed": "Could not read data from Firebase. Check the connection and try again."
 }

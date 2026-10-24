@@ -214,5 +214,7 @@
   "fileTooLargeSkipping": "{name} ৭০ এমবি এর বেশি, স্কিপ করা হচ্ছে",
   "fileFailedRetrying": "{name} ব্যর্থ হয়েছে, আবার চেষ্টা করা হচ্ছে...",
   "fileTranscribeFailed": "{name} ট্রান্সক্রাইব করা যায়নি",
-  "folderUploadConfirm": "মোট {supportedFilesCount} টি ফাইল পাওয়া গেছে। আপনি কি ব্যাচ প্রসেসিং শুরু করতে চান?"
+  "folderUploadConfirm": "মোট {supportedFilesCount} টি ফাইল পাওয়া গেছে। আপনি কি ব্যাচ প্রসেসিং শুরু করতে চান?",
+  "firebaseQuotaExceeded": "আজকের ফায়ারবেইজ ফ্রি রিড সীমা শেষ। সীমা নতুন হলে (বাংলাদেশ সময় দুপুর ১-২টার দিকে) আবার চেষ্টা করুন।",
+  "firebasePullFailed": "ফায়ারবেইজ থেকে ডাটা আনা যায়নি। কানেকশন চেক করে আবার চেষ্টা করুন।"
 }

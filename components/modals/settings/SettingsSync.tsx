@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { syncAllLocalToCloud, checkCloudConnection } from '../../../services/api';
 import { isLocalServerEnabled, setLocalServerEnabled } from '../../../utils/config';
-import { getFirebaseSyncStats, subscribeFirebaseSyncStats, scheduleGentleFirebasePull, FirebaseGentleSyncStats } from '../../../services/firebaseThrottledQueue';
+import { getFirebaseSyncStats, subscribeFirebaseSyncStats, scheduleGentleFirebasePull, PULL_FAILURE_TEXT, FirebaseGentleSyncStats } from '../../../services/firebaseThrottledQueue';
 import { useAppStore } from '../../../hooks/useAppStore';
 import { messageOf } from '../../../utils/errorMessage';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
@@ -39,10 +39,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
             }
         });
 
-        return () => { 
-            mounted = false; 
-            unsubscribe();
-        };
+        return () => { mounted = false; unsubscribe(); };
     }, []);
 
     const handleToggleXampp = () => {
@@ -63,7 +60,9 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
         const res = await scheduleGentleFirebasePull(() => {
             useAppStore.getState().triggerStoreUpdate('studio_history');
         }, true);
-        if (res.pulledCount > 0) {
+        if (res.failure) {
+            addToast(uiText(appLang, PULL_FAILURE_TEXT[res.failure]), 'error');
+        } else if (res.pulledCount > 0) {
             addToast(uiText(appLang, 'firebaseMerged', { pulledCount: res.pulledCount }), 'success');
         } else {
             addToast(uiText(appLang, 'firebaseUpToDate', { cloudTotal: res.cloudTotal }), 'info');

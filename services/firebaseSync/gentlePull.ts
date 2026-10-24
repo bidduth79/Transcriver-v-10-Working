@@ -6,6 +6,8 @@ import { removeCloudSecretCopies } from './secretCleanup';
 import { SYNC_STAMP_FIELD } from './syncStamp';
 import { startOfYesterday, getPullCheckpoint, savePullCheckpoint, countCloudDocs } from './pullWindow';
 import { messageOf } from '../../utils/errorMessage';
+import { pullFailureOf, PULL_FAILURE_TEXT, type PullFailure } from './pullFailure';
+import { uiText } from '../../utils/uiText';
 
 /**
  * কোনোরকম চাপ বা ফ্রিজ ছাড়াই ফায়ারবেইজ থেকে নতুন ডাটা ছোট ছোট চ্যাংকে (Chunk) লোকাল IndexedDB-তে নিয়ে আসে।
@@ -14,7 +16,7 @@ import { messageOf } from '../../utils/errorMessage';
 export const scheduleGentleFirebasePull = (
   onHistoryUpdated?: () => void,
   forceManual = false
-): Promise<{ pulledCount: number; cloudTotal: number }> => {
+): Promise<{ pulledCount: number; cloudTotal: number; failure?: PullFailure }> => {
   if (!isFirebaseConfigured || !db) {
     syncStats.statusMessageBn = 'ফায়ারবেইজ কনফিগার করা নেই (.env)';
     notifyListeners();
@@ -45,6 +47,7 @@ export const scheduleGentleFirebasePull = (
 
       let totalNewItemsMerged = 0;
       let cloudHistoryTotal = 0;
+      let failure: PullFailure | undefined;
 
       try {
         await authPromise;
@@ -122,6 +125,8 @@ export const scheduleGentleFirebasePull = (
             }
           } catch (storeErr) {
             console.warn(`[Firebase Gentle Pull] Notice on ${storeName}:`, messageOf(storeErr) || storeErr);
+            failure = pullFailureOf(storeErr);
+            if (failure === 'quota') break; // Every other store would be refused the same way
           }
 
           // পরবর্তী স্টোর চেক করার আগে ১.২ সেকেন্ড বিরতি নিন
@@ -129,16 +134,17 @@ export const scheduleGentleFirebasePull = (
         }
 
         syncStats.lastSyncTime = new Date().toLocaleTimeString('bn-BD');
-        syncStats.statusMessageBn = totalNewItemsMerged > 0
+        syncStats.statusMessageBn = failure ? uiText('bn', PULL_FAILURE_TEXT[failure]) : totalNewItemsMerged > 0
           ? `ফায়ারবেইজ থেকে ${totalNewItemsMerged}টি নতুন ডাটা সফলভাবে যুক্ত হয়েছে (মোট ক্লাউড হিস্টোরি: ${cloudHistoryTotal}টি)`
           : `ফায়ারবেইজের সকল ডাটা (${cloudHistoryTotal}টি হিস্টোরি) লোকালে আপ-টু-ডেট আছে`;
       } catch (err) {
         console.warn("[Firebase Gentle Pull] Error:", messageOf(err) || err);
-        syncStats.statusMessageBn = 'ফায়ারবেইজ কানেকশন সাময়িকভাবে পাওয়া যায়নি';
+        failure = pullFailureOf(err);
+        syncStats.statusMessageBn = failure === 'quota' ? uiText('bn', PULL_FAILURE_TEXT.quota) : 'ফায়ারবেইজ কানেকশন সাময়িকভাবে পাওয়া যায়নি';
       } finally {
         runtime.isPullRunning = false;
         notifyListeners();
-        resolve({ pulledCount: totalNewItemsMerged, cloudTotal: cloudHistoryTotal });
+        resolve({ pulledCount: totalNewItemsMerged, cloudTotal: cloudHistoryTotal, failure });
       }
     }, startDelay);
   });
