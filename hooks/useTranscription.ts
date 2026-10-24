@@ -6,9 +6,8 @@ import { useTranscriptionState } from './transcription/useTranscriptionState';
 import { removeRepetitiveBlocks, calculateEstimatedSeconds, parseDurationToSeconds } from './transcription/transcriptionUtils';
 import { formatErrorMessage, resolveEmptyTranscript } from './transcription/transcriptionErrors';
 import { getDecodingStage, getProgressStage } from './transcription/transcriptionStages';
-import { buildTranscriptionRequest, extractResponseText } from './transcription/geminiRequest';
-import { prepareAudio, generateWithRecovery, retryHighSensitivity, keyLabelOf, type BuildRequest } from './transcription/geminiTranscriptionRunner';
-import { createAudioSource, type AudioSource } from './transcription/geminiAudioSource';
+import { prepareAudio, keyLabelOf } from './transcription/geminiTranscriptionRunner';
+import { transcribeAudio } from './transcription/runTranscription';
 import { parseRateLimit } from './transcription/rateLimit';
 import { buildHistoryItem, addToInMemoryHistory, persistHistoryItem, scheduleBgbAnalysis } from './transcription/transcriptionHistory';
 import { DEFAULT_MODEL } from '../constants/aiModels';
@@ -88,7 +87,6 @@ export const useTranscription = (
     startProgressTimer(estimated);
 
     let lastUsedKeyLabel = '';
-    let audio: AudioSource | null = null;
     try {
       const provider = await getActiveProvider();
       if (!provider) {
@@ -101,39 +99,15 @@ export const useTranscription = (
 
       setCurrentStage(appLang === 'bn' ? 'অডিও ডেটা প্রস্তুত করা হচ্ছে...' : 'Preparing audio for AI...');
       const modelName = provider.model || DEFAULT_MODEL;
-      const source = createAudioSource(effectiveFile, effectiveMimeType);
-      audio = source;
-      const buildRequest: BuildRequest = async (ai, key) => buildTranscriptionRequest(modelName, transcriptionMode, await source.partFor(ai, key));
-
-      setCurrentStage(appLang === 'bn' ? 'এআই সার্ভারে সম্পূর্ণ অডিও বিশ্লেষণ ও ট্রান্সক্রাইব করা হচ্ছে...' : 'Transcribing media on AI server...');
-      const result = await generateWithRecovery({ provider, buildRequest, lang: appLang, setStage: setCurrentStage, addToast });
-      const { ai, source: activeSource } = result;
+      const result = await transcribeAudio(effectiveFile, effectiveMimeType, audioDurationSeconds, {
+        provider, modelName, mode: transcriptionMode, lang: appLang, setStage: setCurrentStage, addToast,
+      });
+      const { source: activeSource, finishReason } = result;
       lastUsedKeyLabel = result.keyLabel;
-      let lastResultObj: any = result.response;
-      let fullText = extractResponseText(lastResultObj);
-
-      const firstFinishReason = lastResultObj?.candidates?.[0]?.finishReason;
-
-      // Auto-recovery if no text was produced on first attempt (due to RECITATION, intro music, low volume, or decoder quirk)
-      if (!fullText.trim() && firstFinishReason !== 'SAFETY' && firstFinishReason !== 'MAX_TOKENS') {
-        console.warn(`Empty transcript on first attempt (finishReason: ${firstFinishReason}). Retrying with enhanced sensitivity...`);
-        setCurrentStage(appLang === 'bn'
-          ? 'কণ্ঠস্বর গভীরভাবে শনাক্ত করতে বিকল্প মোডে পুনরায় চেষ্টা করা হচ্ছে...'
-          : 'Retrying with high-sensitivity speech detection...');
-        const retryResp = await retryHighSensitivity({ ai, apiKey: result.apiKey, audio: source, modelName, inputFile, effectiveMimeType });
-        const retryText = extractResponseText(retryResp);
-        if (retryText.trim()) {
-          fullText = retryText;
-          lastResultObj = retryResp;
-        }
-      }
 
       clearTranscriptionTimer();
 
-      fullText = removeRepetitiveBlocks(fullText);
-
-      const finishReason = lastResultObj?.candidates?.[0]?.finishReason;
-      lastResultObj = null; // Release SDK response object from memory immediately
+      let fullText = removeRepetitiveBlocks(result.text);
 
       let isNoSpeechDetected = false;
       if (!fullText.trim()) {
@@ -186,7 +160,6 @@ export const useTranscription = (
       logSystemActivity('TRANSCRIPTION', 'ERROR', 'Failed', safeMsg);
       return { success: false, error: safeMsg, rateLimit: parseRateLimit(error) };
     } finally {
-      audio?.cleanup();
       clearTranscriptionTimer();
       setHeavyProcessingActive('transcription', false);
       setProgress(100);
