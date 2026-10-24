@@ -11,6 +11,9 @@ const inPackages = (...names: string[]) => (id: string) =>
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    // Snapshots show dates and times as in Bangladesh, where the app is used; GitHub's CI runs in UTC.
+    // Test workers start after this and inherit it.
+    if (mode === 'test') process.env.TZ = 'Asia/Dhaka';
     // Tests must not pick up the developer's real key from .env
     const processKey = mode === 'test' ? '' : (env.GEMINI_API_KEY || env.VITE_API_KEY_1 || process.env.GEMINI_API_KEY || process.env.API_KEY || '');
     return {
