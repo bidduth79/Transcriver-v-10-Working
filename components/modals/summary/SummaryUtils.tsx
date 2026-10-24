@@ -1,10 +1,11 @@
 import React from 'react';
+import { uiText } from '../../../utils/uiText';
 
 export const getSentimentLabel = (s: string, appLang: 'bn' | 'en') => {
-  if (s === 'positive') return appLang === 'bn' ? 'ইতিবাচক' : 'Positive';
-  if (s === 'negative') return appLang === 'bn' ? 'নেতিবাচক' : 'Negative';
-  if (s === 'pending') return appLang === 'bn' ? 'বিশ্লেষণ হয়নি' : 'Not Analyzed';
-  return appLang === 'bn' ? 'নিউট্রাল' : 'Neutral';
+  if (s === 'positive') return uiText(appLang, 'positive');
+  if (s === 'negative') return uiText(appLang, 'negative');
+  if (s === 'pending') return uiText(appLang, 'notAnalyzed');
+  return uiText(appLang, 'neutral');
 };
 
 export const highlightText = (text: string, term: string) => {

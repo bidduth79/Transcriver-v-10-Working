@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { uiText } from '../../utils/uiText';
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -68,13 +69,13 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({ isOpen, onClose, ela
 
         {/* Title */}
         <h2 className="text-2xl font-black text-white mb-8 font-stylish-bn tracking-tight">
-            {appLang === 'bn' ? 'ট্রান্সক্রিপশন সফল!' : 'Transcription Successful!'}
+            {uiText(appLang, 'transcriptionSuccessful')}
         </h2>
 
         {/* Time Box */}
         <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full mb-8 shadow-inner">
             <p className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider">
-                {appLang === 'bn' ? 'মোট সময় লেগেছে:' : 'Total Time Taken:'}
+                {uiText(appLang, 'totalTimeTaken')}
             </p>
             <p className="text-4xl font-black text-white tabular-nums tracking-wider">
                 {formatTime(elapsedSeconds)}
@@ -86,7 +87,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({ isOpen, onClose, ela
             onClick={handleClose}
             className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95 text-sm uppercase tracking-widest cursor-pointer"
         >
-            {appLang === 'bn' ? 'ঠিক আছে' : 'OKAY'}
+            {uiText(appLang, 'okay')}
         </button>
 
           </motion.div>

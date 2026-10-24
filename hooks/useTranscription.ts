@@ -12,6 +12,7 @@ import { parseRateLimit, type RateLimitInfo } from './transcription/rateLimit';
 import type { FileMeta } from '../types';
 import { buildHistoryItem, addToInMemoryHistory, persistHistoryItem, scheduleBgbAnalysis } from './transcription/transcriptionHistory';
 import { DEFAULT_MODEL } from '../constants/aiModels';
+import { uiText } from '../utils/uiText';
 
 const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
@@ -68,9 +69,7 @@ export const useTranscription = (
     if (!inputFile) return;
 
     if (inputFile.size > MAX_FILE_SIZE) {
-      addToast(appLang === 'bn'
-        ? 'ফাইল সাইজ ৫০০ এমবি এর বেশি হতে পারবে না। অনুগ্রহ করে Tools থেকে ফাইলটি Compress করে নিন।'
-        : 'File size cannot exceed 500MB. Please compress the file from Tools.', 'error');
+      addToast(uiText(appLang, 'fileSizeCannotExceed500mbPlease'), 'error');
       setStatus('idle');
       return;
     }
@@ -103,7 +102,7 @@ export const useTranscription = (
       const currentFileName = inputMetadata?.name || (inputFile as File).name || 'audio_file';
       const { effectiveFile, effectiveMimeType } = await prepareAudio(inputFile, currentFileName);
 
-      setCurrentStage(appLang === 'bn' ? 'অডিও ডেটা প্রস্তুত করা হচ্ছে...' : 'Preparing audio for AI...');
+      setCurrentStage(uiText(appLang, 'preparingAudioForAi'));
       const modelName = provider.model || DEFAULT_MODEL;
       const result = await transcribeAudio(effectiveFile, effectiveMimeType, audioDurationSeconds, {
         provider, modelName, mode: transcriptionMode, lang: appLang, setStage: setCurrentStage, addToast,
@@ -133,7 +132,7 @@ export const useTranscription = (
 
       setElapsedSeconds(actualElapsedSeconds);
       setProgress(100);
-      setCurrentStage(appLang === 'bn' ? 'সম্পন্ন হয়েছে!' : 'Completed!');
+      setCurrentStage(uiText(appLang, 'completed'));
       setTranscript(fullText);
       setStatus('completed');
 
@@ -142,7 +141,7 @@ export const useTranscription = (
         playSuccessSound();
         if (!isAutoProcess) {
           addToast(
-            appLang === 'bn' ? 'ট্রান্সক্রিপশন সফলভাবে সম্পন্ন হয়েছে!' : 'Transcription completed successfully!',
+            uiText(appLang, 'transcriptionCompletedSuccessfully'),
             'success'
           );
         }

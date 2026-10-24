@@ -5,6 +5,7 @@ import { ApiKeyModelSelect } from './ApiKeyModelSelect';
 import { ApiKeyList } from './ApiKeyList';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { ToastType } from '../../../hooks/useToast';
+import { uiText } from '../../../utils/uiText';
 
 interface SettingsApiKeysProps {
     isDark: boolean;
@@ -26,7 +27,7 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
 
             {/* Input Area */}
             <div className={`p-6 rounded-3xl border flex flex-col gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                <h3 className="text-xs font-black uppercase tracking-widest opacity-60">{appLang === 'bn' ? 'নতুন কি যুক্ত করুন' : 'Add New Key'}</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest opacity-60">{uiText(appLang, 'addNewKey')}</h3>
                 <div className="flex gap-4">
                     <input 
                         type="text" 
@@ -47,7 +48,7 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
                         disabled={isAddingKey || !newKeyInput}
                         className={`px-6 py-3 ${activeColors.primary} text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all disabled:opacity-50`}
                     >
-                        {isAddingKey ? 'ADDING...' : (appLang === 'bn' ? 'যুক্ত করুন' : 'ADD')}
+                        {isAddingKey ? 'ADDING...' : (uiText(appLang, 'add'))}
                     </button>
                 </div>
             </div>
@@ -59,10 +60,10 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
                 isOpen={!!keyToDelete}
                 onClose={() => setKeyToDelete(null)}
                 onConfirm={confirmDelete}
-                title={appLang === 'bn' ? 'কনফার্মেশন' : 'Confirmation'}
-                message={appLang === 'bn' ? 'আপনি কি নিশ্চিত যে এই কি-টি ডিলিট করতে চান?' : 'Are you sure you want to delete this key?'}
-                confirmText={appLang === 'bn' ? 'ডিলিট করুন' : 'Delete'}
-                cancelText={appLang === 'bn' ? 'বাতিল' : 'Cancel'}
+                title={uiText(appLang, 'confirmation')}
+                message={uiText(appLang, 'areYouSureYouWantTo')}
+                confirmText={uiText(appLang, 'delete')}
+                cancelText={uiText(appLang, 'cancel')}
                 isDark={isDark}
                 activeColors={activeColors}
             />

@@ -3,6 +3,7 @@ import type { HistoryListData } from '../hooks/useHistoryListData';
 import { toDateKey } from '../utils/historyListUtils';
 import { fetchHistoryDaysFromCloud } from '../../../services/firebaseSync/historyRangePull';
 import type { Translations } from '../../../translations';
+import { uiText } from '../../../utils/uiText';
 
 interface Props {
   t: Translations;
@@ -33,7 +34,7 @@ export const HistoryDatePicker = ({ t, list, isDark, appLang }: Props) => {
               {/* Header */}
               <div className="flex justify-between items-center mb-2">
                 <span className={`text-[13px] font-bold pl-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                  {viewDate.toLocaleDateString(appLang === 'bn' ? 'bn-IN' : 'en-US', { month: 'long', year: 'numeric' })}
+                  {viewDate.toLocaleDateString(uiText(appLang, 'calendarLocale'), { month: 'long', year: 'numeric' })}
                 </span>
                 <div className="flex gap-0.5">
                   <button onClick={(e) => { e.stopPropagation(); setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1)); }} className={`p-1 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}>

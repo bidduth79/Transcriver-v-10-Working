@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFullScreen } from '../../hooks/useFullScreen';
 import type { Translations } from '../../translations';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import { uiText } from '../../utils/uiText';
 
 interface HeaderProps {
   t: Translations;
@@ -170,8 +171,8 @@ export const Header: React.FC<HeaderProps> = ({
           )}
           
           <button type="button" onClick={() => setAppLang(prev => prev === 'bn' ? 'en' : 'bn')} className={`flex items-center justify-center gap-2 bg-black/20 backdrop-blur-md border border-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-xl hover:bg-black/30 group transition-all active:scale-95 mr-0 md:mr-2 cursor-pointer col-span-2 md:col-span-1`}>
-            <div className={`${activeColors.primary} w-5 h-5 md:w-6 md:h-6 rounded-lg flex items-center justify-center text-[9px] md:text-[10px] font-black text-white shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6`}>{appLang === 'bn' ? "EN" : "ব"}</div>
-            <span className="text-[10px] md:text-[11px] font-black text-white uppercase tracking-wider transition-colors group-hover:text-white/100 text-white/80 hidden sm:inline">{appLang === 'bn' ? 'বাংলা' : 'EN'}</span>
+            <div className={`${activeColors.primary} w-5 h-5 md:w-6 md:h-6 rounded-lg flex items-center justify-center text-[9px] md:text-[10px] font-black text-white shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6`}>{uiText(appLang, 'languageBadge')}</div>
+            <span className="text-[10px] md:text-[11px] font-black text-white uppercase tracking-wider transition-colors group-hover:text-white/100 text-white/80 hidden sm:inline">{uiText(appLang, 'languageLabel')}</span>
           </button>
           
           <div className="flex-col items-end mr-4 text-right hidden lg:flex cursor-default group">

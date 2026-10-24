@@ -1,4 +1,5 @@
 import React from 'react';
+import { uiText } from '../../../utils/uiText';
 
 interface Props {
   appLang: string;
@@ -16,7 +17,7 @@ export const BatchProgressStatus = ({ appLang, hasBatchStarted, progress, etaSec
           <div className="mb-4">
             <div className="flex justify-between items-center mb-1.5">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                {appLang === 'bn' ? 'অগ্রগতি' : 'Progress'}
+                {uiText(appLang, 'progress')}
               </span>
               <span className="text-[10px] font-bold text-indigo-400">
                 {Math.round(progress)}%
@@ -32,15 +33,15 @@ export const BatchProgressStatus = ({ appLang, hasBatchStarted, progress, etaSec
               <span className="text-[10px] text-slate-500">
                 {etaSeconds !== null ? (
                   <>
-                    {appLang === 'bn' ? 'আনুমানিক সময় বাকি: ' : 'Estimated time remaining: '}
+                    {uiText(appLang, 'estimatedTimeRemaining')}
                     <span className="font-medium text-slate-300">
                       {etaSeconds < 60 
-                        ? (appLang === 'bn' ? `~${etaSeconds} সেকেন্ড` : `~${etaSeconds}s`) 
-                        : (appLang === 'bn' ? `~${Math.floor(etaSeconds / 60)} মি ${etaSeconds % 60} সে` : `~${Math.floor(etaSeconds / 60)}m ${etaSeconds % 60}s`)}
+                        ? (uiText(appLang, 'etaSeconds', { etaSeconds })) 
+                        : (uiText(appLang, 'etaMinutesSeconds', { minutes: Math.floor(etaSeconds / 60), seconds: etaSeconds % 60 }))}
                     </span>
                   </>
                 ) : (
-                  appLang === 'bn' ? 'সময় হিসাব করা হচ্ছে...' : 'Calculating time...'
+                  uiText(appLang, 'calculatingTime')
                 )}
               </span>
             </div>
@@ -51,7 +52,7 @@ export const BatchProgressStatus = ({ appLang, hasBatchStarted, progress, etaSec
         {batchCountdown > 0 && (
           <div className="mb-4 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex flex-col items-center justify-center animate-pulse">
             <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">
-              {appLang === 'bn' ? 'পরবর্তী ফাইল শুরু হচ্ছে' : 'Next file starting in'}
+              {uiText(appLang, 'nextFileStartingIn')}
             </span>
             <span className="text-3xl font-black text-indigo-500 tabular-nums">
               {batchCountdown}s

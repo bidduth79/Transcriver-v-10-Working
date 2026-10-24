@@ -4,6 +4,7 @@ import { useInformationModal } from './hooks/useInformationModal';
 import { getGuideData, getTabs } from './utils/informationData';
 import type { ActiveColors } from '../../hooks/useAppTheme';
 import type { ToastType } from '../../hooks/useToast';
+import { uiText } from '../../utils/uiText';
 
 interface InformationModalProps {
   isOpen: boolean;
@@ -46,7 +47,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
                  className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border cursor-pointer hover:scale-105 transition-transform ${isDark ? 'bg-slate-900 border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
                >
                   <div className={`w-3 h-3 rounded-full ${activeColors.primary}`}></div>
-                  <span className="text-xs font-bold uppercase tracking-widest">{appLang === 'bn' ? 'নির্দেশিকা' : 'Guide'}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest">{uiText(appLang, 'guide')}</span>
                   <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                </div>
             </motion.div>
@@ -83,7 +84,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
               <svg className="w-6 h-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
             </div>
             <div>
-              <h2 className="text-2xl font-black uppercase tracking-tight font-stylish-bn leading-none transition-colors group-hover:text-white/90">{appLang === 'bn' ? 'ব্যবহার নির্দেশিকা' : 'USER MANUAL'}</h2>
+              <h2 className="text-2xl font-black uppercase tracking-tight font-stylish-bn leading-none transition-colors group-hover:text-white/90">{uiText(appLang, 'userManual')}</h2>
               <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] mt-1">LI CELL STUDIO V4.0</p>
             </div>
           </div>
@@ -142,9 +143,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
                    <div>
                       <h5 className="text-white font-black uppercase tracking-widest text-xs mb-1">PRO TIP</h5>
                       <p className="text-white/80 text-xs font-bold font-stylish-bn">
-                        {appLang === 'bn' 
-                          ? 'ভালো ফলাফলের জন্য নয়েজ-মুক্ত অডিও ব্যবহার করুন। বড় ফাইলের ক্ষেত্রে "Auto Split" ব্যবহার করলে দ্রুত কাজ হবে।' 
-                          : 'Use noise-free audio for best results. For large files, "Auto Split" is faster.'}
+                        {uiText(appLang, 'useNoiseFreeAudioForBest')}
                       </p>
                    </div>
                 </div>
@@ -163,7 +162,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
            </button>
 
            <button onClick={onClose} className={`px-10 py-3 ${activeColors.primary} text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all`}>
-             {appLang === 'bn' ? 'বুঝতে পেরেছি' : 'GOT IT'}
+             {uiText(appLang, 'gotIt')}
            </button>
         </footer>
 

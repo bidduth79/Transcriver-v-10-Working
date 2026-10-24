@@ -3,6 +3,7 @@ import { useAppStore } from '@/hooks/useAppStore';
 import { getSensitiveKeywords } from '../../../utils/sensitiveKeywords';
 import type { Translations } from '../../../translations';
 import type { FileChangeEvent } from '../../../hooks/useFileHandler';
+import { uiText } from '../../../utils/uiText';
 
 const EMPTY_MATCHES: string[] = [];
 
@@ -80,7 +81,7 @@ export const useSidebar = (
   };
 
   const getHeaderTitle = (isRecording: boolean, t: Translations) => {
-      if (isRecording) return appLang === 'bn' ? "রেকর্ডিং চলছে..." : "Recording...";
+      if (isRecording) return uiText(appLang, 'recording');
       if (activeTab === 'youtube') return 'YOUTUBE LINK';
       if (activeTab === 'facebook') return 'FACEBOOK LINK';
       return t.audioVideoFile;

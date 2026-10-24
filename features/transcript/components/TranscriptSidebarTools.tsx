@@ -1,5 +1,6 @@
 import React from 'react';
 import type { BgbAnalysisResult } from '../../../types/bgb';
+import { uiText } from '../../../utils/uiText';
 
 interface TranscriptSidebarToolsProps {
   sensitiveMatches: string[];
@@ -44,7 +45,7 @@ export const TranscriptSidebarTools: React.FC<TranscriptSidebarToolsProps> = ({
               </svg>
             </div>
             <h4 className={`text-[10px] md:text-xs font-black uppercase tracking-widest ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-              {appLang === 'bn' ? 'সার্চিং ওয়ার্ড' : 'Searching Words'}
+              {uiText(appLang, 'searchingWords')}
             </h4>
           </div>
           

@@ -8,6 +8,7 @@ import { buildThinkingConfig } from '../../../hooks/transcription/geminiRequest'
 import { messageOf } from '../../../utils/errorMessage';
 import type { FileMeta } from '../../../types';
 import type { ToastType } from '../../../hooks/useToast';
+import { uiText } from '../../../utils/uiText';
 
 export interface AiAnalysis { sentiment: 'positive' | 'negative' | 'neutral'; remark: string }
 
@@ -89,24 +90,22 @@ export function useSummaryAnalysis(
         else if (s.includes('negative') || s.includes('নেতিবাচক')) sentiment = 'negative';
       }
 
-      const remark = remarkMatch ? remarkMatch[1].trim() : (appLang === 'bn' ? 'বিশ্লেষণ সম্পন্ন হয়েছে।' : 'Analysis complete.');
+      const remark = remarkMatch ? remarkMatch[1].trim() : (uiText(appLang, 'analysisComplete'));
       setAiAnalysis({ sentiment, remark });
       
       // Log Success
       logSystemActivity('ANALYSIS', 'SUCCESS', 'Sentiment Analysis Completed', `Term: ${searchTerm}, Sentiment: ${sentiment}`);
       
-      addToast(appLang === 'bn' ? "এআই বিশ্লেষণ সফল হয়েছে" : "AI analysis successful", 'success');
+      addToast(uiText(appLang, 'aiAnalysisSuccessful'), 'success');
     } catch (error) {
       console.error("AI Analysis Error:", error);
       
       // Log Error
       logSystemActivity('ANALYSIS', 'ERROR', 'Analysis Failed', `Error: ${messageOf(error)}`);
       
-      const quotaMsg = appLang === 'bn' 
-        ? "API Key সমস্যা বা কোটা শেষ। দয়া করে সেটিংসে গিয়ে কি পরিবর্তন করুন।" 
-        : "API Key Error or Quota exceeded. Please change Key in Settings.";
+      const quotaMsg = uiText(appLang, 'apiKeyErrorOrQuotaExceeded');
       
-      const errorMsg = messageOf(error)?.includes('429') || messageOf(error)?.includes('403') ? quotaMsg : (appLang === 'bn' ? 'এআই বিশ্লেষণ ব্যর্থ হয়েছে' : 'AI analysis failed');
+      const errorMsg = messageOf(error)?.includes('429') || messageOf(error)?.includes('403') ? quotaMsg : (uiText(appLang, 'aiAnalysisFailed'));
       addToast(errorMsg, 'error');
     } finally {
       setIsAnalyzing(false);

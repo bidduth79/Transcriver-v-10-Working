@@ -6,6 +6,7 @@ import { rateLimitWaitMs, type RateLimitInfo } from '../transcription/rateLimit'
 import { notifyWhenHidden } from '../../services/browserNotification';
 import { messageOf } from '../../utils/errorMessage';
 import type { TranscriptionOutcome } from '../useTranscription';
+import { uiText } from '../../utils/uiText';
 
 export interface FailedFile {
   file: File;
@@ -60,13 +61,11 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
     ctx.setFailedFiles(prevFailed => {
       ctx.setProcessedCount(prevProcessed => {
         if (prevFailed.length > 0) {
-          const message = appLang === 'bn'
-            ? `ব্যাচ সম্পন্ন। ${prevProcessed}টি সফল, ${prevFailed.length}টি ব্যর্থ।`
-            : `Batch completed. ${prevProcessed} succeeded, ${prevFailed.length} failed.`;
+          const message = uiText(appLang, 'batchCompletedWithFailures', { prevProcessed, failed: prevFailed.length });
           addToast(message, 'warning');
           notifyWhenHidden('LI CELL Studio', message);
         } else {
-          const message = appLang === 'bn' ? 'ব্যাচ প্রসেসিং সফলভাবে সম্পন্ন হয়েছে' : 'Batch processing completed successfully';
+          const message = uiText(appLang, 'batchProcessingCompletedSuccessfully');
           addToast(message, 'success');
           notifyWhenHidden('LI CELL Studio', message);
         }
@@ -102,7 +101,7 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
     ctx.setCurrentBatchIndex(index);
 
     if (currentFile.size > MAX_FILE_SIZE) {
-      addToast(appLang === 'bn' ? `${currentFile.name} ৭০ এমবি এর বেশি, স্কিপ করা হচ্ছে` : `${currentFile.name} exceeds 70MB, skipping`, 'error');
+      addToast(uiText(appLang, 'fileTooLargeSkipping', { name: currentFile.name }), 'error');
       ctx.setFailedFiles(prev => [...prev, { file: currentFile, reason: 'Size exceeds 70MB' }]);
       startCountdownForNextFile(queue, index + 1);
       return;
@@ -144,14 +143,12 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
       // No key has quota left today: pause here instead of failing (and spending requests on) the rest
       if (limit?.isDaily) {
         ctx.pauseForQuota(index);
-        addToast(appLang === 'bn'
-          ? 'সব এপিআই কি-র আজকের কোটা শেষ, তাই ব্যাচ থামানো হয়েছে। নতুন কি যোগ করে বা কোটা রিসেটের পর (বাংলাদেশ সময় দুপুর ১-২টা) আবার চালু করুন।'
-          : 'Daily quota is used up on every API key, so the batch was paused. Add a key or resume after the quota resets (midnight Pacific time).', 'error');
+        addToast(uiText(appLang, 'dailyQuotaIsUsedUpOn'), 'error');
         return;
       }
 
       if (retryCount < 1) {
-        addToast(appLang === 'bn' ? `${currentFile.name} ব্যর্থ হয়েছে, আবার চেষ্টা করা হচ্ছে...` : `${currentFile.name} failed, retrying...`, 'warning');
+        addToast(uiText(appLang, 'fileFailedRetrying', { name: currentFile.name }), 'warning');
         clearRetryTimeout();
         retryTimeoutRef.current = window.setTimeout(() => {
           retryTimeoutRef.current = null;
@@ -162,7 +159,7 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
           }
         }, (limit && rateLimitWaitMs(limit)) || 3000);
       } else {
-        addToast(appLang === 'bn' ? `${currentFile.name} ট্রান্সক্রাইব করা যায়নি` : `Failed to transcribe ${currentFile.name}`, 'error');
+        addToast(uiText(appLang, 'fileTranscribeFailed', { name: currentFile.name }), 'error');
         ctx.setFailedFiles(prev => [...prev, { file: currentFile, reason: messageOf(error) || 'Transcription failed' }]);
         startCountdownForNextFile(queue, index + 1);
       }

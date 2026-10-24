@@ -5,6 +5,7 @@ import { logSystemActivity } from '../../../services/SystemLogger';
 import type { SummaryStats } from '../hooks/useSummaryLogic';
 import type { AiAnalysis } from '../hooks/useSummaryLogic';
 import type { ToastType } from '../../../hooks/useToast';
+import { uiText } from '../../../utils/uiText';
 
 interface Options {
   isOpen: boolean;
@@ -106,7 +107,7 @@ export const useSummaryHistory = ({
     const updated = await deleteSearchAnalysisAction(id);
     setHistory(updated);
     logSystemActivity('ANALYSIS', 'WARNING', 'Analysis Deleted', `ID: ${id}`);
-    addToast(appLang === 'bn' ? "ডিলিট করা হয়েছে" : "Deleted successfully", 'warning');
+    addToast(uiText(appLang, 'deletedSuccessfully'), 'warning');
   };
 
   // Later entries for an already-listed file are marked as duplicates

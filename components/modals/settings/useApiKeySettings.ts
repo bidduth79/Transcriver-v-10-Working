@@ -3,6 +3,7 @@ import { useAppStore } from '@/hooks/useAppStore';
 import { UserApiKey, addUserApiKey, deleteApiKey, setActiveApiKey, getAllApiKeys, getActiveKeyId, getActiveModel, setActiveModel } from '../../../services/ApiKeyManager';
 import { STORES } from '../../../services/db';
 import type { ToastType } from '../../../hooks/useToast';
+import { uiText } from '../../../utils/uiText';
 
 // Saved keys, active key/model and add/select/delete/model-change actions for the API Keys tab
 export const useApiKeySettings = (appLang: 'bn' | 'en', addToast: (m: string, t: ToastType) => void) => {
@@ -39,7 +40,7 @@ useEffect(() => {
 
 const handleAddKey = async () => {
     if (!newKeyInput.trim()) {
-        addToast(appLang === 'bn' ? 'দয়া করে এপিআই কি দিন' : 'Please enter API Key', 'error');
+        addToast(uiText(appLang, 'pleaseEnterApiKey'), 'error');
         return;
     }
     setIsAddingKey(true);
@@ -48,7 +49,7 @@ const handleAddKey = async () => {
         setNewKeyInput('');
         setNewKeyLabel('');
         await refreshKeys();
-        addToast(appLang === 'bn' ? 'নতুন কি যুক্ত এবং সক্রিয় (Active) করা হয়েছে' : 'Key added and set as Active', 'success');
+        addToast(uiText(appLang, 'keyAddedAndSetAsActive'), 'success');
     } catch (e) {
         console.error(e);
         addToast('Failed to add key', 'error');
@@ -60,7 +61,7 @@ const handleAddKey = async () => {
 const handleSelectKey = (id: string) => {
     setActiveApiKey(id);
     setActiveKeyId(id);
-    addToast(appLang === 'bn' ? 'এপিআই কি সিলেক্ট করা হয়েছে' : 'API Key Selected', 'success');
+    addToast(uiText(appLang, 'apiKeySelected'), 'success');
 };
 
 const handleDeleteKey = (id: string) => {
@@ -71,7 +72,7 @@ const confirmDelete = async () => {
     if (keyToDelete) {
         await deleteApiKey(keyToDelete);
         await refreshKeys();
-        addToast(appLang === 'bn' ? 'কি ডিলিট করা হয়েছে' : 'Key deleted', 'warning');
+        addToast(uiText(appLang, 'keyDeleted'), 'warning');
         setKeyToDelete(null);
     }
 };
@@ -80,7 +81,7 @@ const handleModelChange = (modelId: string) => {
     setActiveModel(modelId);
     setSelectedModel(modelId);
     useAppStore.getState().triggerActiveApiKeyChanged();
-    addToast(appLang === 'bn' ? `মডেল পরিবর্তন হয়েছে: ${modelId}` : `Model changed to: ${modelId}`, 'success');
+    addToast(uiText(appLang, 'modelChangedTo', { modelId }), 'success');
 };
 
   return {

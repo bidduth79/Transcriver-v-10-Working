@@ -1,5 +1,6 @@
 import React from 'react';
 import { SpeakerProfile } from '../../../types/speaker';
+import { uiText } from '../../../utils/uiText';
 
 interface Props {
   profile: SpeakerProfile | null;
@@ -22,7 +23,7 @@ export const SpeakerSidebarHeader = ({ profile, speakerName, isLoading, isDark, 
             </div>
             <div className="truncate">
               <h2 className="text-base font-bold tracking-wide truncate">
-                {isLoading ? (appLang === 'bn' ? 'তথ্য খোঁজা হচ্ছে...' : 'Fetching Profile...') : profile?.name || speakerName}
+                {isLoading ? (uiText(appLang, 'fetchingProfile')) : profile?.name || speakerName}
               </h2>
               {profile?.customNote?.roleOrDesignation && (
                 <p className="text-xs text-indigo-400 font-medium truncate">{profile.customNote.roleOrDesignation}</p>

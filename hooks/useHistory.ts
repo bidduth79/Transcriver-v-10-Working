@@ -8,6 +8,7 @@ import { scheduleGentleFirebasePull } from '../services/firebaseThrottledQueue';
 import { filterHistoryItems, downloadHistoryBackup, restoreHistoryFromFile } from './history/historyUtils';
 import { forgetHistoryTranscripts } from './history/useHistoryTranscript';
 import { useTranscriptSearchIds } from './history/useTranscriptSearchIds';
+import { uiText } from '../utils/uiText';
 
 export const useHistory = (
   appLang: 'en' | 'bn',
@@ -100,7 +101,7 @@ export const useHistory = (
       setActiveHistoryId(null);
       onHistoryItemDeleted(id);
     }
-    addToast(appLang === 'bn' ? 'ডিলিট করা হয়েছে' : 'Deleted', 'warning');
+    addToast(uiText(appLang, 'deleted'), 'warning');
 
     // 2. Perform IndexedDB & background sync deletion asynchronously off the critical UI path
     setTimeout(async () => {
@@ -124,8 +125,8 @@ export const useHistory = (
       updateSessionCache(next);
       addToast(
         updatedItem.isFavorite 
-          ? (appLang === 'bn' ? 'বুকমার্কে যোগ করা হয়েছে' : 'Added to favorites') 
-          : (appLang === 'bn' ? 'বুকমার্ক থেকে সরানো হয়েছে' : 'Removed from favorites'), 
+          ? (uiText(appLang, 'addedToFavorites')) 
+          : (uiText(appLang, 'removedFromFavorites')), 
         'success'
       );
       await updateHistoryRecord(id, { isFavorite: updatedItem.isFavorite });
@@ -139,10 +140,10 @@ export const useHistory = (
       const order = new Map(history.map((h, i) => [h.id, i]));
       const records = (await getAllFromStore(STORES.HISTORY)) as HistoryItem[];
       downloadHistoryBackup(records.sort((a, b) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity)));
-      addToast(appLang === 'bn' ? 'ব্যাকআপ ডাউনলোড শুরু হয়েছে' : 'Backup download started', 'info');
+      addToast(uiText(appLang, 'backupDownloadStarted'), 'info');
     } catch (e) {
       console.error("Failed to back up history", e);
-      addToast(appLang === 'bn' ? 'ব্যাকআপ করতে সমস্যা হয়েছে' : 'Failed to back up history', 'error');
+      addToast(uiText(appLang, 'failedToBackUpHistory'), 'error');
     }
   };
 
@@ -151,10 +152,10 @@ export const useHistory = (
       await restoreHistoryFromFile(file);
       broadcastHistoryUpdate();
       loadHistory();
-      addToast(appLang === 'bn' ? 'হিস্টোরি রিস্টোর সফল হয়েছে' : 'History restored successfully', 'success');
+      addToast(uiText(appLang, 'historyRestoredSuccessfully'), 'success');
     } catch (e) {
       console.error("Failed to restore history", e);
-      addToast(appLang === 'bn' ? 'রিস্টোর করতে সমস্যা হয়েছে' : 'Failed to restore history', 'error');
+      addToast(uiText(appLang, 'failedToRestoreHistory'), 'error');
     }
   };
 

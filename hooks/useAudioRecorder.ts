@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { uiText } from '../utils/uiText';
 
 // ============================================================================
 // 🎙️ মাইক্রোফোন অপশন নিয়ন্ত্রণ (Microphone Feature Toggle)
@@ -47,9 +48,7 @@ export const useAudioRecorder = (
     // মাইক্রোফোন ব্যাকএন্ড স্থগিত থাকলে নোটিফিকেশন প্রদর্শন ও প্রসেস বন্ধ
     if (!isMicrophoneEnabled()) {
       addToast(
-        appLang === 'bn' 
-          ? "মাইক্রোফোন রেকর্ডিং অপশনটি সেটিংস থেকে বন্ধ রাখা হয়েছে।" 
-          : "Microphone recording is disabled in Settings.", 
+        uiText(appLang, 'microphoneRecordingIsDisabledInSettings'), 
         'info'
       );
       return;
@@ -111,7 +110,7 @@ export const useAudioRecorder = (
       }, 1000);
     } catch (e) {
       console.error("Mic Access Error", e);
-      addToast(appLang === 'bn' ? "মাইক্রোফোন এক্সেস পাওয়া যায়নি" : "Microphone access denied", 'error');
+      addToast(uiText(appLang, 'microphoneAccessDenied'), 'error');
     }
   };
 

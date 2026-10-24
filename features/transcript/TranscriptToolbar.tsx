@@ -4,6 +4,7 @@ import { DownloadMenu } from '../../components/common/DownloadMenu';
 import { useTranscriptToolbar } from './hooks/useTranscriptToolbar';
 import { unicodeToBijoy, bijoyToUnicode, isUnicode } from '@abdalgolabs/ansi-unicode-converter';
 import type { TranscriptOutputProps } from './transcriptOutputTypes';
+import { uiText } from '../../utils/uiText';
 
 type TranscriptToolbarProps = Pick<TranscriptOutputProps, 't' | 'status' | 'appLang' | 'activeColors' | 'searchTerm'
   | 'handleSearchChange' | 'transcriptSearchInputRef' | 'matchCount' | 'currentMatchIndex' | 'fontSize' | 'setFontSize'
@@ -47,7 +48,7 @@ export const TranscriptToolbar = ({
           <button 
             onClick={handleSummaryClick}
             className="w-9 h-9 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-95 group/tool shadow-xl cursor-pointer group"
-            title={appLang === 'bn' ? 'সার্চ এনালাইসিস' : 'Search Analysis'}
+            title={uiText(appLang, 'searchAnalysis')}
           >
             <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
@@ -56,7 +57,7 @@ export const TranscriptToolbar = ({
           <button 
             onClick={() => setIsReportOpen(true)}
             className="w-9 h-9 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-95 group/tool shadow-xl cursor-pointer group"
-            title={appLang === 'bn' ? 'রিপোর্ট' : 'Report'}
+            title={uiText(appLang, 'report')}
           >
             <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -65,7 +66,7 @@ export const TranscriptToolbar = ({
           <button 
             onClick={() => setIsAnalysisOpen(true)}
             className="w-9 h-9 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all active:scale-95 group/tool shadow-xl cursor-pointer group"
-            title={appLang === 'bn' ? 'ফুল ট্রান্সক্রিপ্ট প্রিভিউ' : 'Full Transcript Preview'}
+            title={uiText(appLang, 'fullTranscriptPreview')}
           >
             <Expand className="w-4 h-4 transition-transform group-hover:scale-110" strokeWidth={2.5} />
           </button>
@@ -83,7 +84,7 @@ export const TranscriptToolbar = ({
           <input 
             ref={transcriptSearchInputRef} 
             type="text" 
-            placeholder={appLang === 'bn' ? 'ট্রান্সক্রিপ্টে খুঁজুন...' : 'Search in transcript...'} 
+            placeholder={uiText(appLang, 'searchInTranscript')} 
             value={searchTerm} 
             onChange={handleSearchChange}
             onKeyDown={handleKeyDown}
@@ -113,7 +114,7 @@ export const TranscriptToolbar = ({
             </button>
             <button 
               onClick={() => transformingType !== 'translate' && transformTranscript('translate', 'bn')}
-              className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all font-stylish-bn cursor-pointer ${appLang === 'bn' ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+              className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all font-stylish-bn cursor-pointer ${uiText(appLang, 'textWhite40HoverTextWhite')}`}
               title="Translate to Bengali"
             >
               বাংলা
@@ -126,11 +127,11 @@ export const TranscriptToolbar = ({
               onClick={() => {
                 if (!isTranscriptUnicode) {
                   setTranscript(bijoyToUnicode(transcript || ''));
-                  addToast(appLang === 'bn' ? 'ইউনিকোডে রূপান্তর করা হয়েছে' : 'Converted to Unicode', 'success');
+                  addToast(uiText(appLang, 'convertedToUnicode'), 'success');
                 }
               }}
               className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all font-stylish-bn cursor-pointer ${isTranscriptUnicode ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
-              title={appLang === 'bn' ? 'ইউনিকোডে কনভার্ট করুন' : 'Convert to Unicode'}
+              title={uiText(appLang, 'convertToUnicode')}
             >
               ইউ
             </button>
@@ -138,11 +139,11 @@ export const TranscriptToolbar = ({
               onClick={() => {
                 if (isTranscriptUnicode && transcript) {
                   setTranscript(unicodeToBijoy(transcript));
-                  addToast(appLang === 'bn' ? 'বিজয়ে রূপান্তর করা হয়েছে' : 'Converted to Bijoy', 'success');
+                  addToast(uiText(appLang, 'convertedToBijoy'), 'success');
                 }
               }}
               className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all font-stylish-bn cursor-pointer ${!isTranscriptUnicode ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
-              title={appLang === 'bn' ? 'বিজয়তে কনভার্ট করুন' : 'Convert to Bijoy'}
+              title={uiText(appLang, 'convertToBijoy')}
             >
               বি
             </button>
@@ -180,7 +181,7 @@ export const TranscriptToolbar = ({
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  <span>{appLang === 'bn' ? 'ডাউনলোড' : 'Download'}</span>
+                  <span>{uiText(appLang, 'download')}</span>
                   <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" />
                   </svg>
@@ -193,7 +194,7 @@ export const TranscriptToolbar = ({
           <button 
             onClick={handleDelete}
             className="w-9 h-9 flex items-center justify-center bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95 shadow-xl cursor-pointer"
-            title={appLang === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
+            title={uiText(appLang, 'deleteAlt')}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

@@ -3,6 +3,7 @@ import { YouTubeInput } from '../tools/YouTubeInput.tsx';
 import { isMicrophoneEnabled } from '../../hooks/useAudioRecorder.ts';
 import { useFileDrop } from './hooks/useFileDrop';
 import type { AudioVideoInputProps } from './sidebarTypes';
+import { uiText } from '../../utils/uiText';
 
 export const AudioVideoInput = ({
   t,
@@ -63,7 +64,7 @@ export const AudioVideoInput = ({
                 <button 
                   onClick={() => { setActiveTab('folder'); document.getElementById('folderInput')?.click(); }}
                   className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-md group cursor-pointer ${activeTab === 'folder' ? 'bg-emerald-600 text-white ring-2 ring-offset-2 ring-emerald-200' : (isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-400' : 'bg-white hover:bg-slate-50 text-slate-400')}`}
-                  title={appLang === 'bn' ? 'একাধিক ফাইল আপলোড' : 'Multiple File Upload'}
+                  title={uiText(appLang, 'multipleFileUpload')}
                 >
                     <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
                 </button>
@@ -72,7 +73,7 @@ export const AudioVideoInput = ({
                   <button 
                     onClick={() => { setActiveTab('record'); onStartRecording(); }}
                     className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-md group cursor-pointer ${activeTab === 'record' ? 'bg-red-500 text-white ring-2 ring-offset-2 ring-red-200' : (isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-400' : 'bg-white hover:bg-slate-50 text-slate-400')}`}
-                    title={appLang === 'bn' ? "লাইভ অডিও রেকর্ড করুন" : "Record Live Audio"}
+                    title={uiText(appLang, 'recordLiveAudio')}
                   >
                       <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                   </button>
@@ -81,7 +82,7 @@ export const AudioVideoInput = ({
                 <button 
                   onClick={() => setActiveTab('youtube')}
                   className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-md group cursor-pointer ${activeTab === 'youtube' || activeTab === 'facebook' ? 'bg-red-600 text-white ring-2 ring-offset-2 ring-red-200' : (isDark ? 'bg-slate-800 hover:bg-slate-700 text-slate-400' : 'bg-white hover:bg-slate-50 text-slate-400')}`}
-                  title={appLang === 'bn' ? 'ইউটিউব বা ফেসবুক লিংক' : 'YouTube & Facebook Link'}
+                  title={uiText(appLang, 'youtubeFacebookLink')}
                 >
                     <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
                 </button>
@@ -104,15 +105,13 @@ export const AudioVideoInput = ({
             )}
             
             {activeTab === 'folder' && (
-                <p className="text-[10px] text-center font-bold opacity-40 uppercase tracking-widest">{appLang === 'bn' ? 'একাধিক ফাইল আপলোড করতে ক্লিক করুন (MP3, WAV, MP4, OPUS)' : 'Click to upload multiple files (MP3, WAV, MP4, OPUS)'}</p>
+                <p className="text-[10px] text-center font-bold opacity-40 uppercase tracking-widest">{uiText(appLang, 'clickToUploadMultipleFiles')}</p>
             )}
 
             {activeTab === 'record' && (
                 <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center animate-in fade-in">
                     <p className="text-[11px] font-bold text-amber-500">
-                        {appLang === 'bn' 
-                            ? '🎙️ মাইক্রোফোন অপশনটি সাময়িকভাবে স্থগিত রাখা হয়েছে।' 
-                            : '🎙️ Live microphone recording is temporarily paused.'}
+                        {uiText(appLang, 'liveMicrophoneRecordingIsTemporarilyPaused')}
                     </p>
                 </div>
             )}
@@ -146,7 +145,7 @@ export const AudioVideoInput = ({
                className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg transition-all active:scale-95 flex items-center gap-2"
              >
                <div className="w-2 h-2 bg-white rounded-sm"></div>
-               {appLang === 'bn' ? "বন্ধ করুন" : "STOP"}
+               {uiText(appLang, 'stop')}
              </button>
           </div>
         )}

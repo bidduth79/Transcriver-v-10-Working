@@ -3,6 +3,7 @@ import { BatchProgressStatus } from './components/BatchProgressStatus';
 import { BatchQueueItem } from './components/BatchQueueItem';
 import { BatchControls } from './components/BatchControls';
 import type { BatchProcessingQueueProps } from './sidebarTypes';
+import { uiText } from '../../utils/uiText';
 
 export const BatchProcessingQueue = ({
   appLang,
@@ -39,7 +40,7 @@ export const BatchProcessingQueue = ({
         <div className="flex items-center gap-3">
           <div className={`w-2.5 h-2.5 rounded-full ${activeColors?.primary || 'bg-indigo-600'} shadow-[0_0_12px_rgba(255,255,255,0.4)] shrink-0`}></div>
           <span className="text-[12px] font-black uppercase tracking-[0.15em] text-white truncate">
-            {appLang === 'bn' ? 'ব্যাচ প্রসেসিং' : 'Batch Processing'}
+            {uiText(appLang, 'batchProcessing')}
           </span>
         </div>
         <span className="text-[10px] font-bold px-2 py-1 bg-indigo-500/20 text-indigo-300 rounded-full">

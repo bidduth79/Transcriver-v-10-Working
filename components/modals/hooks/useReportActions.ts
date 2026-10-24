@@ -10,6 +10,7 @@ import { messageOf } from '../../../utils/errorMessage';
 import type { FileMeta } from '../../../types';
 import type { ToastType } from '../../../hooks/useToast';
 import type { ReportAnalysis } from './useReportAnalysis';
+import { uiText } from '../../../utils/uiText';
 
 export interface ReportItem {
   id: string;
@@ -121,7 +122,7 @@ export const useReportActions = (
       // Log Success
       logSystemActivity('REPORT', 'SUCCESS', 'Report Generated', `Term: ${searchTerm}, File: ${fileMeta.name}`);
       
-      addToast(appLang === 'bn' ? "রিপোর্ট তৈরি হয়েছে" : "Report generated", 'success');
+      addToast(uiText(appLang, 'reportGenerated'), 'success');
     } catch (err) {
       console.error(err);
       
@@ -129,8 +130,8 @@ export const useReportActions = (
       logSystemActivity('REPORT', 'ERROR', 'Report Generation Failed', `Error: ${messageOf(err)}`);
       
       const errorMsg = messageOf(err)?.includes('API Key') 
-        ? (appLang === 'bn' ? 'API Key সিলেক্ট করুন' : 'Select API Key') 
-        : (appLang === 'bn' ? "রিপোর্ট তৈরিতে সমস্যা হয়েছে" : "Failed to generate report");
+        ? (uiText(appLang, 'selectApiKey')) 
+        : (uiText(appLang, 'failedToGenerateReport'));
 
       addToast(errorMsg, 'error');
     } finally {
@@ -144,7 +145,7 @@ export const useReportActions = (
     await loadReportsFromDB();
     if (selectedReport?.id === id) setSelectedReport(null);
     logSystemActivity('REPORT', 'WARNING', 'Report Deleted', `ID: ${id}`);
-    addToast(appLang === 'bn' ? "রিপোর্ট ডিলিট করা হয়েছে" : "Report deleted", 'warning');
+    addToast(uiText(appLang, 'reportDeleted'), 'warning');
   };
 
   return { report, loading, reportHistory, loadReportsFromDB, generateReport, handleDeleteReport };

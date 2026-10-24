@@ -1,6 +1,7 @@
 import React from 'react';
 import { Cpu } from 'lucide-react';
 import { AVAILABLE_MODELS, MODEL_CATEGORY_GROUPS } from '../../../services/ApiKeyManager';
+import { uiText } from '../../../utils/uiText';
 
 interface Props {
   isDark: boolean;
@@ -18,10 +19,10 @@ export const ApiKeyModelSelect = ({ isDark, appLang, selectedModel, onChange }: 
                     </div>
                     <div>
                         <h3 className="text-xs font-black uppercase tracking-widest opacity-80">
-                            {appLang === 'bn' ? 'সক্রিয় এআই মডেল' : 'Active AI Model'}
+                            {uiText(appLang, 'activeAiModel')}
                         </h3>
                         <p className="text-[11px] opacity-50 mt-0.5">
-                            {appLang === 'bn' ? 'ট্রান্সক্রিপশন ও বিশ্লেষণের জন্য ব্যবহৃত মডেল (ক্যাটাগরি অনুযায়ী)' : 'Select Gemini model for transcription & analysis'}
+                            {uiText(appLang, 'selectGeminiModelForTranscriptionAnalysis')}
                         </p>
                     </div>
                 </div>

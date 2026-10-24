@@ -4,6 +4,7 @@ import { useActivityLogs } from './activityLogs/useActivityLogs';
 import { ActivityLogFilters } from './activityLogs/ActivityLogFilters';
 import { ActivityLogList } from './activityLogs/ActivityLogList';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import { uiText } from '../../utils/uiText';
 
 interface ActivityLogsModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
            className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border cursor-pointer hover:scale-105 transition-transform ${isDark ? 'bg-slate-900 border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
          >
             <div className={`w-3 h-3 rounded-full ${activeColors.primary}`}></div>
-            <span className="text-xs font-bold uppercase tracking-widest">{appLang === 'bn' ? 'লগস' : 'Logs'}</span>
+            <span className="text-xs font-bold uppercase tracking-widest">{uiText(appLang, 'logs')}</span>
             <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
          </div>
       </div>
@@ -59,7 +60,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
                <svg className="w-7 h-7 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
             </div>
             <div>
-              <h2 className="text-2xl font-black uppercase tracking-tight font-stylish-bn transition-colors group-hover:text-white/90">{appLang === 'bn' ? 'অ্যাক্টিভিটি মনিটর' : 'Activity Monitor'}</h2>
+              <h2 className="text-2xl font-black uppercase tracking-tight font-stylish-bn transition-colors group-hover:text-white/90">{uiText(appLang, 'activityMonitor')}</h2>
               <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mt-1">SYSTEM LOGS & DIAGNOSTICS</p>
             </div>
           </div>

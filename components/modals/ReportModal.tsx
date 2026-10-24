@@ -10,6 +10,7 @@ import { ReportHistoryView } from './report/ReportHistoryView';
 import type { ActiveColors } from '../../hooks/useAppTheme';
 import type { FileMeta } from '../../types';
 import type { ToastType } from '../../hooks/useToast';
+import { uiText } from '../../utils/uiText';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -71,9 +72,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     if (!textToCopy) return;
     const success = await copyToClipboard(textToCopy);
     if (success) {
-      addToast(appLang === 'bn' ? "কপি করা হয়েছে" : "Copied to clipboard", 'success');
+      addToast(uiText(appLang, 'copiedToClipboard'), 'success');
     } else {
-      addToast(appLang === 'bn' ? "কপি করতে সমস্যা হয়েছে" : "Failed to copy", 'error');
+      addToast(uiText(appLang, 'failedToCopy'), 'error');
     }
   };
 
@@ -92,7 +93,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    addToast(appLang === 'bn' ? "ডাউনলোড শুরু হয়েছে" : "Download started", 'success');
+    addToast(uiText(appLang, 'downloadStarted'), 'success');
   };
 
   const handleDeleteReport = async (e: React.MouseEvent, id: string) => {
@@ -111,7 +112,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
            className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border cursor-pointer hover:scale-105 transition-transform ${isDark ? 'bg-slate-900 border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
          >
             <div className={`w-3 h-3 rounded-full ${activeColors.primary}`}></div>
-            <span className="text-xs font-bold uppercase tracking-widest">{appLang === 'bn' ? 'রিপোর্ট' : 'Report'}</span>
+            <span className="text-xs font-bold uppercase tracking-widest">{uiText(appLang, 'report')}</span>
             <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
          </div>
       </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { getActiveProvider, incrementTotalCalls } from '../services/ApiKeyManager';
 import { createGeminiClient } from '../services/apiKeys/geminiClient';
 import { messageOf } from '../utils/errorMessage';
+import { uiText } from '../utils/uiText';
 
 export const useTransformTranscript = (
   transcript: string,
@@ -24,7 +25,7 @@ export const useTransformTranscript = (
         let prompt = "";
         
         if (type === 'translate') {
-            const finalTargetLang = targetLang === 'en' ? 'English' : targetLang === 'bn' ? 'Bengali' : (appLang === 'bn' ? 'English' : 'Bengali');
+            const finalTargetLang = targetLang === 'en' ? 'English' : targetLang === 'bn' ? 'Bengali' : (uiText(appLang, 'bengali'));
             prompt = `You are a professional translator. Translate the following transcript to ${finalTargetLang}.
 RULES:
 1. KEEP TIMESTAMP FORMAT EXACTLY AS IS: [MM:SS]

@@ -2,6 +2,7 @@ import React from 'react';
 import { toast } from 'sonner';
 import { FileMeta, HistoryItem, TranscriptMeta } from '../types';
 import { CheckCircle, XCircle, Info, FolderUp } from 'lucide-react';
+import { uiText } from '../utils/uiText';
 
 export const showFolderUploadModal = (
     appLang: string, 
@@ -18,10 +19,10 @@ export const showFolderUploadModal = (
             </div>
             <div className="flex flex-col flex-grow text-left">
               <span className="font-semibold text-white text-sm leading-tight">
-                {appLang === 'bn' ? 'ফোল্ডার আপলোড' : 'Folder Upload'}
+                {uiText(appLang, 'folderUpload')}
               </span>
               <span className="text-emerald-100 text-xs mt-1 leading-snug">
-                {appLang === 'bn' ? `মোট ${supportedFilesCount} টি ফাইল পাওয়া গেছে। আপনি কি ব্যাচ প্রসেসিং শুরু করতে চান?` : `Found ${supportedFilesCount} files. Do you want to start batch processing?`}
+                {uiText(appLang, 'folderUploadConfirm', { supportedFilesCount })}
               </span>
             </div>
           </div>
@@ -33,7 +34,7 @@ export const showFolderUploadModal = (
               }}
               className="flex-1 bg-white text-emerald-900 border-none py-1.5 px-3 rounded-full font-semibold text-xs cursor-pointer hover:bg-emerald-50 transition-colors"
             >
-              {appLang === 'bn' ? 'শুরু করুন' : 'Start'}
+              {uiText(appLang, 'start')}
             </button>
             <button 
               onClick={() => { 
@@ -42,7 +43,7 @@ export const showFolderUploadModal = (
               }}
               className="flex-1 bg-transparent text-white border border-emerald-400/50 py-1.5 px-3 rounded-full font-semibold text-xs cursor-pointer hover:bg-white/10 transition-colors"
             >
-              {appLang === 'bn' ? 'বাতিল' : 'Cancel'}
+              {uiText(appLang, 'cancel')}
             </button>
           </div>
         </div>
@@ -59,7 +60,7 @@ export const showNoFilesFoundModal = (appLang: string) => {
           </div>
           <div className="flex flex-col text-left">
             <span className="font-semibold text-white text-sm leading-tight">
-              {appLang === 'bn' ? 'কোনো অডিও/ভিডিও ফাইল পাওয়া যায়নি' : 'No Audio/Video Files Found'}
+              {uiText(appLang, 'noAudioVideoFilesFound')}
             </span>
           </div>
         </div>
@@ -81,10 +82,10 @@ export const showFileAlreadyTranscribedModal = (
             </div>
             <div className="flex flex-col flex-grow text-left">
               <span className="font-semibold text-white text-sm leading-tight">
-                {appLang === 'bn' ? 'ফাইলটি ইতিমধ্যে ট্রান্সক্রাইব করা হয়েছে!' : 'File Already Transcribed!'}
+                {uiText(appLang, 'fileAlreadyTranscribed')}
               </span>
               <span className="text-blue-100 text-xs mt-1 leading-snug">
-                {appLang === 'bn' ? 'আপনি কি নতুন করে আবার ট্রান্সক্রাইব করতে চান, নাকি আগের রেজাল্ট দেখতে চান?' : 'Do you want to transcribe it again, or view the previous result?'}
+                {uiText(appLang, 'doYouWantToTranscribeIt')}
               </span>
             </div>
           </div>
@@ -96,7 +97,7 @@ export const showFileAlreadyTranscribedModal = (
               }}
               className="flex-1 bg-white text-blue-900 border-none py-1.5 px-3 rounded-full font-semibold text-xs cursor-pointer hover:bg-blue-50 transition-colors"
             >
-              {appLang === 'bn' ? 'নতুন করে করুন' : 'Transcribe Again'}
+              {uiText(appLang, 'transcribeAgain')}
             </button>
             <button 
               onClick={() => { 
@@ -105,7 +106,7 @@ export const showFileAlreadyTranscribedModal = (
               }}
               className="flex-1 bg-transparent text-white border border-blue-400/50 py-1.5 px-3 rounded-full font-semibold text-xs cursor-pointer hover:bg-white/10 transition-colors"
             >
-              {appLang === 'bn' ? 'আগেরটি দেখুন' : 'View Existing'}
+              {uiText(appLang, 'viewExisting')}
             </button>
           </div>
         </div>

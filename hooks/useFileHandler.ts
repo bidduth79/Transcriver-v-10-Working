@@ -8,6 +8,7 @@ import {
 import { isSupportedMediaFile } from './fileHandler/mediaDuration';
 import { loadNewFileMetadata, loadHistoryFileMetadata } from './fileHandler/loadFileMetadata';
 import { loadHistoryTranscript } from './history/useHistoryTranscript';
+import { uiText } from '../utils/uiText';
 
 const MAX_FILE_SIZE = 70 * 1024 * 1024;
 
@@ -113,7 +114,7 @@ export const useFileHandler = ({
       date: existingHistoryItem.publishedDate
     });
     setActiveHistoryId(existingHistoryItem.id);
-    addToast(appLang === 'bn' ? "হিস্টোরি লোড হয়েছে" : "History loaded", 'info');
+    addToast(uiText(appLang, 'historyLoaded'), 'info');
   };
 
   const handleFileChange = (e: FileChangeEvent, autoStart: boolean = false) => {
@@ -127,7 +128,7 @@ export const useFileHandler = ({
 
     const selectedFile = files[0];
     if (selectedFile.size > MAX_FILE_SIZE) {
-      addToast(appLang === 'bn' ? 'ফাইল সাইজ ৭০ এমবি এর বেশি হতে পারবে না' : 'File size cannot exceed 70MB', 'error');
+      addToast(uiText(appLang, 'fileSizeCannotExceed70mb'), 'error');
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }

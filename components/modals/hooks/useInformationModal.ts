@@ -3,6 +3,7 @@ import { getApiUrl } from '../../../services/api';
 import { isLocalServerEnabled } from '../../../utils/config';
 import { messageOf } from '../../../utils/errorMessage';
 import type { ToastType } from '../../../hooks/useToast';
+import { uiText } from '../../../utils/uiText';
 
 interface Options {
     addToast?: (msg: string, type: ToastType) => void;
@@ -18,7 +19,7 @@ export const useInformationModal = ({ addToast, appLang }: Options) => {
 
     const runDbSetup = async () => {
         if (!isLocalServerEnabled()) {
-            if (addToast) addToast(appLang === 'bn' ? 'লোকাল জেম্প সার্ভার অপশনটি সেটিংস থেকে বন্ধ রাখা হয়েছে।' : 'Local XAMPP Server is currently disabled in Settings.', 'warning');
+            if (addToast) addToast(uiText(appLang, 'localXamppServerIsCurrentlyDisabled'), 'warning');
             return;
         }
         try {
@@ -36,13 +37,13 @@ export const useInformationModal = ({ addToast, appLang }: Options) => {
             }
 
             if (data.status === 'success') {
-                if (addToast) addToast(appLang === 'bn' ? 'ডাটাবেস সেটআপ সফল হয়েছে!' : 'Database Setup Successful!', 'success');
+                if (addToast) addToast(uiText(appLang, 'databaseSetupSuccessful'), 'success');
             } else {
                 if (addToast) addToast('Setup Error: ' + (data.message || 'Unknown'), 'error');
             }
         } catch (e) {
             console.error("Fetch error:", e);
-            if (addToast) addToast((appLang === 'bn' ? 'সার্ভার কানেকশন ব্যর্থ: ' : 'Server Connection Failed: ') + (messageOf(e) || 'Unknown error'), 'error');
+            if (addToast) addToast((uiText(appLang, 'serverConnectionFailed')) + (messageOf(e) || 'Unknown error'), 'error');
         }
     };
 

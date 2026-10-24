@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getSensitiveKeywords, setSensitiveKeywords } from '../../../utils/sensitiveKeywords';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { ToastType } from '../../../hooks/useToast';
+import { uiText } from '../../../utils/uiText';
 
 interface SettingsKeywordsProps {
     isDark: boolean;
@@ -25,14 +26,14 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
         setKeywords(newKeywords);
         setSensitiveKeywords(newKeywords);
         setNewKeywordInput('');
-        addToast(appLang === 'bn' ? 'শব্দ যুক্ত করা হয়েছে' : 'Keywords added', 'success');
+        addToast(uiText(appLang, 'keywordsAdded'), 'success');
     };
 
     const handleRemoveKeyword = (kwToRemove: string) => {
         const newKeywords = keywords.filter(kw => kw !== kwToRemove);
         setKeywords(newKeywords);
         setSensitiveKeywords(newKeywords);
-        addToast(appLang === 'bn' ? 'শব্দ মুছে ফেলা হয়েছে' : 'Keyword removed', 'warning');
+        addToast(uiText(appLang, 'keywordRemoved'), 'warning');
     };
 
     return (
@@ -40,12 +41,12 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
             {/* Input Area */}
             <div className={`p-6 rounded-3xl border flex flex-col gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                 <h3 className="text-xs font-black uppercase tracking-widest opacity-60">
-                    {appLang === 'bn' ? 'নতুন সংবেদনশীল শব্দ যুক্ত করুন (কমা দিয়ে আলাদা করুন)' : 'Add New Sensitive Keywords (comma separated)'}
+                    {uiText(appLang, 'addNewSensitiveKeywordsCommaSeparated')}
                 </h3>
                 <div className="flex gap-4">
                     <input 
                         type="text" 
-                        placeholder={appLang === 'bn' ? "শব্দ লিখুন..." : "Enter keywords..."}
+                        placeholder={uiText(appLang, 'enterKeywords')}
                         value={newKeywordInput}
                         onChange={e => setNewKeywordInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' ? handleAddKeyword() : null}
@@ -56,7 +57,7 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
                         disabled={!newKeywordInput.trim()}
                         className={`px-6 py-3 ${activeColors.primary} text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all disabled:opacity-50`}
                     >
-                        {appLang === 'bn' ? 'যুক্ত করুন' : 'ADD'}
+                        {uiText(appLang, 'add')}
                     </button>
                 </div>
             </div>
@@ -65,7 +66,7 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
             <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                 {keywords.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center opacity-30">
-                        <p className="text-sm font-black uppercase tracking-widest">{appLang === 'bn' ? 'কোনো শব্দ পাওয়া যায়নি' : 'No Keywords Found'}</p>
+                        <p className="text-sm font-black uppercase tracking-widest">{uiText(appLang, 'noKeywordsFound')}</p>
                     </div>
                 ) : (
                     <div className="flex flex-wrap gap-3">
@@ -80,7 +81,7 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
                                 <button 
                                     onClick={() => handleRemoveKeyword(kw)}
                                     className="text-slate-400 hover:text-red-500 transition-all rounded-full p-1"
-                                    title={appLang === 'bn' ? 'মুছে ফেলুন' : 'Remove Keyword'}
+                                    title={uiText(appLang, 'removeKeyword')}
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>

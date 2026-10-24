@@ -1,6 +1,7 @@
 import React from 'react';
 import { FailedFile } from '../../hooks/useBatchProcessor';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import { uiText } from '../../utils/uiText';
 
 interface BatchSummaryModalProps {
   isOpen: boolean;
@@ -45,10 +46,10 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
             </div>
             <div>
               <h3 className={`text-xl font-black uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                {appLang === 'bn' ? 'ব্যাচ প্রসেসিং রিপোর্ট' : 'Batch Processing Report'}
+                {uiText(appLang, 'batchProcessingReport')}
               </h3>
               <p className={`text-sm mt-1 font-medium ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
-                {appLang === 'bn' ? `মোট ${totalFiles}টি ফাইল প্রসেস করা হয়েছে` : `Processed ${totalFiles} files in total`}
+                {uiText(appLang, 'batchProcessedTotal', { totalFiles })}
               </p>
             </div>
           </div>
@@ -61,13 +62,13 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className={`p-5 rounded-2xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-100'}`}>
               <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
-                {appLang === 'bn' ? 'সফল হয়েছে' : 'Succeeded'}
+                {uiText(appLang, 'succeeded')}
               </p>
               <p className="text-4xl font-black text-emerald-500 tabular-nums">{processedCount}</p>
             </div>
             <div className={`p-5 rounded-2xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-100'}`}>
               <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
-                {appLang === 'bn' ? 'ব্যর্থ হয়েছে' : 'Failed'}
+                {uiText(appLang, 'failed')}
               </p>
               <p className={`text-4xl font-black tabular-nums ${hasFailed ? 'text-rose-500' : isDark ? 'text-white/20' : 'text-slate-300'}`}>{failedFiles.length}</p>
             </div>
@@ -76,7 +77,7 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
           {hasFailed && (
             <div>
               <h4 className={`text-sm font-bold uppercase tracking-wider mb-4 ${isDark ? 'text-white/70' : 'text-slate-700'}`}>
-                {appLang === 'bn' ? 'ব্যর্থ ফাইলসমূহ' : 'Failed Files'}
+                {uiText(appLang, 'failedFiles')}
               </h4>
               <div className="space-y-3">
                 {failedFiles.map((failed, idx) => (
@@ -102,7 +103,7 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
                 onClick={onClose}
                 className={`flex-1 py-3.5 rounded-xl font-bold uppercase tracking-wider text-sm transition-all border ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
               >
-                {appLang === 'bn' ? 'বন্ধ করুন' : 'Close'}
+                {uiText(appLang, 'close')}
               </button>
               <button 
                 onClick={() => {
@@ -111,7 +112,7 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
                 }}
                 className={`flex-1 py-3.5 rounded-xl font-bold uppercase tracking-wider text-sm transition-all text-white shadow-lg hover:scale-[1.02] active:scale-[0.98] ${activeColors.primary}`}
               >
-                {appLang === 'bn' ? 'পুনরায় চেষ্টা করুন' : 'Retry Failed'}
+                {uiText(appLang, 'retryFailed')}
               </button>
             </>
           ) : (
@@ -119,7 +120,7 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
               onClick={onClose}
               className={`w-full py-3.5 rounded-xl font-bold uppercase tracking-wider text-sm transition-all text-white shadow-lg hover:scale-[1.02] active:scale-[0.98] ${activeColors.primary}`}
             >
-              {appLang === 'bn' ? 'ঠিক আছে' : 'OK'}
+              {uiText(appLang, 'ok')}
             </button>
           )}
         </div>

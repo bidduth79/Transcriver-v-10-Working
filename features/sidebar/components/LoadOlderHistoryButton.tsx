@@ -5,6 +5,7 @@ import { isFirebaseConfigured } from '../../../services/firebase';
 import { fetchOlderHistoryFromCloud } from '../../../services/firebaseSync/historyRangePull';
 import type { Translations } from '../../../translations';
 import type { HistoryItem } from '../../../types';
+import { uiText } from '../../../utils/uiText';
 
 interface Props {
   t: Translations;
@@ -24,7 +25,7 @@ export const LoadOlderHistoryButton = ({ t, isDark, appLang, history }: Props) =
       const oldest = history.reduce<string | undefined>((min, h) => (h?.date && (!min || h.date < min) ? h.date : min), undefined);
       const added = await fetchOlderHistoryFromCloud(oldest);
       if (added) {
-        toast.success(appLang === 'bn' ? `${added}${t.olderItemsAdded}` : `${added} ${t.olderItemsAdded}`);
+        toast.success(uiText(appLang, 'olderItemsAddedCount', { added, olderItemsAdded: t.olderItemsAdded }));
       } else if (added === 0) {
         toast.info(t.noOlderCloudData);
       } else {

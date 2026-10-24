@@ -11,6 +11,7 @@ import { useAppStore } from '../../../hooks/useAppStore';
 import { messageOf } from '../../../utils/errorMessage';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { ToastType } from '../../../hooks/useToast';
+import { uiText } from '../../../utils/uiText';
 
 interface SettingsSyncProps {
     isDark: boolean;
@@ -55,22 +56,22 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
         setXamppEnabled(nextState);
         addToast(
             nextState 
-                ? (appLang === 'bn' ? '🖥️ লোকাল জেম্প সার্ভার সিঙ্ক চালু করা হয়েছে' : '🖥️ Local XAMPP Server sync enabled')
-                : (appLang === 'bn' ? '🖥️ লোকাল জেম্প সার্ভার সিঙ্ক বন্ধ করা হয়েছে' : '🖥️ Local XAMPP Server sync disabled'),
+                ? (uiText(appLang, 'localXamppServerSyncEnabled'))
+                : (uiText(appLang, 'localXamppServerSyncDisabled')),
             nextState ? 'success' : 'info'
         );
     };
 
     const handleGentleCloudPull = async () => {
         if (fbStats.isPulling || isSyncing) return;
-        addToast(appLang === 'bn' ? 'ফায়ারবেইজ থেকে ধীরে ধীরে ডাটা চেক করা হচ্ছে...' : 'Checking Firebase gently...', 'info');
+        addToast(uiText(appLang, 'checkingFirebaseGently'), 'info');
         const res = await scheduleGentleFirebasePull(() => {
             useAppStore.getState().triggerStoreUpdate('studio_history');
         }, true);
         if (res.pulledCount > 0) {
-            addToast(appLang === 'bn' ? `ফায়ারবেইজ থেকে ${res.pulledCount}টি নতুন ডাটা যুক্ত হয়েছে!` : `Merged ${res.pulledCount} records from Firebase`, 'success');
+            addToast(uiText(appLang, 'firebaseMerged', { pulledCount: res.pulledCount }), 'success');
         } else {
-            addToast(appLang === 'bn' ? `সকল ডাটা আপ-টু-ডেট আছে (ক্লাউডে মোট: ${res.cloudTotal}টি)` : `All records up to date (Cloud total: ${res.cloudTotal})`, 'info');
+            addToast(uiText(appLang, 'firebaseUpToDate', { cloudTotal: res.cloudTotal }), 'info');
         }
     };
 
@@ -85,10 +86,10 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                 setSyncProgress(pct);
             });
             useAppStore.getState().triggerStoreUpdate('studio_history');
-            addToast(appLang === 'bn' ? 'সকল ডাটাবেইজ সিনক্রোনাইজ সম্পন্ন হয়েছে' : 'All Databases Synced Successfully', 'success');
+            addToast(uiText(appLang, 'allDatabasesSyncedSuccessfully'), 'success');
         } catch (e) {
             setSyncStatus('Failed: ' + messageOf(e));
-            addToast(appLang === 'bn' ? 'অপারেশন ব্যর্থ হয়েছে' : 'Operation Failed', 'error');
+            addToast(uiText(appLang, 'operationFailed'), 'error');
         } finally {
             setIsSyncing(false);
         }
@@ -101,7 +102,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                 {/* Firebase Status */}
                 <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                     <h3 className="text-xs font-black uppercase tracking-widest mb-3 opacity-60">
-                        {appLang === 'bn' ? 'ফায়ারবেস ক্লাউড স্ট্যাটাস' : 'Firebase Cloud Status'}
+                        {uiText(appLang, 'firebaseCloudStatus')}
                     </h3>
                     <div className="flex items-center gap-3">
                         <div className={`w-3 h-3 rounded-full ${cloudConnection.includes('Online') ? 'bg-green-500 shadow-lg shadow-green-500/50' : 'bg-red-500 shadow-lg shadow-red-500/50'}`}></div>
@@ -116,10 +117,10 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                 <div className={`p-6 rounded-3xl border flex items-center justify-between gap-3 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                     <div>
                         <h3 className="text-xs font-black uppercase tracking-widest opacity-60 mb-1">
-                            {appLang === 'bn' ? 'লোকাল জেম্প সার্ভার (XAMPP)' : 'Local XAMPP Server'}
+                            {uiText(appLang, 'localXamppServer')}
                         </h3>
                         <p className="text-[10px] opacity-60">
-                            {xamppEnabled ? '127.0.0.1/licell_api সক্রিয়' : (appLang === 'bn' ? 'আপতত সম্পূর্ণ বন্ধ (OFF)' : 'Completely Paused')}
+                            {xamppEnabled ? '127.0.0.1/licell_api সক্রিয়' : (uiText(appLang, 'completelyPaused'))}
                         </p>
                     </div>
                     <button
@@ -189,7 +190,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                             </div>
                             <div className="text-center">
-                                <span className="block text-sm font-black uppercase tracking-widest mb-1">{appLang === 'bn' ? 'দ্বিমুখী মাস্টার ডাটাবেস সিঙ্ক' : 'MANUAL DATABASE SYNC'}</span>
+                                <span className="block text-sm font-black uppercase tracking-widest mb-1">{uiText(appLang, 'manualDatabaseSync')}</span>
                                 <span className="block text-[10px] opacity-60 font-bold max-w-[280px] mx-auto">
                                     {xamppEnabled ? 'Local XAMPP ↔ IndexedDB ↔ Firebase' : 'IndexedDB (Local Storage) ↔ Firebase Cloud'}
                                 </span>

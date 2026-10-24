@@ -5,6 +5,7 @@ import { useSpeakerProfile } from '../../../hooks/useSpeakerProfile';
 import { escapeRegExp } from '../TranscriptViewer';
 import type { TranscriptOutputProps } from '../transcriptOutputTypes';
 import type { HistoryItem } from '../../../types';
+import { uiText } from '../../../utils/uiText';
 
 type Options = Pick<TranscriptOutputProps,
   'appLang' | 'transcript' | 'setTranscript' | 'addToast' | 'activeHistoryId' | 'matchCount' | 'searchTerm' |
@@ -22,13 +23,13 @@ export const useTranscriptOutputState = ({
   const logo = useLogoAnimation();
 
   const handleRenameSpeaker = React.useCallback(async (oldName: string) => {
-    const newName = window.prompt(appLang === 'bn' ? `"${oldName}" এর নতুন নাম দিন:` : `Rename "${oldName}" to:`, oldName);
+    const newName = window.prompt(uiText(appLang, 'renameSpeakerPrompt', { oldName }), oldName);
     if (newName && newName.trim() !== '' && newName !== oldName) {
       // Find occurrences of **oldName** or **oldName:** and replace with newName
       const regex = new RegExp(`\\*\\*\\s*${escapeRegExp(oldName)}\\s*(:?)\\s*\\*\\*`, 'gi');
       const updatedTranscript = transcript.replace(regex, `**${newName}$1**`);
       setTranscript(updatedTranscript);
-      addToast(appLang === 'bn' ? 'স্পীকারের নাম পরিবর্তন করা হয়েছে' : 'Speaker renamed successfully', 'success');
+      addToast(uiText(appLang, 'speakerRenamedSuccessfully'), 'success');
 
       if (activeHistoryId) {
         const { getFromStore, addToStore, STORES } = await import('../../../services/db');

@@ -6,6 +6,7 @@ import { HoldToDeleteProgress } from './components/HoldToDeleteProgress';
 import { SensitiveMatchBadge } from './components/SensitiveMatchBadge';
 import { HistoryCardStatsRow } from './components/HistoryCardStatsRow';
 import type { HistoryCardProps } from './historyCardTypes';
+import { uiText } from '../../utils/uiText';
 
 export const HistoryItemCard = memo(({ 
   item, 
@@ -30,7 +31,7 @@ export const HistoryItemCard = memo(({
 
   const formattedTime = useMemo(() => {
     try {
-      return new Date(item.date).toLocaleTimeString(appLang === 'bn' ? 'bn-BD' : 'en-US', { timeStyle: 'short' });
+      return new Date(item.date).toLocaleTimeString(uiText(appLang, 'dateLocale'), { timeStyle: 'short' });
     } catch {
       return '';
     }
@@ -92,7 +93,7 @@ export const HistoryItemCard = memo(({
                 <svg className="w-3 h-3 transition-transform group-hover:scale-125" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 <span>{formattedTime}</span>
                 {item.hasBeenOpened && (
-                  <span title={appLang === 'bn' ? "ইতিপূর্বে খোলা হয়েছে" : "Previously Opened"}>
+                  <span title={uiText(appLang, 'previouslyOpened')}>
                     <svg className={`w-3 h-3 ml-0.5 ${isActive ? (isDark ? 'text-green-400' : 'text-green-600') : 'text-indigo-400/70 group-hover:text-indigo-500'} transition-colors`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -103,7 +104,7 @@ export const HistoryItemCard = memo(({
             <div className="flex items-center gap-1.5">
                 {isPressing && (
                     <span className="shrink-0 px-1.5 py-0.5 text-[8px] font-black rounded uppercase tracking-wider bg-red-500 text-white animate-pulse">
-                        {appLang === 'bn' ? 'ডিলিট হচ্ছে...' : 'DELETING...'}
+                        {uiText(appLang, 'deleting')}
                     </span>
                 )}
                 {!isPressing && isDuplicate && (

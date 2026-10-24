@@ -11,6 +11,7 @@ import type { ToastType } from '../../../hooks/useToast';
 import type { SpeakerProfile } from '../../../types/speaker';
 import type { SpeakerCustomNote } from '../../../types/speaker';
 import type { FormattedTranscriptProps } from '../TranscriptViewer';
+import { uiText } from '../../../utils/uiText';
 
 export interface TranscriptModalsProps {
   isSummaryOpen: boolean;
@@ -138,7 +139,7 @@ export const TranscriptModals: React.FC<TranscriptModalsProps> = ({
             setTranscript(h.transcript ?? await loadHistoryTranscript(h.id));
             setStatus('completed');
             setIsAnalysisOpen(false);
-            addToast(appLang === 'bn' ? "হিস্টোরি লোড হয়েছে" : "History loaded", 'info');
+            addToast(uiText(appLang, 'historyLoaded'), 'info');
           }}
         />
       )}

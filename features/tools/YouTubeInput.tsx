@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { getApiUrl, isLocalServerEnabled } from '../../utils/config';
 import { messageOf } from '../../utils/errorMessage';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import { uiText } from '../../utils/uiText';
 
 interface YouTubeInputProps {
   onSuccess: (blob: Blob, fileName: string, mode: string) => void;
@@ -51,17 +52,15 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
         onSuccess(blob, data.filename || 'youtube_audio.mp3', 'transcribe');
         setUrl('');
       } else {
-        throw new Error(appLang === 'bn' ? 'অডিও ডাউনলোড করা যায়নি' : 'Failed to download audio');
+        throw new Error(uiText(appLang, 'failedToDownloadAudio'));
       }
     } catch (err) {
       console.error('YouTube link error:', err);
       // A network error means the local server could not be reached
       if (err instanceof TypeError) {
-        setError(appLang === 'bn'
-          ? 'লোকাল সার্ভারে পৌঁছানো যায়নি। কম্পিউটারে XAMPP চালু আছে কিনা এবং সেটিংসে সার্ভারের ঠিকানা দেখুন।'
-          : 'Could not reach the local server. Check that XAMPP is running and the server address in Settings.');
+        setError(uiText(appLang, 'couldNotReachTheLocalServer'));
       } else {
-        setError(messageOf(err) || (appLang === 'bn' ? 'লিংক প্রসেস করতে ব্যর্থ হয়েছে' : 'Failed to process link'));
+        setError(messageOf(err) || (uiText(appLang, 'failedToProcessLink')));
       }
     } finally {
       setLoading(false);
@@ -72,9 +71,7 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
     <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full">
       {!isLocalServerEnabled() && (
         <p className={`text-[10px] font-medium px-1 leading-relaxed ${isDark ? 'text-amber-300/80' : 'text-amber-700'}`}>
-          {appLang === 'bn'
-            ? 'লিংক থেকে অডিও আনতে আপনার কম্পিউটারের লোকাল সার্ভার (XAMPP + yt-dlp) লাগে। সেটিংস → ক্লাউড সিঙ্ক থেকে লোকাল সার্ভার চালু করুন।'
-            : 'Loading audio from a link needs your local server (XAMPP + yt-dlp). Turn it on in Settings → Cloud Sync.'}
+          {uiText(appLang, 'loadingAudioFromALinkNeeds')}
         </p>
       )}
       <div className="relative flex items-center">
@@ -82,7 +79,7 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
           type="text"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder={appLang === 'bn' ? 'ইউটিউব বা ফেসবুক লিংক পেস্ট করুন...' : 'Paste YouTube or Facebook link...'}
+          placeholder={uiText(appLang, 'pasteYoutubeOrFacebookLink')}
           disabled={loading}
           className={`w-full px-3 py-2.5 text-xs rounded-xl border transition-all outline-none ${
             isDark 
@@ -119,10 +116,10 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
         {loading ? (
           <>
             <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            <span>{appLang === 'bn' ? 'ডাউনলোড হচ্ছে...' : 'Processing...'}</span>
+            <span>{uiText(appLang, 'processing')}</span>
           </>
         ) : (
-          <span>{appLang === 'bn' ? 'লোড করুন' : 'Load Audio'}</span>
+          <span>{uiText(appLang, 'loadAudio')}</span>
         )}
       </button>
     </form>

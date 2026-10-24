@@ -3,6 +3,7 @@ import { isMicrophoneEnabled, setMicrophoneEnabled } from '../../../hooks/useAud
 import { isLocalServerEnabled, setLocalServerEnabled } from '../../../utils/config';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { ToastType } from '../../../hooks/useToast';
+import { uiText } from '../../../utils/uiText';
 
 interface SettingsSystemProps {
     isDark: boolean;
@@ -26,8 +27,8 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
         setMicEnabled(nextState);
         addToast(
             nextState 
-                ? (appLang === 'bn' ? '🎙️ মাইক্রোফোন অপশন চালু করা হয়েছে' : '🎙️ Microphone option enabled')
-                : (appLang === 'bn' ? '🎙️ মাইক্রোফোন অপশন বন্ধ করা হয়েছে' : '🎙️ Microphone option disabled'),
+                ? (uiText(appLang, 'microphoneOptionEnabled'))
+                : (uiText(appLang, 'microphoneOptionDisabled')),
             nextState ? 'success' : 'info'
         );
     };
@@ -38,8 +39,8 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
         setXamppEnabled(nextState);
         addToast(
             nextState 
-                ? (appLang === 'bn' ? '🖥️ লোকাল জেম্প সার্ভার চালু করা হয়েছে' : '🖥️ Local XAMPP Server enabled')
-                : (appLang === 'bn' ? '🖥️ লোকাল জেম্প সার্ভার বন্ধ করা হয়েছে' : '🖥️ Local XAMPP Server disabled'),
+                ? (uiText(appLang, 'localXamppServerEnabled'))
+                : (uiText(appLang, 'localXamppServerDisabled')),
             nextState ? 'success' : 'info'
         );
     };
@@ -52,13 +53,11 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                     <div className="flex items-center gap-2">
                         <span className="text-lg">🎙️</span>
                         <h3 className="text-sm font-black uppercase tracking-wider">
-                            {appLang === 'bn' ? 'মাইক্রোফোন রেকর্ডিং অপশন' : 'Live Microphone Recording'}
+                            {uiText(appLang, 'liveMicrophoneRecording')}
                         </h3>
                     </div>
                     <p className="text-xs opacity-60">
-                        {appLang === 'bn' 
-                            ? 'সাইডবারে সরাসরি মাইক্রোফোন দিয়ে লাইভ কথা রেকর্ড করার বাটনটি চালু বা বন্ধ রাখুন।' 
-                            : 'Show or hide the live microphone recording button in the left sidebar.'}
+                        {uiText(appLang, 'showOrHideTheLiveMicrophone')}
                     </p>
                 </div>
                 <button
@@ -70,8 +69,8 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                     }`}
                 >
                     {micEnabled 
-                        ? (appLang === 'bn' ? '✓ চালু আছে (ON)' : '✓ ENABLED') 
-                        : (appLang === 'bn' ? '✕ আপতত বন্ধ (OFF)' : '✕ DISABLED')}
+                        ? (uiText(appLang, 'enabled')) 
+                        : (uiText(appLang, 'disabled'))}
                 </button>
             </div>
 
@@ -81,13 +80,11 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                     <div className="flex items-center gap-2">
                         <span className="text-lg">🖥️</span>
                         <h3 className="text-sm font-black uppercase tracking-wider">
-                            {appLang === 'bn' ? 'লোকাল জেম্প সার্ভার (XAMPP - 127.0.0.1)' : 'Local XAMPP Server (127.0.0.1)'}
+                            {uiText(appLang, 'localXamppServer12700')}
                         </h3>
                     </div>
                     <p className="text-xs opacity-60">
-                        {appLang === 'bn' 
-                            ? 'আপনার পিসির লোকাল Apache/PHP (127.0.0.1/licell_api) সিঙ্ক বন্ধ বা চালু রাখুন। বন্ধ থাকলে কোনো নেটওয়ার্ক কল হবে না।' 
-                            : 'Enable or disable sync with local Apache/PHP server. When disabled, zero network calls are made to 127.0.0.1.'}
+                        {uiText(appLang, 'enableOrDisableSyncWithLocal')}
                     </p>
                 </div>
                 <button
@@ -99,23 +96,23 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                     }`}
                 >
                     {xamppEnabled 
-                        ? (appLang === 'bn' ? '✓ চালু আছে (ON)' : '✓ ENABLED') 
-                        : (appLang === 'bn' ? '✕ আপতত বন্ধ (OFF)' : '✕ DISABLED')}
+                        ? (uiText(appLang, 'enabled')) 
+                        : (uiText(appLang, 'disabled'))}
                 </button>
             </div>
 
             {/* 3. Download Path */}
             <div className={`p-6 rounded-3xl border flex flex-col gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                 <h3 className="text-xs font-black uppercase tracking-widest opacity-60">
-                    {appLang === 'bn' ? 'ডাউনলোড পাথ (ফোল্ডার লোকেশন)' : 'Download Path (Folder Location)'}
+                    {uiText(appLang, 'downloadPathFolderLocation')}
                 </h3>
                 <p className="text-[10px] opacity-60">
-                    {appLang === 'bn' ? 'এখানে কোনো পাথ না দিলে ডিফল্টভাবে প্রজেক্টের "downloads" ফোল্ডারে সেভ হবে।' : 'If left empty, files will be saved in the project\'s "downloads" folder by default.'}
+                    {uiText(appLang, 'ifLeftEmptyFilesWillBe')}
                 </p>
                 <div className="flex gap-4">
                     <input 
                         type="text" 
-                        placeholder={appLang === 'bn' ? "যেমন: E:\\MyDownloads" : "e.g. E:\\MyDownloads"}
+                        placeholder={uiText(appLang, 'eGEMydownloads')}
                         value={downloadPath}
                         onChange={e => setDownloadPath(e.target.value)}
                         className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold border outline-none focus:ring-2 ${isDark ? 'bg-slate-800 border-slate-600 text-white focus:ring-indigo-500/50' : 'bg-white border-slate-300 text-slate-800 focus:ring-indigo-500/20'}`}
@@ -123,11 +120,11 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                     <button 
                         onClick={() => {
                             localStorage.setItem('customDownloadPath', downloadPath.trim());
-                            addToast(appLang === 'bn' ? 'ডাউনলোড পাথ সেভ হয়েছে' : 'Download path saved', 'success');
+                            addToast(uiText(appLang, 'downloadPathSaved'), 'success');
                         }}
                         className={`px-6 py-3 ${activeColors.primary} text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer`}
                     >
-                        {appLang === 'bn' ? 'সেভ করুন' : 'SAVE'}
+                        {uiText(appLang, 'save')}
                     </button>
                 </div>
             </div>

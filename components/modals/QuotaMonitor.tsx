@@ -6,6 +6,7 @@ import { QuotaMiniProgress } from './quota/QuotaMiniProgress';
 import { PeakUsageChart } from './quota/PeakUsageChart';
 import { DEFAULT_MODEL } from '../../constants/aiModels';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import { uiText } from '../../utils/uiText';
 
 interface QuotaMonitorProps {
   isDark: boolean;
@@ -35,17 +36,17 @@ export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang }) =
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h2 className={`text-xl font-medium ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>
-            {appLang === 'bn' ? 'এপিআই রেট লিমিট' : 'API Rate Limit'}
+            {uiText(appLang, 'apiRateLimit')}
           </h2>
           <span className="px-2 py-0.5 text-[10px] font-bold border border-slate-300 dark:border-slate-600 rounded-full text-slate-500 dark:text-slate-400">
-            {isCustom ? (appLang === 'bn' ? 'আপনার সীমা' : 'Your limits') : (appLang === 'bn' ? 'আনুমানিক সীমা' : 'Estimated limits')}
+            {isCustom ? (uiText(appLang, 'yourLimits')) : (uiText(appLang, 'estimatedLimits'))}
           </span>
         </div>
         <button
           onClick={() => setIsEditingLimits(v => !v)}
           className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${isDark ? 'border-slate-700 text-slate-300 hover:bg-slate-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
         >
-          {appLang === 'bn' ? 'সীমা বদলান' : 'Edit limits'}
+          {uiText(appLang, 'editLimits')}
         </button>
       </div>
 
@@ -88,7 +89,7 @@ export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang }) =
       <div className="mt-8">
         <div className="flex items-center gap-2 mb-4">
             <h3 className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-            {appLang === 'bn' ? 'পিক ইউসেজ ট্রেন্ড' : 'Peak usage trends'}
+            {uiText(appLang, 'peakUsageTrends')}
             </h3>
             {logs.length > 0 && <span className="text-[10px] bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full font-bold">Active</span>}
         </div>
