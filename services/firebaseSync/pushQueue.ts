@@ -1,11 +1,12 @@
 import { db, authPromise, isFirebaseConfigured } from '../firebase';
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import {
   queueMap, activeProcessingLocks, runtime, syncStats, notifyListeners, isHeavyProcessingActive,
   sleep, IDLE_MESSAGE, THROTTLE_DELAY_MS, INITIAL_IDLE_WAIT_MS, POST_PROCESSING_COOL_DOWN_MS,
 } from './syncState';
 import { withSyncStamp } from './syncStamp';
 import { packForCloud } from './transcriptCompression';
+import { tombstoneFor } from './tombstone';
 
 /**
  * ট্রান্সক্রিপশন বা ব্যাচ প্রসেসিং শুরু/শেষ হলে এই লক কল করা হয়।
@@ -128,7 +129,7 @@ const startWorker = async () => {
               console.debug(`[Firebase Gentle Sync] Sent document ${item.storeName}/${item.id}`);
             }
           } else if (item.action === 'delete') {
-            await deleteDoc(doc(db, item.storeName, item.id));
+            await setDoc(doc(db, item.storeName, item.id), tombstoneFor(item.id));
             console.debug(`[Firebase Gentle Sync] Deleted document ${item.storeName}/${item.id}`);
           }
           syncStats.lastSyncTime = new Date().toLocaleTimeString('bn-BD');

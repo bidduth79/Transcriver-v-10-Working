@@ -1,5 +1,5 @@
 import { db, authPromise, isFirebaseConfigured } from './firebase';
-import { doc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { getApiUrl, isLocalServerEnabled } from '../utils/config';
 import { supabase, isSupabaseConfigured } from './supabase';
 import { addToQueue } from './syncQueue';
@@ -7,6 +7,7 @@ import { FIREBASE_SYNCED_STORES } from '../constants/storeNames';
 import { enqueueFirebaseWrite, enqueueFirebaseDelete } from './firebaseThrottledQueue';
 import { fetchFromPrimaryIdb, fetchFromLocalApi, fetchFromFirebase, fetchFromSupabase } from './sync/syncSources';
 import { withSyncStamp } from './firebaseSync/syncStamp';
+import { tombstoneFor } from './firebaseSync/tombstone';
 import { packForCloud } from './firebaseSync/transcriptCompression';
 
 // ============================================================================
@@ -133,7 +134,7 @@ export const deleteDataDual = async (storeName: string, id: string, forceAll = f
     if (isFirebaseConfigured && db) {
       if (forceAll) {
         promises.push(
-          authPromise.then(() => deleteDoc(doc(db!, storeName, id)))
+          authPromise.then(() => setDoc(doc(db!, storeName, id), tombstoneFor(id)))
             .catch(e => console.warn("Firebase immediate delete warning:", e.message))
         );
       } else if (AUTO_SYNC_FIREBASE_ENABLED) {

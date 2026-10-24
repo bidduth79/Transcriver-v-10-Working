@@ -1,6 +1,7 @@
 import { get, set } from 'idb-keyval';
 import { db, authPromise } from './firebase';
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
+import { tombstoneFor } from './firebaseSync/tombstone';
 import { supabase } from './supabase';
 import { getApiUrl, isLocalServerEnabled } from '../utils/config';
 import { AUTO_SYNC_SUPABASE_ENABLED, AUTO_SYNC_FIREBASE_ENABLED } from './syncEngine';
@@ -57,7 +58,7 @@ export const processQueue = async () => {
                     if (task.action === 'save') {
                         await setDoc(doc(db, task.storeName, task.id), task.payload);
                     } else if (task.action === 'delete') {
-                        await deleteDoc(doc(db, task.storeName, task.id));
+                        await setDoc(doc(db, task.storeName, task.id), tombstoneFor(task.id));
                     }
                     success = true;
                 } else if (task.target === 'supabase' && AUTO_SYNC_SUPABASE_ENABLED) {

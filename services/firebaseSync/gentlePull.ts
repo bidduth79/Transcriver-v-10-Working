@@ -86,6 +86,9 @@ export const scheduleGentleFirebasePull = (
                 syncStats.lastPulledCount = totalNewItemsMerged;
                 notifyListeners();
               },
+              onRemoved: (count) => {
+                if (count > 0) console.debug(`[Firebase Gentle Pull] Removed ${count} ${storeName} items deleted on another device`);
+              },
             });
 
             // App start: only documents saved since the last pull, plus every transcript dated today or
@@ -107,13 +110,13 @@ export const scheduleGentleFirebasePull = (
             }
 
             const cloudCount = parts.reduce((sum, part) => sum + part.cloudCount, 0);
-            const merged = parts.reduce((sum, part) => sum + part.merged, 0);
-            if (cloudCount === 0) {
+            const changed = parts.reduce((sum, part) => sum + part.merged + part.removed, 0);
+            if (cloudCount === 0 && changed === 0) {
               await sleep(600);
               continue;
             }
 
-            if (merged > 0 && isHistory && onHistoryUpdated) {
+            if (changed > 0 && isHistory && onHistoryUpdated) {
               onHistoryUpdated();
             }
           } catch (storeErr: any) {

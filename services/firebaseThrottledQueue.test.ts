@@ -5,7 +5,6 @@ const m = vi.hoisted(() => ({
   local: new Map<string, any>(),
   cloud: {} as Record<string, { id: string; data: any }[]>,
   setDoc: vi.fn(async (..._a: any[]) => {}),
-  deleteDoc: vi.fn(async (..._a: any[]) => {}),
   getDocs: vi.fn(),
 }));
 
@@ -15,7 +14,7 @@ vi.mock('./firebase', () => ({
   authPromise: Promise.resolve(),
 }));
 vi.mock('firebase/firestore', () => ({
-  doc: (_db: any, store: string, id: string) => `${store}/${id}`, setDoc: m.setDoc, deleteDoc: m.deleteDoc, serverTimestamp: () => 'SERVER_TIME',
+  doc: (_db: any, store: string, id: string) => `${store}/${id}`, setDoc: m.setDoc, serverTimestamp: () => 'SERVER_TIME',
 }));
 vi.mock('firebase/firestore/lite', () => ({
   setLogLevel: vi.fn(), getFirestore: () => ({}), collection: (_db: any, name: string) => name,
@@ -98,9 +97,10 @@ describe('push queue', () => {
     await vi.advanceTimersByTimeAsync(2500);
     expect(m.setDoc).toHaveBeenCalledTimes(2);
     await vi.advanceTimersByTimeAsync(2500);
-    expect(m.deleteDoc).toHaveBeenCalledWith('reports/9');
+    // A delete leaves a small marker so other devices remove their copy too
+    expect(m.setDoc).toHaveBeenLastCalledWith('reports/9', { id: '9', _deleted: true, _syncedAt: 'SERVER_TIME' });
     await vi.advanceTimersByTimeAsync(5000);
-    expect(m.setDoc).toHaveBeenCalledTimes(2);
+    expect(m.setDoc).toHaveBeenCalledTimes(3);
     expect(stats(q)).toMatchObject({ pendingWrites: 0, isPushing: false, statusMessageBn: 'ফায়ারবেইজ সিঙ্ক সম্পূর্ণ আপ-টু-ডেট আছে' });
     expect(stats(q).lastSyncTime).not.toBeNull();
     expect(listener).toHaveBeenCalled();

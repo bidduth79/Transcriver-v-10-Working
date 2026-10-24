@@ -1,4 +1,5 @@
 import type { Firestore } from 'firebase/firestore';
+import { DELETED_FIELD } from './tombstone';
 
 const CHECKPOINT_PREFIX = 'firebase_pull_checkpoint_';
 // The device clock and Firestore's clock can differ; overlap is harmless because only missing documents are added
@@ -20,7 +21,9 @@ export const savePullCheckpoint = (storeName: string, pullStartedAt: number) => 
 
 // Number of documents in a cloud collection, counted by Firestore (about one read per 1000 documents)
 export const countCloudDocs = async (db: Firestore, storeName: string) => {
-  const { getFirestore, collection, getCount } = await import('firebase/firestore/lite');
-  const snapshot = await getCount(collection(getFirestore(db.app), storeName));
-  return snapshot.data().count;
+  const { getFirestore, collection, getCount, query, where } = await import('firebase/firestore/lite');
+  const items = collection(getFirestore(db.app), storeName);
+  // Deletion markers are not items; each count costs about one read per 1000 documents
+  const [all, deleted] = await Promise.all([getCount(items), getCount(query(items, where(DELETED_FIELD, '==', true)))]);
+  return all.data().count - deleted.data().count;
 };

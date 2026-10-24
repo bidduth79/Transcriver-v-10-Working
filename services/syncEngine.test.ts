@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const m = vi.hoisted(() => ({
   local: { value: false }, fbConfigured: { value: true }, sbConfigured: { value: true },
   idb: [] as any[], fb: [] as any[], sbPages: [] as any[][], sbError: null as any,
-  setDoc: vi.fn(async () => {}), deleteDoc: vi.fn(async () => {}), addToQueue: vi.fn(),
+  setDoc: vi.fn(async () => {}), addToQueue: vi.fn(),
   enqueueWrite: vi.fn(), enqueueDelete: vi.fn(), upsert: vi.fn(), sbDelete: vi.fn(),
 }));
 
@@ -11,7 +11,7 @@ vi.mock('./firebase', () => ({ get db() { return m.fbConfigured.value ? {} : nul
 vi.mock('firebase/firestore', () => ({
   collection: (_d: any, n: string) => n, doc: (_d: any, s: string, id: string) => `${s}/${id}`,
   getDocs: vi.fn(async () => ({ docs: m.fb.map(d => ({ id: d.id, data: () => d })) })),
-  setDoc: m.setDoc, deleteDoc: m.deleteDoc, serverTimestamp: () => 'SERVER_TIME',
+  setDoc: m.setDoc, serverTimestamp: () => 'SERVER_TIME',
 }));
 vi.mock('../utils/config', () => ({ getApiUrl: (p: string) => `http://local/${p}`, isLocalServerEnabled: () => m.local.value }));
 vi.mock('./supabase', () => ({
@@ -118,7 +118,7 @@ describe('saveDataDual / deleteDataDual', () => {
     await SE.deleteDataDual('studio_history', 'a', true);
     expect(fetchMock).toHaveBeenLastCalledWith('http://local/api.php?action=delete&store=studio_history&id=a');
     expect(m.addToQueue).toHaveBeenLastCalledWith('local', 'delete', 'studio_history', 'a');
-    expect(m.deleteDoc).toHaveBeenCalledWith('studio_history/a');
+    expect(m.setDoc).toHaveBeenLastCalledWith('studio_history/a', { id: 'a', _deleted: true, _syncedAt: 'SERVER_TIME' });
     expect(m.sbDelete).toHaveBeenCalledWith('a');
     expect(m.addToQueue).toHaveBeenCalledTimes(2);
   });

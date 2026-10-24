@@ -25,7 +25,12 @@ vi.mock('firebase/firestore/lite', () => ({
   query: (name: string, ...c: any[]) => Object.assign({ name }, ...c),
   orderBy: () => ({}), documentId: () => '__name__', startAfter: (d: any) => ({ after: d.id }), limit: (n: number) => ({ lim: n }),
   where: (field: string, _op: string, min: any) => ({ field, min }), Timestamp: { fromDate: (d: Date) => ({ ms: d.getTime() }) },
-  getCount: async (name: string) => { m.counts++; return { data: () => ({ count: (m.cloud[name] || []).length }) }; },
+  // A query object here is the count of deletion markers
+  getCount: async (q: any) => {
+    m.counts++;
+    const docs = typeof q === 'string' ? (m.cloud[q] || []) : (m.cloud[q.name] || []).filter((d: any) => d.data[q.field] === q.min);
+    return { data: () => ({ count: docs.length }) };
+  },
   getDocs: m.getDocs,
 }));
 
@@ -41,6 +46,7 @@ const fakeIdb = {
         return req;
       },
       put: (item: any) => { m.local.set(`${store}::${item.id}`, item); queueMicrotask(() => tx.oncomplete?.()); },
+      delete: (id: string) => { m.local.delete(`${store}::${id}`); queueMicrotask(() => tx.oncomplete?.()); },
     });
     return tx;
   },
@@ -114,7 +120,7 @@ describe('gentle pull', () => {
     expect([...m.local.keys()].sort()).toEqual(['studio_history::old0', 'studio_history::t', 'studio_history::y', 'studio_reports::r-new']);
     expect(m.local.get('studio_history::t')).toEqual({ id: 't', fileName: 'today', date: new Date(NOW - 3600000).toISOString() });
     expect(m.docsRead).toBe(4);
-    expect(m.counts).toBe(1);
+    expect(m.counts).toBe(2);
     expect(onHistory).toHaveBeenCalledTimes(1);
     expect(stats(q)).toMatchObject({ isPulling: false, lastPulledCount: 3, totalCloudHistoryDocs: 12 });
     // The pull started 4s after launch; the checkpoint keeps a 10-minute overlap for clock differences
@@ -133,6 +139,19 @@ describe('gentle pull', () => {
     // 'n' via the stamp and via its date, 't' via its date, and 'r-new' again inside the 10-minute overlap
     expect(m.docsRead).toBe(4);
     expect(m.local.size).toBe(5);
+  });
+
+  it('removes an item deleted on another device and does not count its marker', async () => {
+    seed();
+    await runPull(await load());
+    vi.resetModules();
+    vi.setSystemTime(NOW + 3600000);
+    m.cloud.studio_history = m.cloud.studio_history.map(d => (d.id === 't' ? { id: 't', data: { _deleted: true, _syncedAt: { ms: NOW + 3500000 } } } : d));
+    const onHistory = vi.fn();
+    expect(await runPull(await load(), onHistory)).toEqual({ pulledCount: 0, cloudTotal: 11 });
+    expect(m.local.has('studio_history::t')).toBe(false);
+    expect(m.local.has('studio_history::y')).toBe(true);
+    expect(onHistory).toHaveBeenCalledTimes(1);
   });
 
   it('a manual sync from Settings still brings every missing document', async () => {

@@ -3,6 +3,7 @@ import type { QueryDocumentSnapshot, QueryConstraint, QuerySnapshot } from 'fire
 import { syncStats, notifyListeners, sleep } from './syncState';
 import { withoutSyncStamp } from './syncStamp';
 import { unpackFromCloud } from './transcriptCompression';
+import { isTombstone } from './tombstone';
 
 // Documents fetched per request; only one page is held in memory at a time
 export const PULL_PAGE_SIZE = 50;
@@ -35,6 +36,18 @@ const putChunk = (idb: IDBDatabase, storeName: string, chunk: any[]) => new Prom
   }
 });
 
+const deleteKeys = (idb: IDBDatabase, storeName: string, ids: string[]) => new Promise<void>((res) => {
+  try {
+    const tx = idb.transaction([storeName], 'readwrite');
+    const st = tx.objectStore(storeName);
+    ids.forEach(id => st.delete(id));
+    tx.oncomplete = () => res();
+    tx.onerror = () => res();
+  } catch (e) {
+    res();
+  }
+});
+
 interface PullStoreOptions {
   db: Firestore;
   idb: IDBDatabase;
@@ -42,6 +55,8 @@ interface PullStoreOptions {
   shouldStop: () => boolean;
   onCloudCount: (count: number) => void;
   onMerged: (count: number) => void;
+  // Local items removed because they were deleted on another device
+  onRemoved?: (count: number) => void;
   // Only documents whose `field` is at least `min` and below `max` (a Date is compared as a Firestore timestamp)
   since?: { field: string; min: string | Date; max?: string };
   // Sees every cloud document read (also ones already stored locally)
@@ -51,9 +66,10 @@ interface PullStoreOptions {
 /**
  * Copies cloud documents that are missing locally, one page at a time, so a large collection
  * never sits in memory at once. Stops between pages when `shouldStop` turns true.
- * Returns how many cloud documents were seen, how many were added locally, and whether it read to the end.
+ * A deletion marker removes the local copy instead. Returns how many cloud items were seen, how many were
+ * added and removed locally, and whether it read to the end.
  */
-export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloudCount, onMerged, since, onCloudDoc }: PullStoreOptions) => {
+export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloudCount, onMerged, onRemoved, since, onCloudDoc }: PullStoreOptions) => {
   // Read through the cache-free Lite SDK: the full SDK's memory cache keeps every pulled document
   // (all transcripts) in memory for the rest of the session. Loaded only when a pull runs.
   const { getFirestore, collection, getDocs, query, orderBy, limit, startAfter, documentId, setLogLevel, where, Timestamp } = await import('firebase/firestore/lite');
@@ -63,6 +79,7 @@ export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloud
   let lastDoc: QueryDocumentSnapshot | null = null;
   let cloudCount = 0;
   let merged = 0;
+  let removed = 0;
   let completed = false;
   const filter: QueryConstraint[] = since
     ? [
@@ -77,21 +94,30 @@ export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloud
       ? [...filter, startAfter(lastDoc), limit(PULL_PAGE_SIZE)]
       : [...filter, limit(PULL_PAGE_SIZE)];
     const snap: QuerySnapshot = await getDocs(query(collection(liteDb, storeName), ...constraints));
-    cloudCount += snap.size;
+    cloudCount += snap.docs.filter(docSnap => !isTombstone(docSnap.data())).length;
     onCloudCount(cloudCount);
-
     if (snap.empty) { completed = true; break; }
     if (!existingKeys) existingKeys = await getLocalKeys(idb, storeName);
 
     // শুধুমাত্র যে ডকুমেন্টগুলো লোকালে নেই সেগুলো আলাদা করুন (যাতে অযথা ডুপ্লিকেট রাইট না হয়)
     const packedDocs: any[] = [];
+    const deletedIds: string[] = [];
     snap.forEach((docSnap) => {
       const docId = String(docSnap.id);
       onCloudDoc?.(docId, docSnap.data());
-      if (!existingKeys!.has(docId)) {
+      if (isTombstone(docSnap.data())) {
+        if (existingKeys!.has(docId)) deletedIds.push(docId);
+      } else if (!existingKeys!.has(docId)) {
         packedDocs.push({ id: docId, ...withoutSyncStamp(docSnap.data()) });
       }
     });
+    if (deletedIds.length > 0) {
+      await deleteKeys(idb, storeName, deletedIds);
+      deletedIds.forEach(id => existingKeys!.delete(id));
+      removed += deletedIds.length;
+      onRemoved?.(deletedIds.length);
+    }
+
     // Long transcripts are stored gzipped in the cloud
     const missingDocs = await Promise.all(packedDocs.map(item => unpackFromCloud(item)));
 
@@ -114,5 +140,5 @@ export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloud
     lastDoc = snap.docs[snap.docs.length - 1];
   }
 
-  return { cloudCount, merged, completed };
+  return { cloudCount, merged, removed, completed };
 };

@@ -4,6 +4,7 @@ import { getApiUrl, isLocalServerEnabled } from '../../utils/config';
 import { supabase, isSupabaseConfigured } from '../supabase';
 import { withoutSyncStamp } from '../firebaseSync/syncStamp';
 import { unpackFromCloud } from '../firebaseSync/transcriptCompression';
+import { isTombstone } from '../firebaseSync/tombstone';
 
 // Readers for each storage backend. Every reader resolves to [] on failure so one source never blocks the others.
 
@@ -74,7 +75,9 @@ export const fetchFromFirebase = async (storeName: string): Promise<any[]> => {
     await authPromise;
     const querySnapshot = await getDocs(collection(db, storeName));
     // Long history transcripts are stored gzipped in the cloud
-    return await Promise.all(querySnapshot.docs.map(async d => ({ id: d.id, ...await unpackFromCloud(withoutSyncStamp(d.data())) })));
+    // Deleted items stay in the cloud only as markers
+    const liveDocs = querySnapshot.docs.filter(d => !isTombstone(d.data()));
+    return await Promise.all(liveDocs.map(async d => ({ id: d.id, ...await unpackFromCloud(withoutSyncStamp(d.data())) })));
   } catch (e) {
     return [];
   }
