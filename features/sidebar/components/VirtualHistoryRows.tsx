@@ -51,7 +51,7 @@ export const VirtualHistoryRows = ({ list, activeColors, cardProps }: Props) => 
                        }}
                      >
                        <div className="flex items-center gap-2">
-                         <span className="bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-black px-4 py-1.5 rounded-full border border-white/10 shadow-lg uppercase tracking-widest relative z-30">
+                         <span className="bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-black px-4 py-1.5 rounded-full border border-white/10 shadow-lg uppercase tracking-widest bn:tracking-normal relative z-30">
                            {flatItem.group}
                          </span>
                          <span className={`${activeColors?.primary || 'bg-indigo-600'} backdrop-blur-md text-white text-[10px] font-black px-2 py-1.5 rounded-full border border-white/20 shadow-lg shadow-black/10 relative z-30`}>

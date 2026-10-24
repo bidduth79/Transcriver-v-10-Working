@@ -6,6 +6,8 @@ export { fetchDataDual, saveDataDual, deleteDataDual };
 import { authPromise, auth, db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { FIREBASE_SYNCED_STORES } from '../constants/storeNames';
+import { uiText } from '../utils/uiText';
+import { currentAppLang } from '../hooks/useThemeStore';
 
 export const checkCloudConnection = async (): Promise<{ status: 'online' | 'offline' | 'auth-error', message: string }> => {
   try {
@@ -57,7 +59,7 @@ export const performMasterSync = async (onProgress: (msg: string, p: number) => 
             const store = stores[i];
             const displayStoreName = store.replace('studio_', '').toUpperCase();
 
-            onProgress(`ধীরে ধীরে সিঙ্ক হচ্ছে: ${displayStoreName}...`, Math.round((i / totalStores) * 100));
+            onProgress(uiText(currentAppLang(), 'syncingStore', { store: displayStoreName }), Math.round((i / totalStores) * 100));
 
             // Fetch from all sources (Local, IDB, Firebase, Supabase) and deduplicate
             const allData = await fetchDataDual(store, true);
@@ -94,7 +96,7 @@ export const performMasterSync = async (onProgress: (msg: string, p: number) => 
             }
         }
 
-        onProgress("সিনক্রোনাইজ সম্পন্ন হয়েছে", 100);
+        onProgress(uiText(currentAppLang(), 'syncFinished'), 100);
         return true;
     } catch (e) {
         console.error("Master Sync Failed:", e);

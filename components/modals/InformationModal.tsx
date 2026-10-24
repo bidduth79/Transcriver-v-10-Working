@@ -50,7 +50,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
                  className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border cursor-pointer hover:scale-105 transition-transform ${isDark ? 'bg-slate-900 border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
                >
                   <div className={`w-3 h-3 rounded-full ${activeColors.primary}`}></div>
-                  <span className="text-xs font-bold uppercase tracking-widest">{uiText(appLang, 'guide')}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest bn:tracking-normal">{uiText(appLang, 'guide')}</span>
                   <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                </div>
             </motion.div>
@@ -114,7 +114,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
                  <div className={`w-6 h-6 flex items-center justify-center ${activeTab === tab.id ? 'text-white' : 'opacity-60'}`}>
                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">{tab.icon}</svg>
                  </div>
-                 <span className="text-xs font-black uppercase tracking-widest font-stylish-bn">{tab.label}</span>
+                 <span className="text-xs font-black uppercase tracking-widest bn:tracking-normal font-stylish-bn">{tab.label}</span>
                  {activeTab === tab.id && <div className="absolute inset-0 bg-white/10 animate-pulse pointer-events-none"></div>}
                </button>
              ))}
@@ -166,7 +166,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
              DB SETUP
            </button>
 
-           <button onClick={onClose} className={`px-10 py-3 ${activeColors.primary} text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-xl hover:scale-105 active:scale-95 transition-all`}>
+           <button onClick={onClose} className={`px-10 py-3 ${activeColors.primary} text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] bn:tracking-normal shadow-xl hover:scale-105 active:scale-95 transition-all`}>
              {uiText(appLang, 'gotIt')}
            </button>
         </footer>

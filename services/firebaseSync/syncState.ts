@@ -1,4 +1,6 @@
 import { isFirebaseConfigured } from '../firebase';
+import { uiText } from '../../utils/uiText';
+import { currentAppLang } from '../../hooks/useThemeStore';
 
 export interface QueueItem {
   key: string;
@@ -25,7 +27,7 @@ export const INITIAL_IDLE_WAIT_MS = 4500;
 // ট্রান্সক্রিপশন বা ব্যাচ শেষ হওয়ার পর কুল-ডাউন বিরতি (৮ সেকেন্ড)
 export const POST_PROCESSING_COOL_DOWN_MS = 8000;
 
-export const IDLE_MESSAGE = isFirebaseConfigured ? 'প্রস্তুত (Idle)' : 'ফায়ারবেইজ কনফিগার করা নেই';
+export const IDLE_MESSAGE = isFirebaseConfigured ? uiText(currentAppLang(), 'idleReady') : uiText(currentAppLang(), 'firebaseNotConfigured');
 
 export const queueMap = new Map<string, QueueItem>();
 export const activeProcessingLocks = new Set<'transcription' | 'batch'>();

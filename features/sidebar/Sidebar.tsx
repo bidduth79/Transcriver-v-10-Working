@@ -54,6 +54,7 @@ export const Sidebar = ({
         <div className="md:hidden absolute top-4 right-4 z-50">
            <button 
              onClick={() => setIsSidebarOpen(false)}
+             aria-label={t.close}
              className="p-3 bg-red-500 text-white rounded-full shadow-lg active:scale-95 transition-transform cursor-pointer group"
            >
              <svg className="w-5 h-5 transition-transform group-hover:scale-110 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>

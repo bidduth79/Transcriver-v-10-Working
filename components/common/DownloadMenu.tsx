@@ -7,6 +7,8 @@ import { messageOf } from '../../utils/errorMessage';
 import type { Translations } from '../../translations';
 import type { ToastType } from '../../hooks/useToast';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import { uiText } from '../../utils/uiText';
+import { useThemeStore } from '../../hooks/useThemeStore';
 
 interface DownloadMenuProps {
   transcript: string;
@@ -20,6 +22,7 @@ interface DownloadMenuProps {
 }
 
 export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMatches = [], addToast, customTrigger }: DownloadMenuProps) => {
+  const appLang = useThemeStore(state => state.appLang);
   const [isOpen, setIsOpen] = useState(false);
   const [includeKeywords, setIncludeKeywords] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -48,10 +51,10 @@ export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMat
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       setIsOpen(false);
-      addToast(`${ext.toUpperCase()} ফাইল ডাউনলোড শুরু হয়েছে`, 'success');
+      addToast(uiText(appLang, 'fileDownloadStarted', { ext: ext.toUpperCase() }), 'success');
     } catch (error) {
       console.error('Download error:', error);
-      addToast(`ডাউনলোড ত্রুটি: ${messageOf(error) || 'Unknown error'}`, 'error');
+      addToast(uiText(appLang, 'downloadErrorWith', { message: messageOf(error) || 'Unknown error' }), 'error');
     }
   };
 
@@ -61,7 +64,7 @@ export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMat
       downloadFile(build(), ext);
     } catch (error) {
       console.error(`${label} Export Error:`, error);
-      addToast(`${label} এরর: ${messageOf(error)}`, 'error');
+      addToast(uiText(appLang, 'exportErrorWith', { label, message: messageOf(error) }), 'error');
     }
   };
 
@@ -79,7 +82,7 @@ export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMat
       ) : (
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex items-center px-8 py-3.5 bg-white text-slate-900 rounded-full text-sm font-black uppercase tracking-widest hover:brightness-95 transition-all shadow-xl active:scale-95 shrink-0 group ${isOpen ? 'ring-4 ring-indigo-500/20' : ''}`}
+          className={`flex items-center px-8 py-3.5 bg-white text-slate-900 rounded-full text-sm font-black uppercase tracking-widest bn:tracking-normal hover:brightness-95 transition-all shadow-xl active:scale-95 shrink-0 group ${isOpen ? 'ring-4 ring-indigo-500/20' : ''}`}
         >
           <svg className={`w-5 h-5 mr-3 transition-transform duration-500 ${isOpen ? 'rotate-180' : 'group-hover:scale-125'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

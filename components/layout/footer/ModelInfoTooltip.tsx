@@ -10,6 +10,7 @@ interface Props {
 // Floating Bengali instruction card shown when hovering a model's (i) button
 export const ModelInfoTooltip = ({ model, onMouseEnter, onMouseLeave }: Props) => (
                <div
+                 lang="bn"
                  onMouseEnter={onMouseEnter}
                  onMouseLeave={onMouseLeave}
                  className="absolute bottom-4 left-full ml-3 w-80 bg-slate-900/98 backdrop-blur-2xl border border-indigo-500/40 rounded-2xl p-4 shadow-[0_20px_60px_rgba(0,0,0,0.9)] z-[80] text-left normal-case tracking-normal pointer-events-auto"

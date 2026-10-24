@@ -8,6 +8,8 @@ import { withSyncStamp } from './syncStamp';
 import { packForCloud } from './transcriptCompression';
 import { tombstoneFor } from './tombstone';
 import { messageOf } from '../../utils/errorMessage';
+import { uiText } from '../../utils/uiText';
+import { currentAppLang } from '../../hooks/useThemeStore';
 
 /**
  * ট্রান্সক্রিপশন বা ব্যাচ প্রসেসিং শুরু/শেষ হলে এই লক কল করা হয়।
@@ -21,14 +23,14 @@ export const setHeavyProcessingActive = (source: 'transcription' | 'batch', acti
       runtime.debounceTimer = null;
     }
     syncStats.statusMessageBn = source === 'batch'
-      ? `ব্যাচ প্রসেসিং চলছে — ফায়ারবেইজ সিঙ্ক সাময়িক বিরতিতে আছে (অপেক্ষমাণ: ${queueMap.size}টি)`
-      : `ট্রান্সক্রিপশন চলছে — ফায়ারবেইজ সিঙ্ক সাময়িক বিরতিতে আছে`;
+      ? uiText(currentAppLang(), 'syncPausedBatch', { count: queueMap.size })
+      : uiText(currentAppLang(), 'syncPausedTranscription');
     notifyListeners();
   } else {
     activeProcessingLocks.delete(source);
     notifyListeners();
     if (activeProcessingLocks.size === 0 && queueMap.size > 0) {
-      syncStats.statusMessageBn = `কাজ সম্পন্ন — ৮ সেকেন্ড পর ধীরে ধীরে ${queueMap.size}টি ডাটা ফায়ারবেইজে সিঙ্ক হবে...`;
+      syncStats.statusMessageBn = uiText(currentAppLang(), 'syncResumesSoon', { count: queueMap.size });
       notifyListeners();
       scheduleWorker(POST_PROCESSING_COOL_DOWN_MS);
     } else if (activeProcessingLocks.size === 0) {
@@ -87,7 +89,7 @@ const sanitizeForFirestore = (obj: unknown): Record<string, unknown> => {
 const startWorker = async () => {
   if (runtime.isWorkerRunning || queueMap.size === 0 || isHeavyProcessingActive()) return;
   runtime.isWorkerRunning = true;
-  syncStats.statusMessageBn = 'ব্যাকগ্রাউন্ডে ধীরে ধীরে ফায়ারবেইজে সেভ হচ্ছে...';
+  syncStats.statusMessageBn = uiText(currentAppLang(), 'syncSavingInBackground');
   notifyListeners();
 
   try {
@@ -103,7 +105,7 @@ const startWorker = async () => {
     while (queueMap.size > 0) {
       // যদি এর মধ্যে নতুন ট্রান্সক্রিপশন বা ব্যাচ শুরু হয়, সাথে সাথে সিঙ্ক পজ করে বেরিয়ে আসুন!
       if (isHeavyProcessingActive()) {
-        syncStats.statusMessageBn = `প্রসেসিং শুরু হওয়ায় ফায়ারবেইজ সিঙ্ক পজ করা হয়েছে (বাকি: ${queueMap.size}টি)`;
+        syncStats.statusMessageBn = uiText(currentAppLang(), 'syncPausedProcessing', { count: queueMap.size });
         break;
       }
 
@@ -145,7 +147,7 @@ const startWorker = async () => {
     }
 
     if (!isHeavyProcessingActive() && queueMap.size === 0) {
-      syncStats.statusMessageBn = 'ফায়ারবেইজ সিঙ্ক সম্পূর্ণ আপ-টু-ডেট আছে';
+      syncStats.statusMessageBn = uiText(currentAppLang(), 'syncUpToDate');
     }
   } catch (err) {
     console.warn("[Firebase Gentle Sync] Worker notice:", messageOf(err) || err);

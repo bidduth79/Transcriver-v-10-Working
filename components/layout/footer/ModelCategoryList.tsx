@@ -1,6 +1,8 @@
 import React from 'react';
 import { AVAILABLE_MODELS, MODEL_CATEGORY_GROUPS, DEFAULT_MODEL } from '../../../services/ApiKeyManager.ts';
 import type { ModelSelectorState } from './useModelSelector';
+import { uiText } from '../../../utils/uiText';
+import { useThemeStore } from '../../../hooks/useThemeStore';
 
 interface Props {
   activeModelName: string;
@@ -9,6 +11,7 @@ interface Props {
 
 // Model list grouped by speed category, each row with a Bengali info (i) button
 export const ModelCategoryList = ({ activeModelName, selector }: Props) => {
+  const appLang = useThemeStore(state => state.appLang);
   const { hoveredModel, setHoveredModel, handleModelSelect } = selector;
   return (
              <div className="p-2.5 max-h-[370px] overflow-y-auto custom-scrollbar space-y-3">
@@ -17,10 +20,10 @@ export const ModelCategoryList = ({ activeModelName, selector }: Props) => {
                  return (
                    <div key={group.id} className="bg-slate-950/50 border border-white/5 rounded-xl p-2">
                      <div className="px-2 py-1 mb-1 border-b border-white/5">
-                       <div className={`text-[10px] font-black tracking-wide normal-case ${group.accentClass}`}>
+                       <div className={`text-[10px] font-black tracking-wide bn:tracking-normal normal-case ${group.accentClass}`}>
                          {group.titleBn}
                        </div>
-                       <div className="text-[9px] text-slate-400 font-medium normal-case tracking-normal">
+                       <div className="text-[10px] text-slate-400 font-medium normal-case tracking-normal">
                          {group.subtitleBn}
                        </div>
                      </div>
@@ -42,16 +45,16 @@ export const ModelCategoryList = ({ activeModelName, selector }: Props) => {
                              <div className="flex items-center gap-2 min-w-0">
                                <div className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? 'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.9)]' : 'bg-slate-600'}`}></div>
                                <div className="truncate">
-                                 <span className="text-[11px] font-bold tracking-wider block truncate">{m.label}</span>
-                                 <span className="text-[9px] text-slate-400 normal-case tracking-normal font-medium">
-                                   গতি: {m.speedBadgeBn} {m.id === DEFAULT_MODEL ? '• (ডিফল্ট)' : ''}
+                                 <span className="text-[11px] font-bold tracking-wider bn:tracking-normal block truncate">{m.label}</span>
+                                 <span className="text-[10px] text-slate-400 normal-case tracking-normal font-medium">
+                                   {uiText(appLang, 'speedLabel')} {m.speedBadgeBn} {m.id === DEFAULT_MODEL ? uiText(appLang, 'defaultMarker') : ''}
                                  </span>
                                </div>
                              </div>
 
                              <div className="flex items-center gap-2 shrink-0">
                                {m.badge && (
-                                 <span className={`text-[8px] px-2 py-0.5 rounded-md font-black tracking-wider border ${group.badgeClass}`}>
+                                 <span className={`text-[10px] px-2 py-0.5 rounded-md font-black tracking-wider bn:tracking-normal border ${group.badgeClass}`}>
                                    {m.badge}
                                  </span>
                                )}
@@ -66,7 +69,7 @@ export const ModelCategoryList = ({ activeModelName, selector }: Props) => {
                                    e.stopPropagation();
                                    setHoveredModel(prev => (prev?.id === m.id ? null : m));
                                  }}
-                                 aria-label={`${m.label} বাংলা নির্দেশনা`}
+                                 aria-label={uiText(appLang, 'modelGuideLabel', { label: m.label })}
                                  className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-serif italic font-black transition-all border cursor-help ${
                                    isHovered
                                      ? 'bg-indigo-500 text-white border-indigo-400 scale-110 shadow-[0_0_12px_rgba(99,102,241,0.8)]'

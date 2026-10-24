@@ -34,7 +34,7 @@ export const ActivityLogFilters = ({ state, isDark }: Props) => {
                 <span className="text-slate-400">-</span>
                 <input type="date" className={`px-3 py-2 rounded-xl text-xs font-bold border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-800'}`} value={dateTo} onChange={e => setDateTo(e.target.value)} />
             </div>
-            <div className={`ml-auto px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600'}`}>
+            <div className={`ml-auto px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bn:tracking-normal ${isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-600'}`}>
                 {filteredLogs.length} Records
             </div>
         </div>

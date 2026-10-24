@@ -26,8 +26,8 @@ export const ExpandedHistoryHeader = ({
               <svg className="w-8 h-8 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
             <div className="space-y-1">
-              <h2 className="text-3xl font-black text-white uppercase tracking-wider leading-none font-stylish-bn group-hover:text-white transition-colors text-white/90">{t.history}</h2>
-              <p className={`text-[10px] font-black ${activeColors.text.replace('text-', 'text-opacity-80 text-')} tracking-[0.3em] uppercase`}>{itemCount} {t.itemsLogged}</p>
+              <h2 className="text-3xl font-black text-white uppercase tracking-wider bn:tracking-normal leading-none font-stylish-bn group-hover:text-white transition-colors text-white/90">{t.history}</h2>
+              <p className={`text-[10px] font-black ${activeColors.text.replace('text-', 'text-opacity-80 text-')} tracking-[0.3em] bn:tracking-normal uppercase`}>{itemCount} {t.itemsLogged}</p>
             </div>
           </div>
 
@@ -83,7 +83,7 @@ export const ExpandedHistoryHeader = ({
             onClick={onClose} 
             className={`group flex items-center gap-4 ${activeColors.primary} hover:brightness-110 text-white px-10 py-4 rounded-2xl transition-all active:scale-95 shadow-xl border border-white/10`}
           >
-            <span className="text-xs font-black uppercase tracking-widest">{t.close}</span>
+            <span className="text-xs font-black uppercase tracking-widest bn:tracking-normal">{t.close}</span>
             <svg className="w-5 h-5 transition-transform duration-500 group-hover:rotate-180 group-hover:scale-150" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </header>

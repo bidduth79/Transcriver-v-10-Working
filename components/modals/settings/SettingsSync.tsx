@@ -95,7 +95,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Firebase Status */}
                 <div className={`p-6 rounded-3xl border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                    <h3 className="text-xs font-black uppercase tracking-widest mb-3 opacity-60">
+                    <h3 className="text-xs font-black uppercase tracking-widest bn:tracking-normal mb-3 opacity-60">
                         {uiText(appLang, 'firebaseCloudStatus')}
                     </h3>
                     <div className="flex items-center gap-3">
@@ -110,7 +110,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                 {/* Local XAMPP Toggle Card */}
                 <div className={`p-6 rounded-3xl border flex items-center justify-between gap-3 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                     <div>
-                        <h3 className="text-xs font-black uppercase tracking-widest opacity-60 mb-1">
+                        <h3 className="text-xs font-black uppercase tracking-widest bn:tracking-normal opacity-60 mb-1">
                             {uiText(appLang, 'localXamppServer')}
                         </h3>
                         <p className="text-[10px] opacity-60">
@@ -119,7 +119,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                     </div>
                     <button
                         onClick={handleToggleXampp}
-                        className={`px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer shadow-md active:scale-95 ${
+                        className={`px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bn:tracking-normal transition-all cursor-pointer shadow-md active:scale-95 ${
                             xamppEnabled 
                                 ? 'bg-emerald-600 hover:bg-emerald-500 text-white' 
                                 : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
@@ -134,11 +134,11 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
             <div className={`p-5 rounded-3xl border flex flex-col md:flex-row items-center justify-between gap-4 ${isDark ? 'bg-slate-900/80 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                 <div className="space-y-1 text-center md:text-left">
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                        <h4 className="text-xs font-black uppercase tracking-wider text-indigo-400">
+                        <h4 className="text-xs font-black uppercase tracking-wider bn:tracking-normal text-indigo-400">
                             {uiText(appLang, 'smartBatchLockSync')}
                         </h4>
                         {fbStats.isPausedForProcessing && (
-                            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[9px] font-black uppercase">
+                            <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black uppercase">
                                 {uiText(appLang, 'syncLockedProcessing')}
                             </span>
                         )}
@@ -151,7 +151,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                 <button
                     onClick={handleGentleCloudPull}
                     disabled={fbStats.isPulling || isSyncing || fbStats.isPausedForProcessing}
-                    className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-[11px] font-black tracking-wide transition-all cursor-pointer shrink-0 shadow-md"
+                    className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-[11px] font-black tracking-wide bn:tracking-normal transition-all cursor-pointer shrink-0 shadow-md"
                 >
                     {fbStats.isPulling ? uiText(appLang, 'checkingSlowly') : uiText(appLang, 'fetchNewFromFirebase')}
                 </button>
@@ -172,7 +172,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                         <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                             <div className="h-full bg-indigo-600 transition-all duration-300" style={{ width: `${syncProgress}%` }}></div>
                         </div>
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{syncStatus}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest bn:tracking-normal opacity-60">{syncStatus}</p>
                     </div>
                 ) : (
                     <div className="flex justify-center w-full max-w-md mx-auto">
@@ -184,7 +184,7 @@ export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                             </div>
                             <div className="text-center">
-                                <span className="block text-sm font-black uppercase tracking-widest mb-1">{uiText(appLang, 'manualDatabaseSync')}</span>
+                                <span className="block text-sm font-black uppercase tracking-widest bn:tracking-normal mb-1">{uiText(appLang, 'manualDatabaseSync')}</span>
                                 <span className="block text-[10px] opacity-60 font-bold max-w-[280px] mx-auto">
                                     {xamppEnabled ? 'Local XAMPP ↔ IndexedDB ↔ Firebase' : 'IndexedDB (Local Storage) ↔ Firebase Cloud'}
                                 </span>

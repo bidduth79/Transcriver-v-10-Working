@@ -16,7 +16,7 @@ export const BatchProgressStatus = ({ appLang, hasBatchStarted, progress, etaSec
         {hasBatchStarted && (
           <div className="mb-4">
             <div className="flex justify-between items-center mb-1.5">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bn:tracking-normal">
                 {uiText(appLang, 'progress')}
               </span>
               <span className="text-[10px] font-bold text-indigo-400">
@@ -51,7 +51,7 @@ export const BatchProgressStatus = ({ appLang, hasBatchStarted, progress, etaSec
         {/* Countdown Timer */}
         {batchCountdown > 0 && (
           <div className="mb-4 p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex flex-col items-center justify-center animate-pulse">
-            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">
+            <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest bn:tracking-normal mb-1">
               {uiText(appLang, 'nextFileStartingIn')}
             </span>
             <span className="text-3xl font-black text-indigo-500 tabular-nums">

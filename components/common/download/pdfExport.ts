@@ -2,6 +2,8 @@ import { toast } from 'sonner';
 import { normalizeTimestamps } from './exportContent';
 import { printHtmlInFrame } from '../print/printHtmlInFrame';
 import { messageOf } from '../../../utils/errorMessage';
+import { uiText } from '../../../utils/uiText';
+import { currentAppLang } from '../../../hooks/useThemeStore';
 
 const TOAST_ID = 'pdf-export-toast';
 
@@ -86,13 +88,13 @@ const buildPdfHtml = ({ transcript, fileName, searchTerm, keywordRegex }: PdfOpt
 export const printTranscriptAsPdf = (options: PdfOptions) => {
   try {
     // Show brief notification that disappears quickly
-    toast.info('PDF প্রস্তুত করা হচ্ছে...', { id: TOAST_ID, duration: 1500 });
+    toast.info(uiText(currentAppLang(), 'pdfPreparing'), { id: TOAST_ID, duration: 1500 });
     printHtmlInFrame(buildPdfHtml(options), {
       fontWaitMs: 300,
-      onBeforePrint: () => toast.success('PDF প্রস্তুত হয়েছে!', { id: TOAST_ID, duration: 1200 }),
+      onBeforePrint: () => toast.success(uiText(currentAppLang(), 'pdfReady'), { id: TOAST_ID, duration: 1200 }),
     });
   } catch (error) {
     console.error('PDF Export Error:', error);
-    toast.error(`PDF এরর: ${messageOf(error)}`, { id: TOAST_ID, duration: 2500 });
+    toast.error(uiText(currentAppLang(), 'pdfErrorWith', { message: messageOf(error) }), { id: TOAST_ID, duration: 2500 });
   }
 };

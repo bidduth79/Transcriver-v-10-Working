@@ -20,12 +20,12 @@ export const SensitiveMatchBadge = ({ item, sensitiveMatches, loadHistoryItem }:
                             e.stopPropagation();
                             loadHistoryItem(item, sensitiveMatches[0]);
                           }}
-                          className="shrink-0 px-1.5 py-0.5 bg-red-600 hover:bg-red-500 cursor-pointer transition-colors text-white text-[8px] font-black rounded uppercase tracking-wider animate-pulse"
+                          className="shrink-0 px-1.5 py-0.5 bg-red-600 hover:bg-red-500 cursor-pointer transition-colors text-white text-[10px] font-black rounded uppercase tracking-wider bn:tracking-normal animate-pulse"
                         >
                             {sensitiveMatches[0]}
                         </span>
                         {sensitiveMatches.length > 1 && (
-                          <span className="shrink-0 px-1.5 py-0.5 bg-red-600/80 text-white text-[8px] font-black rounded uppercase tracking-wider">
+                          <span className="shrink-0 px-1.5 py-0.5 bg-red-600/80 text-white text-[10px] font-black rounded uppercase tracking-wider bn:tracking-normal">
                               +{sensitiveMatches.length - 1}
                           </span>
                         )}
@@ -42,7 +42,7 @@ export const SensitiveMatchBadge = ({ item, sensitiveMatches, loadHistoryItem }:
                                 e.stopPropagation();
                                 loadHistoryItem(item, match);
                             }}
-                            className="shrink-0 px-1.5 py-0.5 bg-red-600 hover:bg-red-500 text-white text-[8px] font-black rounded uppercase tracking-wider cursor-pointer transition-colors"
+                            className="shrink-0 px-1.5 py-0.5 bg-red-600 hover:bg-red-500 text-white text-[10px] font-black rounded uppercase tracking-wider bn:tracking-normal cursor-pointer transition-colors"
                           >
                               {match}
                           </span>

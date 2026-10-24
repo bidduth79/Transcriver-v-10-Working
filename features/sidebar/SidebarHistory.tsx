@@ -92,12 +92,12 @@ export const SidebarHistory = ({
         ) : !history || history.length === 0 ? (
           <div className="h-40 flex flex-col items-center justify-center opacity-30 text-slate-400 group cursor-default">
             <svg className="w-10 h-10 mb-2 transition-transform duration-700 group-hover:rotate-180 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <p className="text-[10px] font-bold uppercase tracking-widest">{t.empty}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest bn:tracking-normal">{t.empty}</p>
           </div>
         ) : Object.keys(processedGroupedHistory).length === 0 && searchQuery ? (
           <div className="h-40 flex flex-col items-center justify-center opacity-50 text-slate-400 group cursor-default">
             <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-            <p className="text-[10px] font-bold uppercase tracking-widest">{t.noResultsFound}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest bn:tracking-normal">{t.noResultsFound}</p>
           </div>
         ) : (
           <div className={`${cardBg} p-5 rounded-3xl border ${cardBorder} shadow-[0_30px_60px_rgba(0,0,0,0.25)] transition-all mb-4 relative`}>

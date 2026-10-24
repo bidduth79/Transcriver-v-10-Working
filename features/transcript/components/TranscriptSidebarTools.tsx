@@ -44,7 +44,7 @@ export const TranscriptSidebarTools: React.FC<TranscriptSidebarToolsProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h4 className={`text-[10px] md:text-xs font-black uppercase tracking-widest ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+            <h4 className={`text-[10px] md:text-xs font-black uppercase tracking-widest bn:tracking-normal ${isDark ? 'text-red-400' : 'text-red-600'}`}>
               {uiText(appLang, 'searchingWords')}
             </h4>
           </div>
@@ -60,11 +60,11 @@ export const TranscriptSidebarTools: React.FC<TranscriptSidebarToolsProps> = ({
                     handleSearchChange({ target: { value: item.word } });
                   }
                 }}
-                className={`cursor-pointer flex items-center justify-between text-[10px] md:text-[11px] font-black tracking-wide px-3 py-2 rounded-xl shrink-0 transition-colors ${isDark ? 'bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-900/30' : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-100'}`} 
+                className={`cursor-pointer flex items-center justify-between text-[10px] md:text-[11px] font-black tracking-wide bn:tracking-normal px-3 py-2 rounded-xl shrink-0 transition-colors ${isDark ? 'bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-900/30' : 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-100'}`} 
                 title={item.word}
               >
                 <span className="truncate mr-2">{item.word}</span>
-                <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[9px] ${isDark ? 'bg-red-900/50 text-red-300' : 'bg-red-200/50 text-red-700'}`}>
+                <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[10px] ${isDark ? 'bg-red-900/50 text-red-300' : 'bg-red-200/50 text-red-700'}`}>
                   {item.count}
                 </span>
               </div>
@@ -95,7 +95,7 @@ export const TranscriptSidebarTools: React.FC<TranscriptSidebarToolsProps> = ({
               ) : (
                   <div className="w-2.5 h-2.5 rounded-full bg-slate-500"></div>
               )}
-              <h4 className={`text-[10px] md:text-xs font-black uppercase tracking-widest ${
+              <h4 className={`text-[10px] md:text-xs font-black uppercase tracking-widest bn:tracking-normal ${
                   !isBgbAnalysisEnabled || (!bgbAnalysisResult && !isAnalyzing) ? (isDark ? 'text-slate-500' : 'text-slate-500') :
                   isAnalyzing ? (isDark ? 'text-slate-400' : 'text-slate-600') :
                   bgbAnalysisResult?.remark === 'Positive' ? (isDark ? 'text-emerald-400' : 'text-emerald-600') :

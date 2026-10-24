@@ -18,7 +18,7 @@ export const ApiKeyModelSelect = ({ isDark, appLang, selectedModel, onChange }: 
                         <Cpu className="w-5 h-5" />
                     </div>
                     <div>
-                        <h3 className="text-xs font-black uppercase tracking-widest opacity-80">
+                        <h3 className="text-xs font-black uppercase tracking-widest bn:tracking-normal opacity-80">
                             {uiText(appLang, 'activeAiModel')}
                         </h3>
                         <p className="text-[11px] opacity-50 mt-0.5">

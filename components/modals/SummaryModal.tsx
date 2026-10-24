@@ -63,7 +63,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
            className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border cursor-pointer hover:scale-105 transition-transform ${isDark ? 'bg-slate-900 border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
          >
             <div className={`w-3 h-3 rounded-full ${activeColors.primary}`}></div>
-            <span className="text-xs font-bold uppercase tracking-widest">{uiText(appLang, 'analysis')}</span>
+            <span className="text-xs font-bold uppercase tracking-widest bn:tracking-normal">{uiText(appLang, 'analysis')}</span>
             <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
          </div>
       </div>
@@ -103,7 +103,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
             ) : (
               <div className="h-full flex flex-col items-center justify-center opacity-30 py-40 text-center animate-in fade-in">
                 <div className="w-32 h-32 bg-slate-100 rounded-[3rem] flex items-center justify-center mb-10"><svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
-                <p className="text-3xl font-black uppercase tracking-[0.3em]">{uiText(appLang, 'noMatchFound')}</p>
+                <p className="text-3xl font-black uppercase tracking-[0.3em] bn:tracking-normal">{uiText(appLang, 'noMatchFound')}</p>
               </div>
             )
           ) : (

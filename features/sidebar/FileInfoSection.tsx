@@ -39,7 +39,7 @@ export const FileInfoSection = ({
     <div className="px-6 py-6 animate-in fade-in slide-in-from-top-2 shrink-0">
       <div className="flex items-center gap-3 bg-slate-950 px-5 py-3 rounded-2xl shadow-[0_15px_35px_rgba(0,0,0,0.4)] border border-white/10 mb-4 h-[52px]">
         <div className={`w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.4)] shrink-0 animate-pulse`}></div>
-        <span className="text-[12px] font-black uppercase tracking-[0.15em] text-white truncate">{t.fileInfo}</span>
+        <span className="text-[12px] font-black uppercase tracking-[0.15em] bn:tracking-normal text-white truncate">{t.fileInfo}</span>
         <button onClick={resetAll} className="ml-auto text-red-400 hover:text-red-500 transition-all shrink-0 p-1 group cursor-pointer"><svg className="w-4 h-4 transition-transform group-hover:scale-150 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg></button>
       </div>
       <div className={`${cardBg} p-5 rounded-3xl border ${cardBorder} shadow-[0_25px_50px_rgba(0,0,0,0.2)] space-y-4 hover:translate-y-[-2px] transition-all`}>
@@ -132,7 +132,7 @@ export const FileInfoSection = ({
                         <button 
                             key={rate}
                             onClick={() => changePlaybackRate(rate)}
-                            className={`px-1.5 py-1 rounded text-[9px] font-black transition-all cursor-pointer ${
+                            className={`px-1.5 py-1 rounded text-[10px] font-black transition-all cursor-pointer ${
                                 playbackRate === rate 
                                 ? (activeColors?.primary || 'bg-indigo-500') + ' text-white scale-110 shadow-sm' 
                                 : (isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-slate-200/50 hover:bg-slate-200 text-slate-500')
@@ -145,7 +145,7 @@ export const FileInfoSection = ({
             </div>
         </div>
 
-        <button onClick={() => { processTranscription(); setIsSidebarOpen(false); }} disabled={status === 'processing'} className={`w-full py-4 ${activeColors?.primary || 'bg-indigo-600'} text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-2xl hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center gap-2 active:scale-95 group cursor-pointer disabled:cursor-not-allowed`}>
+        <button onClick={() => { processTranscription(); setIsSidebarOpen(false); }} disabled={status === 'processing'} className={`w-full py-4 ${activeColors?.primary || 'bg-indigo-600'} text-white rounded-xl text-xs font-black uppercase tracking-[0.2em] bn:tracking-normal shadow-2xl hover:brightness-110 disabled:opacity-50 transition-all flex items-center justify-center gap-2 active:scale-95 group cursor-pointer disabled:cursor-not-allowed`}>
           {status === 'processing' ? t.processingTranscribe : <><svg className="w-4 h-4 transition-transform group-hover:rotate-12 group-hover:scale-125" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>{t.startTranscribe}</>}
         </button>
       </div>

@@ -86,7 +86,7 @@ export const ExpandedHistory: React.FC<ExpandedHistoryProps> = ({
                <div className="flex justify-center items-center py-12 animate-in fade-in duration-300 col-span-full">
                  <div className={`flex items-center gap-3 px-6 py-3 rounded-full ${isDark ? 'bg-slate-800/80 border-white/10' : 'bg-white border-slate-200'} border shadow-xl`}>
                    <div className={`w-5 h-5 rounded-full border-2 ${activeColors.border} border-t-transparent animate-spin`}></div>
-                   <span className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'} tracking-widest uppercase`}>
+                   <span className={`text-xs font-bold ${isDark ? 'text-slate-400' : 'text-slate-500'} tracking-widest bn:tracking-normal uppercase`}>
                      {t.history === 'ইতিহাস' ? 'আরও লোড হচ্ছে...' : 'Loading more...'}
                    </span>
                  </div>

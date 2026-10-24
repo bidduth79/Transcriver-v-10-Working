@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
         <div>
           <h1 className="text-lg md:text-xl font-black tracking-tight text-white leading-tight">LI CELL <span className={`${isDark ? 'text-indigo-400' : activeColors.text} hidden sm:inline`}>{t.studio}</span></h1>
-          <p className="text-[8px] md:text-[9px] text-white/50 font-black uppercase tracking-widest leading-none mt-0.5 md:mt-1 hidden sm:block">{t.subTitle}</p>
+          <p className="text-[10px] md:text-[10px] text-white/50 font-black uppercase tracking-widest bn:tracking-normal leading-none mt-0.5 md:mt-1 hidden sm:block">{t.subTitle}</p>
         </div>
       </div>
 
@@ -171,12 +171,12 @@ export const Header: React.FC<HeaderProps> = ({
           )}
           
           <button type="button" onClick={() => setAppLang(prev => prev === 'bn' ? 'en' : 'bn')} className={`flex items-center justify-center gap-2 bg-black/20 backdrop-blur-md border border-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-xl hover:bg-black/30 group transition-all active:scale-95 mr-0 md:mr-2 cursor-pointer col-span-2 md:col-span-1`}>
-            <div className={`${activeColors.primary} w-5 h-5 md:w-6 md:h-6 rounded-lg flex items-center justify-center text-[9px] md:text-[10px] font-black text-white shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6`}>{uiText(appLang, 'languageBadge')}</div>
-            <span className="text-[10px] md:text-[11px] font-black text-white uppercase tracking-wider transition-colors group-hover:text-white/100 text-white/80 hidden sm:inline">{uiText(appLang, 'languageLabel')}</span>
+            <div className={`${activeColors.primary} w-5 h-5 md:w-6 md:h-6 rounded-lg flex items-center justify-center text-[10px] md:text-[10px] font-black text-white shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6`}>{uiText(appLang, 'languageBadge')}</div>
+            <span className="text-[10px] md:text-[11px] font-black text-white uppercase tracking-wider bn:tracking-normal transition-colors group-hover:text-white/100 text-white/80 hidden sm:inline">{uiText(appLang, 'languageLabel')}</span>
           </button>
           
           <div className="flex-col items-end mr-4 text-right hidden lg:flex cursor-default group">
-            <span className="text-[10px] font-bold text-white/60 uppercase leading-none mb-1 tracking-wider group-hover:text-white/90 transition-colors">{t.systemStatus}</span>
+            <span className="text-[10px] font-bold text-white/60 uppercase leading-none mb-1 tracking-wider bn:tracking-normal group-hover:text-white/90 transition-colors">{t.systemStatus}</span>
             <span className={`text-[11px] font-black leading-none transition-transform group-hover:scale-105 ${status === 'processing' ? 'text-amber-400' : 'text-green-400'}`}>{status === 'processing' ? t.busy : t.online}</span>
           </div>
           

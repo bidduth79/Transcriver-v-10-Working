@@ -79,10 +79,10 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({ isOpen, onClose, ela
 
         {/* Time Box */}
         <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 w-full mb-8 shadow-inner">
-            <p className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider">
+            <p className="text-slate-400 text-xs font-bold mb-2 uppercase tracking-wider bn:tracking-normal">
                 {uiText(appLang, 'totalTimeTaken')}
             </p>
-            <p className="text-4xl font-black text-white tabular-nums tracking-wider">
+            <p className="text-4xl font-black text-white tabular-nums tracking-wider bn:tracking-normal">
                 {formatTime(elapsedSeconds)}
             </p>
         </div>
@@ -90,7 +90,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({ isOpen, onClose, ela
         {/* Button */}
         <button 
             onClick={handleClose}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95 text-sm uppercase tracking-widest cursor-pointer"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-500/20 transition-all active:scale-95 text-sm uppercase tracking-widest bn:tracking-normal cursor-pointer"
         >
             {uiText(appLang, 'okay')}
         </button>

@@ -79,7 +79,7 @@ export const TranscriptReadingView = ({ props, state }: Props) => {
                         setTranscriptMeta(null);
                       }
                     }}
-                    className="px-8 md:px-10 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl cursor-pointer flex items-center gap-2"
+                    className="px-8 md:px-10 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest bn:tracking-normal hover:bg-black transition-all shadow-xl cursor-pointer flex items-center gap-2"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                     {uiText(appLang, 'tryAgain')}
@@ -94,7 +94,7 @@ export const TranscriptReadingView = ({ props, state }: Props) => {
             <div className="absolute bottom-12 left-0 right-0 flex items-center justify-center z-20 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className={`flex items-center gap-3 px-6 py-3 rounded-full shadow-2xl backdrop-blur-md border ${isDark ? 'bg-slate-900/80 border-slate-700/50 text-indigo-400' : 'bg-white/90 border-slate-200/50 text-indigo-600'}`}>
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                <span className="font-bold text-sm tracking-wide">{uiText(appLang, 'typing')}</span>
+                <span className="font-bold text-sm tracking-wide bn:tracking-normal">{uiText(appLang, 'typing')}</span>
               </div>
             </div>
           )}

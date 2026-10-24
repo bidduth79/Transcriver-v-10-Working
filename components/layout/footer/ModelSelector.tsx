@@ -3,6 +3,8 @@ import { getModelDefinition } from '../../../services/ApiKeyManager.ts';
 import { useModelSelector } from './useModelSelector';
 import { ModelCategoryList } from './ModelCategoryList';
 import { ModelInfoTooltip } from './ModelInfoTooltip';
+import { uiText } from '../../../utils/uiText';
+import { useThemeStore } from '../../../hooks/useThemeStore';
 
 interface Props {
   activeModelName: string;
@@ -12,6 +14,7 @@ interface Props {
 
 // Footer model badge with categorized dropdown, Speed Boost toggle and reset bar
 export const ModelSelector = ({ activeModelName, isAiLoading, onKeyUpdate }: Props) => {
+  const appLang = useThemeStore(state => state.appLang);
   const selector = useModelSelector(onKeyUpdate);
   const {
     modelSelectRef, showModelSelect, setShowModelSelect, hoveredModel, setHoveredModel,
@@ -36,8 +39,8 @@ export const ModelSelector = ({ activeModelName, isAiLoading, onKeyUpdate }: Pro
            </div>
 
            <div className="flex flex-col">
-              <span className={`text-[8px] font-black tracking-widest transition-all duration-300 ${isAiLoading ? 'text-rose-400' : 'text-amber-400/50'}`}>
-                {isAiLoading ? 'NEURAL ENGINE PROCESSING...' : `${currentModelDef.categoryLabelBn} • ${speedOpt ? 'FAST OPT' : 'CLASSIC'}`}
+              <span className={`text-[10px] font-black tracking-widest bn:tracking-normal transition-all duration-300 ${isAiLoading ? 'text-rose-400' : 'text-amber-400/50'}`}>
+                {isAiLoading ? 'NEURAL ENGINE PROCESSING...' : <><span lang="bn" className="bn:tracking-normal">{currentModelDef.categoryLabelBn}</span>{` • ${speedOpt ? 'FAST OPT' : 'CLASSIC'}`}</>}
               </span>
               <span className={`text-[10px] font-black uppercase transition-all duration-500 flex items-center gap-1.5 ${isAiLoading ? 'text-white translate-x-1' : 'text-amber-400/90'}`}>
                 {isAiLoading ? 'ANALYZING:' : 'MODEL:'} <span className={isAiLoading ? 'text-rose-400' : ''}>{currentModelDef.label}</span>
@@ -52,24 +55,24 @@ export const ModelSelector = ({ activeModelName, isAiLoading, onKeyUpdate }: Pro
              {/* Header */}
              <div className="p-3.5 border-b border-white/10 bg-slate-950/70 rounded-t-2xl flex items-center justify-between gap-2">
                <div>
-                 <span className="block text-[11px] text-white font-black tracking-wider">
-                   এআই মডেল ও স্পিড ক্যাটাগরি নির্বাচন করুন
+                 <span className="block text-[11px] text-white font-black tracking-wider bn:tracking-normal">
+                   {uiText(appLang, 'modelSelectorTitle')}
                  </span>
-                 <span className="block text-[9px] text-slate-400 font-medium normal-case tracking-normal mt-0.5">
-                   যেকোনো মডেলের ডানপাশের <b className="text-indigo-400">(i)</b> বাটনে মাউস রাখলে বাংলায় পূর্ণ নির্দেশনা দেখবেন
+                 <span className="block text-[10px] text-slate-400 font-medium normal-case tracking-normal mt-0.5">
+                   {uiText(appLang, 'modelHintBefore')} <b className="text-indigo-400">(i)</b> {uiText(appLang, 'modelHintAfter')}
                  </span>
                </div>
                <button
                  type="button"
                  onClick={handleToggleSpeedOpt}
-                 title="ফাস্ট থিংকিং অপ্টিমাইজেশন চালু/বন্ধ করুন"
-                 className={`px-2.5 py-1 rounded-lg text-[9px] font-black tracking-wider uppercase border transition-all cursor-pointer shrink-0 ${
+                 title={uiText(appLang, 'toggleSpeedOptTitle')}
+                 className={`px-2.5 py-1 min-h-6 rounded-lg text-[10px] font-black tracking-wider bn:tracking-normal uppercase border transition-all cursor-pointer shrink-0 ${
                    speedOpt
                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
                      : 'bg-slate-800 text-slate-400 border-white/10 hover:text-white'
                  }`}
                >
-                 {speedOpt ? '⚡ স্পিড বুস্ট: চালু' : 'স্পিড বুস্ট: বন্ধ'}
+                 {speedOpt ? uiText(appLang, 'speedBoostOn') : uiText(appLang, 'speedBoostOff')}
                </button>
              </div>
 
@@ -78,17 +81,17 @@ export const ModelSelector = ({ activeModelName, isAiLoading, onKeyUpdate }: Pro
 
              {/* Safe Rollback / Reset to Previous Default Footer Bar */}
              <div className="p-2.5 border-t border-white/10 bg-slate-950/90 rounded-b-2xl flex items-center justify-between gap-2">
-               <span className="text-[9px] text-slate-400 normal-case tracking-normal font-medium">
+               <span className="text-[10px] text-slate-400 normal-case tracking-normal font-medium">
                  {resetNotice
-                   ? '✅ পূর্বের ডিফল্ট অবস্থায় ফিরিয়ে আনা হয়েছে!'
-                   : 'কোনো সমস্যা হলে ১ ক্লিকে পূর্বের অবস্থায় ফিরুন:'}
+                   ? uiText(appLang, 'resetDone')
+                   : uiText(appLang, 'resetHint')}
                </span>
                <button
                  type="button"
                  onClick={handleResetToDefault}
-                 className="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[9px] font-black normal-case tracking-normal transition-all cursor-pointer shrink-0"
+                 className="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[10px] font-black normal-case tracking-normal transition-all cursor-pointer shrink-0"
                >
-                 ↺ পূর্বের অবস্থায় রিসেট করুন
+                 {uiText(appLang, 'resetToPrevious')}
                </button>
              </div>
 

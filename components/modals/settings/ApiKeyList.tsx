@@ -37,8 +37,8 @@ export const ApiKeyList = ({ keyList, activeKeyId, isDark, onSelect, onDelete }:
                                     </div>
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <p className={`text-xs font-black uppercase tracking-wider truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{k.label}</p>
-                                            {activeKeyId === k.id && <span className="text-[9px] font-black bg-indigo-500 text-white px-2 py-0.5 rounded-full uppercase tracking-widest">Active</span>}
+                                            <p className={`text-xs font-black uppercase tracking-wider bn:tracking-normal truncate ${isDark ? 'text-white' : 'text-slate-800'}`}>{k.label}</p>
+                                            {activeKeyId === k.id && <span className="text-[10px] font-black bg-indigo-500 text-white px-2 py-0.5 rounded-full uppercase tracking-widest">Active</span>}
                                         </div>
                                         <p className="text-[10px] font-mono opacity-40 mt-1 truncate">****{(k.key || '').slice(-8)}</p>
                                     </div>

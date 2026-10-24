@@ -25,7 +25,7 @@ export const SpeakerArchiveTab: React.FC<SpeakerArchiveTabProps> = ({
       {/* Stance Header */}
       <div className={`p-4 rounded-xl border ${isDark ? 'bg-slate-800/40 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{uiText(appLang, 'bgbStance')}</span>
+          <span className="text-xs font-bold uppercase tracking-wider bn:tracking-normal text-slate-400">{uiText(appLang, 'bgbStance')}</span>
           <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
             dbStats?.overallStance === 'supportive' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
             dbStats?.overallStance === 'critical' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
@@ -44,7 +44,7 @@ export const SpeakerArchiveTab: React.FC<SpeakerArchiveTabProps> = ({
 
       {/* List of Quotes */}
       <div className="space-y-3">
-        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center justify-between">
+        <h3 className="text-xs font-black uppercase tracking-widest bn:tracking-normal text-slate-400 flex items-center justify-between">
           <span>{uiText(appLang, 'savedQuotes', { count: mentions.length })}</span>
           <span className="text-[10px] text-indigo-400">{uiText(appLang, 'autoMatch')}</span>
         </h3>

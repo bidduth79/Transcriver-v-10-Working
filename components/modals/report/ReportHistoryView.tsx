@@ -40,12 +40,12 @@ export const ReportHistoryView = ({ reportHistory, selectedReport, setSelectedRe
                         {selectedReport.content}
                       </div>
                       <div className="flex justify-center gap-4">
-                        <button onClick={onCopy} className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-125 transition-all">{uiText(appLang, 'copy')}</button>
-                        <button onClick={onDownload} className={`flex items-center gap-3 px-8 py-4 ${activeColors.primary} text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:brightness-110 shadow-lg transition-all active:scale-95`}>{uiText(appLang, 'download2')}</button>
+                        <button onClick={onCopy} className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest bn:tracking-normal hover:brightness-125 transition-all">{uiText(appLang, 'copy')}</button>
+                        <button onClick={onDownload} className={`flex items-center gap-3 px-8 py-4 ${activeColors.primary} text-white rounded-2xl text-[11px] font-black uppercase tracking-widest bn:tracking-normal hover:brightness-110 shadow-lg transition-all active:scale-95`}>{uiText(appLang, 'download2')}</button>
                       </div>
                     </div>
                   ) : (
-                    <div className="h-full flex items-center justify-center opacity-10 uppercase font-black tracking-[0.4em]">{uiText(appLang, 'selectReport')}</div>
+                    <div className="h-full flex items-center justify-center opacity-10 uppercase font-black tracking-[0.4em] bn:tracking-normal">{uiText(appLang, 'selectReport')}</div>
                   )}
                </div>
             </div>

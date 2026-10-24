@@ -27,8 +27,8 @@ export const ReportModalHeader = ({ activeColors, viewMode, historyCount, onSele
             <div>
               <h2 className="text-2xl font-black uppercase tracking-tight font-stylish-bn leading-none transition-colors group-hover:text-white/90">{uiText(appLang, 'reportGenerator')}</h2>
               <div className="flex gap-6 mt-4">
-                <button onClick={() => onSelectView('generate')} className={`text-[10px] font-black uppercase tracking-widest pb-1 border-b-2 transition-all ${viewMode === 'generate' ? 'border-white' : 'border-transparent opacity-40 hover:opacity-100'}`}>{uiText(appLang, 'create')}</button>
-                <button onClick={() => onSelectView('history')} className={`text-[10px] font-black uppercase tracking-widest pb-1 border-b-2 transition-all ${viewMode === 'history' ? 'border-white' : 'border-transparent opacity-40 hover:opacity-100'}`}>{uiText(appLang, 'historyWithCount', { historyCount })}</button>
+                <button onClick={() => onSelectView('generate')} className={`text-[10px] font-black uppercase tracking-widest bn:tracking-normal pb-1 border-b-2 transition-all ${viewMode === 'generate' ? 'border-white' : 'border-transparent opacity-40 hover:opacity-100'}`}>{uiText(appLang, 'create')}</button>
+                <button onClick={() => onSelectView('history')} className={`text-[10px] font-black uppercase tracking-widest bn:tracking-normal pb-1 border-b-2 transition-all ${viewMode === 'history' ? 'border-white' : 'border-transparent opacity-40 hover:opacity-100'}`}>{uiText(appLang, 'historyWithCount', { historyCount })}</button>
               </div>
             </div>
           </div>

@@ -33,7 +33,7 @@ export const SummaryHistoryList: React.FC<SummaryHistoryListProps> = ({
   return (
     <div className="space-y-4 pb-20 w-full max-w-3xl mx-auto overflow-x-visible">
       {historyWithDuplicateFlags.length === 0 ? (
-        <div className="py-32 text-center opacity-20"><p className="text-xl font-black uppercase tracking-widest">{uiText(appLang, 'archiveEmpty')}</p></div>
+        <div className="py-32 text-center opacity-20"><p className="text-xl font-black uppercase tracking-widest bn:tracking-normal">{uiText(appLang, 'archiveEmpty')}</p></div>
       ) : (
         historyWithDuplicateFlags.map((item) => (
           <div 
@@ -48,7 +48,7 @@ export const SummaryHistoryList: React.FC<SummaryHistoryListProps> = ({
             className={`p-6 rounded-3xl border cursor-pointer transition-all hover:scale-[1.02] hover:shadow-xl group relative select-none ${hoveredId === item.id ? 'z-[200]' : 'z-10'} ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-slate-200'}`}
           >
             {item.isDuplicate && (
-              <div className="absolute -top-3 -right-3 px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] font-black rounded-full shadow-lg border-2 border-white animate-bounce z-[210]">
+              <div className="absolute -top-3 -right-3 px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black rounded-full shadow-lg border-2 border-white animate-bounce z-[210]">
                 DUPLICATE
               </div>
             )}
@@ -64,7 +64,7 @@ export const SummaryHistoryList: React.FC<SummaryHistoryListProps> = ({
                 <div className="max-h-[250px] overflow-y-auto bg-slate-900 border-2 border-indigo-500/40 rounded-2xl p-5 shadow-2xl custom-scrollbar pointer-events-auto animate-in fade-in zoom-in-95 duration-200">
                   <div className="flex items-center gap-3 mb-4 border-b border-white/10 pb-3 sticky top-0 bg-slate-900 z-10">
                     <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
-                    <p className="text-[10px] font-black text-white uppercase tracking-[0.2em]">{uiText(appLang, 'analysisPreview')}</p>
+                    <p className="text-[10px] font-black text-white uppercase tracking-[0.2em] bn:tracking-normal">{uiText(appLang, 'analysisPreview')}</p>
                   </div>
                   <div className="space-y-3 relative z-0">
                     {item.matchSentences.map((snip, sIdx) => (
@@ -83,7 +83,7 @@ export const SummaryHistoryList: React.FC<SummaryHistoryListProps> = ({
             )}
             
             <div className="absolute inset-0 bg-red-600/95 z-[250] rounded-3xl flex items-center justify-between px-8 animate-in fade-in duration-200 shadow-xl" style={{display: deletingId === item.id ? 'flex' : 'none'}}>
-                <p className="text-white font-black uppercase text-xs tracking-[0.15em]">{uiText(appLang, 'deleteConfirm')}</p>
+                <p className="text-white font-black uppercase text-xs tracking-[0.15em] bn:tracking-normal">{uiText(appLang, 'deleteConfirm')}</p>
                 <div className="flex gap-3">
                   <button onClick={(e) => {e.stopPropagation(); setDeletingId(null);}} className="text-white bg-white/10 px-5 py-2 rounded-xl text-[10px] font-black uppercase border border-white/20 hover:bg-white/20 transition-all">{uiText(appLang, 'cancel')}</button>
                   <button onClick={(e) => confirmDelete(e, item.id)} className="text-red-600 bg-white px-5 py-2 rounded-xl text-[10px] font-black uppercase shadow-lg hover:scale-105 active:scale-95 transition-all">{uiText(appLang, 'delete2')}</button>
@@ -95,26 +95,26 @@ export const SummaryHistoryList: React.FC<SummaryHistoryListProps> = ({
                 <div className="flex items-center gap-4 mb-3">
                    <div className="flex items-center gap-2">
                      <div className={`w-1.5 h-5 rounded-full ${activeColors?.primary || 'bg-indigo-600'}`}></div>
-                     <span className={`px-3 py-1 rounded-lg ${activeColors?.primary || 'bg-indigo-600'} text-white text-[10px] font-black uppercase tracking-wider shadow-sm`}>{item.searchTerm}</span>
+                     <span className={`px-3 py-1 rounded-lg ${activeColors?.primary || 'bg-indigo-600'} text-white text-[10px] font-black uppercase tracking-wider bn:tracking-normal shadow-sm`}>{item.searchTerm}</span>
                    </div>
                    <h4 className={`text-lg font-bold uppercase font-stylish-bn line-clamp-1 group-hover:text-indigo-600 transition-colors ${isDark ? 'text-white' : 'text-slate-800'}`}>{item.fileName}</h4>
                 </div>
                 <div className={`flex items-center gap-5 ${isDark ? 'opacity-70' : 'opacity-60'}`}>
                    <div className="flex items-center gap-2">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                      <span className="text-[10px] font-bold uppercase tracking-wider tabular-nums">{new Date(item.date).toLocaleDateString()}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider bn:tracking-normal tabular-nums">{new Date(item.date).toLocaleDateString()}</span>
                    </div>
                    <div className="flex items-center gap-2">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                      <span className="text-[10px] font-bold uppercase tracking-wider tabular-nums">{item.duration}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider bn:tracking-normal tabular-nums">{item.duration}</span>
                    </div>
                    <div className="flex items-center gap-2">
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
-                      <span className="text-[10px] font-bold uppercase tracking-wider">{uiText(appLang, 'matchesCount', { count: item.matchCount })}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider bn:tracking-normal">{uiText(appLang, 'matchesCount', { count: item.matchCount })}</span>
                    </div>
                    <div className="flex items-center gap-1.5">
                      <div className={`w-1.5 h-1.5 rounded-full ${item.sentiment === 'pending' ? 'bg-slate-400' : item.sentiment === 'positive' ? 'bg-emerald-500' : item.sentiment === 'negative' ? 'bg-rose-500' : 'bg-indigo-400'}`}></div>
-                     <span className="text-[9px] font-bold uppercase tracking-wider">{getSentimentLabel(item.sentiment, appLang)}</span>
+                     <span className="text-[10px] font-bold uppercase tracking-wider bn:tracking-normal">{getSentimentLabel(item.sentiment, appLang)}</span>
                    </div>
                 </div>
               </div>

@@ -47,12 +47,12 @@ export const TranscriberReportModal = ({
 
             <div className="flex flex-wrap items-center gap-4 bg-slate-700 px-4 py-2 rounded-xl border border-slate-600">
                 <div className="flex flex-col">
-                    <label className="text-[9px] font-bold uppercase text-slate-400 mb-1 cursor-pointer">From Date</label>
+                    <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 cursor-pointer">From Date</label>
                     <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="cursor-pointer px-3 py-1.5 rounded border border-slate-500 text-xs font-bold bg-slate-800 text-white outline-none focus:border-white transition-colors" />
                 </div>
                 <div className="w-px h-8 bg-slate-600"></div>
                 <div className="flex flex-col">
-                    <label className="text-[9px] font-bold uppercase text-slate-400 mb-1 cursor-pointer">To Date</label>
+                    <label className="text-[10px] font-bold uppercase text-slate-400 mb-1 cursor-pointer">To Date</label>
                     <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="cursor-pointer px-3 py-1.5 rounded border border-slate-500 text-xs font-bold bg-slate-800 text-white outline-none focus:border-white transition-colors" />
                 </div>
             </div>

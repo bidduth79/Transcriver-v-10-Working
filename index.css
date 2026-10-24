@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Only in the Bengali interface (html lang="bn"). bn:tracking-normal keeps wide letter spacing,
+   meant for English capitals, from pulling Bengali letters apart. */
+@custom-variant bn (&:lang(bn));
+
 @theme {
   --font-sans: "Inter", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
 }

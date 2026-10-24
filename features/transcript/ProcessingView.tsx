@@ -2,10 +2,13 @@
 import React from 'react';
 import { useProcessingView } from './hooks/useProcessingView';
 import type { TranscriptOutputProps } from './transcriptOutputTypes';
+import { uiText } from '../../utils/uiText';
+import { useThemeStore } from '../../hooks/useThemeStore';
 
 export const ProcessingView = ({
   t, isDark, textColor, activeColors, progress, currentStage, elapsedSeconds, estimatedSeconds
 }: Pick<TranscriptOutputProps, 't' | 'isDark' | 'textColor' | 'activeColors' | 'progress' | 'currentStage' | 'elapsedSeconds' | 'estimatedSeconds'>) => {
+  const appLang = useThemeStore(state => state.appLang);
   const { formatTime, remainingSeconds, BACKGROUND_IMAGE_URL } = useProcessingView(estimatedSeconds, elapsedSeconds);
 
   return (
@@ -70,8 +73,8 @@ export const ProcessingView = ({
         <div className="mb-12">
            <div className={`px-8 py-3 rounded-full shadow-[0_5px_20px_-5px_rgba(0,0,0,0.05)] border flex items-center gap-3 backdrop-blur-md ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white/80 border-slate-100'}`}>
               <div className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>
-              <p className={`text-[14px] font-bold tracking-wide font-stylish-bn ${isDark ? 'text-white' : 'text-slate-700'}`}>
-                {currentStage || "প্রসেসিং চলছে . . ."}
+              <p className={`text-[14px] font-bold tracking-wide bn:tracking-normal font-stylish-bn ${isDark ? 'text-white' : 'text-slate-700'}`}>
+                {currentStage || uiText(appLang, 'processingDefault')}
               </p>
            </div>
         </div>
@@ -79,14 +82,14 @@ export const ProcessingView = ({
         {/* Time Stats Container */}
         <div className="w-full max-w-md bg-slate-950 rounded-[2.5rem] p-10 flex items-center justify-between shadow-2xl relative overflow-hidden group">
            <div className="flex flex-col items-center flex-1">
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">ESTIMATED</span>
+              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">ESTIMATED</span>
               <span className="text-2xl font-black text-white tabular-nums">{formatTime(estimatedSeconds)}</span>
            </div>
            
            <div className="w-px h-12 bg-white/10 mx-4"></div>
            
            <div className="flex flex-col items-center flex-1">
-              <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-2">REMAINING</span>
+              <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">REMAINING</span>
               <span className="text-2xl font-black text-white tabular-nums">~{formatTime(remainingSeconds)}</span>
            </div>
            

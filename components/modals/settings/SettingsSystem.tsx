@@ -52,7 +52,7 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                 <div className="flex flex-col gap-1 max-w-md">
                     <div className="flex items-center gap-2">
                         <span className="text-lg">🎙️</span>
-                        <h3 className="text-sm font-black uppercase tracking-wider">
+                        <h3 className="text-sm font-black uppercase tracking-wider bn:tracking-normal">
                             {uiText(appLang, 'liveMicrophoneRecording')}
                         </h3>
                     </div>
@@ -62,7 +62,7 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                 </div>
                 <button
                     onClick={handleToggleMicrophone}
-                    className={`px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer shadow-md active:scale-95 ${
+                    className={`px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest bn:tracking-normal transition-all cursor-pointer shadow-md active:scale-95 ${
                         micEnabled 
                             ? 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-500/30' 
                             : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
@@ -79,7 +79,7 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                 <div className="flex flex-col gap-1 max-w-md">
                     <div className="flex items-center gap-2">
                         <span className="text-lg">🖥️</span>
-                        <h3 className="text-sm font-black uppercase tracking-wider">
+                        <h3 className="text-sm font-black uppercase tracking-wider bn:tracking-normal">
                             {uiText(appLang, 'localXamppServer12700')}
                         </h3>
                     </div>
@@ -89,7 +89,7 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                 </div>
                 <button
                     onClick={handleToggleXampp}
-                    className={`px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer shadow-md active:scale-95 ${
+                    className={`px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest bn:tracking-normal transition-all cursor-pointer shadow-md active:scale-95 ${
                         xamppEnabled 
                             ? 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-500/30' 
                             : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
@@ -103,7 +103,7 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
 
             {/* 3. Download Path */}
             <div className={`p-6 rounded-3xl border flex flex-col gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                <h3 className="text-xs font-black uppercase tracking-widest opacity-60">
+                <h3 className="text-xs font-black uppercase tracking-widest bn:tracking-normal opacity-60">
                     {uiText(appLang, 'downloadPathFolderLocation')}
                 </h3>
                 <p className="text-[10px] opacity-60">
@@ -122,7 +122,7 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                             localStorage.setItem('customDownloadPath', downloadPath.trim());
                             addToast(uiText(appLang, 'downloadPathSaved'), 'success');
                         }}
-                        className={`px-6 py-3 ${activeColors.primary} text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer`}
+                        className={`px-6 py-3 ${activeColors.primary} text-white rounded-xl font-black uppercase tracking-widest bn:tracking-normal text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all cursor-pointer`}
                     >
                         {uiText(appLang, 'save')}
                     </button>

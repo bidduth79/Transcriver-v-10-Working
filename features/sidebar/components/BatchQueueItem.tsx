@@ -67,17 +67,17 @@ export const BatchQueueItem = ({
                         {file.name}
                       </span>
                       {isFailed && (
-                        <span className="text-[9px] font-bold bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded uppercase shrink-0">
+                        <span className="text-[10px] font-bold bg-red-500/20 text-red-500 px-1.5 py-0.5 rounded uppercase shrink-0">
                           {uiText(appLang, 'failedAlt')}
                         </span>
                       )}
                       {isProcessed && (
-                        <span className="text-[9px] font-bold bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 rounded uppercase shrink-0">
+                        <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 rounded uppercase shrink-0">
                           {uiText(appLang, 'success')}
                         </span>
                       )}
                       {isDuplicate && (
-                        <span className="text-[9px] font-bold bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded uppercase shrink-0">
+                        <span className="text-[10px] font-bold bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded uppercase shrink-0">
                           {uiText(appLang, 'duplicate')}
                         </span>
                       )}

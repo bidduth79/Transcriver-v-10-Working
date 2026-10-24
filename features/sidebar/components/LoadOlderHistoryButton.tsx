@@ -43,7 +43,7 @@ export const LoadOlderHistoryButton = ({ t, isDark, appLang, history }: Props) =
     <button
       onClick={handleClick}
       disabled={isLoading}
-      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest border transition-all disabled:opacity-50 ${isDark ? 'border-white/10 text-slate-400 hover:text-white hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
+      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest bn:tracking-normal border transition-all disabled:opacity-50 ${isDark ? 'border-white/10 text-slate-400 hover:text-white hover:bg-white/5' : 'border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50'}`}
     >
       {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <History className="w-3.5 h-3.5" />}
       {t.loadOlderFromCloud}

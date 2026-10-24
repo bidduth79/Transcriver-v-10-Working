@@ -3,6 +3,8 @@ import { SpeakerProfile } from '../../types/speaker';
 import { fetchWikiSummary, fetchWikiImageByTitle, searchWikiImage, searchCommonsImage } from '../speakerProfileUtils';
 import { DEFAULT_MODEL } from '../../constants/aiModels';
 import { messageOf } from '../../utils/errorMessage';
+import { uiText } from '../../utils/uiText';
+import { currentAppLang } from '../useThemeStore';
 
 const LITE_MODEL = 'gemini-3.5-flash-lite';
 
@@ -97,14 +99,14 @@ export const enrichProfileFromWiki = async (parsedProfile: SpeakerProfile, name:
 
 export const getSpeakerProfileErrorMessage = (err: unknown) => {
   const rawMsg = messageOf(err) || '';
-  let displayError = 'স্পীকারের প্রোফাইল লোড করা সম্ভব হয়নি। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।';
+  let displayError = uiText(currentAppLang(), 'profileLoadFailed');
   
   if (rawMsg.includes('PERMISSION_DENIED') || rawMsg.includes('403')) {
-    displayError = 'API Key-তে অনুসন্ধান চালানোর অনুমতি নেই। অনুগ্রহ করে Settings থেকে একটি সক্রিয় API Key প্রদান করুন।';
+    displayError = uiText(currentAppLang(), 'profileSearchNotAllowed');
   } else if (rawMsg.includes('RESOURCE_EXHAUSTED') || rawMsg.includes('429')) {
-    displayError = 'API কোটা সাময়িকভাবে শেষ হয়ে গেছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।';
+    displayError = uiText(currentAppLang(), 'profileQuotaExceeded');
   } else if (rawMsg.includes('API_KEY_INVALID') || rawMsg.includes('400')) {
-    displayError = 'প্রদত্ত API Key টি সঠিক নয়। Settings থেকে সঠিক কি কনফিগার করুন।';
+    displayError = uiText(currentAppLang(), 'profileInvalidKey');
   } else if (rawMsg) {
     displayError = rawMsg;
   }

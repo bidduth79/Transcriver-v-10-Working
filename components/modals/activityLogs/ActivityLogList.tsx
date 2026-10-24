@@ -30,8 +30,8 @@ export const ActivityLogList = ({ state, isDark }: Props) => {
 
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-3 mb-1">
-                                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${getStatusColor(log.status)}`}>{log.status}</span>
-                                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">{log.category}</span>
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase border ${getStatusColor(log.status)}`}>{log.status}</span>
+                                    <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest bn:tracking-normal">{log.category}</span>
                                 </div>
                                 <p className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>{log.message}</p>
                                 {log.details && (

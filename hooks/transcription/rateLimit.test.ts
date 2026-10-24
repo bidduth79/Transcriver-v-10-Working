@@ -48,6 +48,7 @@ describe('generateWithRecovery on rate limits', () => {
 
   it('waits as long as Gemini asks on a per-minute limit and retries the same key', async () => {
     const p = run({ 'KEY-A': [geminiError('PerMinute', '20s'), { text: 'ok' }], 'KEY-B': [] });
+    await vi.dynamicImportSettled(); // the Gemini SDK loads on first use
     await vi.advanceTimersByTimeAsync(20999);
     expect(calls).toEqual(['KEY-A']);
     await vi.advanceTimersByTimeAsync(1);
@@ -57,6 +58,7 @@ describe('generateWithRecovery on rate limits', () => {
 
   it('after waiting, uses another key without making it the default', async () => {
     const p = run({ 'KEY-A': [geminiError('PerMinute', '5s'), geminiError('PerMinute', '5s')], 'KEY-B': [{ text: 'b' }] });
+    await vi.dynamicImportSettled(); // the Gemini SDK loads on first use
     await vi.advanceTimersByTimeAsync(6000);
     expect(await p).toMatchObject({ apiKey: 'KEY-B', response: { text: 'b' } });
     expect(m.setActive).not.toHaveBeenCalled();
@@ -64,6 +66,7 @@ describe('generateWithRecovery on rate limits', () => {
 
   it('switches key at once, and keeps it, when the daily quota is used up', async () => {
     const p = run({ 'KEY-A': [geminiError('GenerateRequestsPerDayPerProjectPerModel')], 'KEY-B': [{ text: 'b' }] });
+    await vi.dynamicImportSettled(); // the Gemini SDK loads on first use
     expect(await p).toMatchObject({ apiKey: 'KEY-B' });
     expect(calls).toEqual(['KEY-A', 'KEY-B']);
     expect(m.setActive).toHaveBeenCalledWith('k2');

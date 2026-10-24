@@ -25,8 +25,8 @@ export const SummaryModalHeader = ({ activeColors, viewMode, onSelectView, onMin
             <div>
               <h2 className="text-4xl font-black uppercase tracking-tight font-stylish-bn leading-none">{uiText(appLang, 'searchAnalysis')}</h2>
               <div className="flex gap-8 mt-5">
-                <button onClick={() => onSelectView('current')} className={`text-[12px] font-black uppercase tracking-[0.3em] pb-2 border-b-2 transition-all ${viewMode === 'current' ? 'border-white text-white' : 'border-transparent text-white/40 hover:text-white/60'}`}>{uiText(appLang, 'liveReport')}</button>
-                <button onClick={() => onSelectView('history')} className={`text-[12px] font-black uppercase tracking-[0.3em] pb-2 border-b-2 transition-all ${viewMode === 'history' ? 'border-white text-white' : 'border-transparent text-white/40 hover:text-white/60'}`}>{uiText(appLang, 'historyArchive')}</button>
+                <button onClick={() => onSelectView('current')} className={`text-[12px] font-black uppercase tracking-[0.3em] bn:tracking-normal pb-2 border-b-2 transition-all ${viewMode === 'current' ? 'border-white text-white' : 'border-transparent text-white/40 hover:text-white/60'}`}>{uiText(appLang, 'liveReport')}</button>
+                <button onClick={() => onSelectView('history')} className={`text-[12px] font-black uppercase tracking-[0.3em] bn:tracking-normal pb-2 border-b-2 transition-all ${viewMode === 'history' ? 'border-white text-white' : 'border-transparent text-white/40 hover:text-white/60'}`}>{uiText(appLang, 'historyArchive')}</button>
               </div>
             </div>
           </div>

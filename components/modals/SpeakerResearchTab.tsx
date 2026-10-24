@@ -93,7 +93,7 @@ export const SpeakerResearchTab: React.FC<SpeakerResearchTabProps> = ({
       {/* Dual-Language Wikipedia Extracted Summaries */}
       {(profile.wikiSummaryBn || profile.wikiSummaryEn) && (
         <div className="space-y-3 pt-2">
-          <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">{uiText(appLang, 'wikipediaExtract')}</h4>
+          <h4 className="text-xs font-black uppercase tracking-wider bn:tracking-normal text-slate-400">{uiText(appLang, 'wikipediaExtract')}</h4>
           {profile.wikiSummaryBn && (
             <div className={`p-3.5 rounded-xl border text-xs leading-relaxed ${isDark ? 'bg-slate-800/20 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
               <span className="font-bold text-indigo-400 block mb-1">{uiText(appLang, 'bengaliWikipedia')}</span>

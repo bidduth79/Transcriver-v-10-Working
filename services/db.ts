@@ -8,6 +8,8 @@ export const DB_VERSION = 3;
 
 import { STORES, FIREBASE_SYNCED_STORES, ALL_STORES } from '../constants/storeNames';
 import type { StoredRecord } from '../types';
+import { uiText } from '../utils/uiText';
+import { currentAppLang } from '../hooks/useThemeStore';
 export { STORES, FIREBASE_SYNCED_STORES, ALL_STORES };
 
 const SYNC_COOLDOWN = 1000 * 60 * 5; // 5 minutes
@@ -22,7 +24,7 @@ export const initDB = () => {
 
     request.onerror = () => {
         console.error("DB Open Error:", request.error);
-        useAppStore.getState().setAppError('ডাটাবেস ওপেন করতে সমস্যা হয়েছে: ' + request.error?.message);
+        useAppStore.getState().setAppError(uiText(currentAppLang(), 'dbOpenFailed', { message: request.error?.message }));
         dbPromise = null;
         reject(request.error);
     };

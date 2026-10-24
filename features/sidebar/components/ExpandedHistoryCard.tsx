@@ -44,7 +44,7 @@ export const ExpandedHistoryCard = ({
                     <div className={`absolute top-0 right-0 w-32 h-32 ${activeColors.soft.replace('bg-', 'bg-opacity-10 bg-')} blur-3xl opacity-0 group-hover:opacity-100 transition-opacity`}></div>
                     <div className="mb-6 flex items-start justify-between relative z-10">
                        <div className="flex gap-2 items-center">
-                           <div className={`px-3 py-1 ${activeColors.soft} ${activeColors.text} rounded-lg text-[8px] font-black uppercase tracking-widest ring-1 ${activeColors.border.replace('border-', 'border-opacity-20 border-')} transition-transform group-hover:scale-110 group-hover:-rotate-3`}>
+                           <div className={`px-3 py-1 ${activeColors.soft} ${activeColors.text} rounded-lg text-[10px] font-black uppercase tracking-widest bn:tracking-normal ring-1 ${activeColors.border.replace('border-', 'border-opacity-20 border-')} transition-transform group-hover:scale-110 group-hover:-rotate-3`}>
                                {item.extension || 'FILE'}
                            </div>
                            {/* Sensitive Match Pill */}
@@ -57,13 +57,13 @@ export const ExpandedHistoryCard = ({
                                        e.stopPropagation();
                                        loadHistoryItem(item, match);
                                      }}
-                                     className="px-3 py-1 bg-red-600 hover:bg-red-500 cursor-pointer transition-colors text-white rounded-lg text-[8px] font-black uppercase tracking-widest ring-1 ring-red-500 shadow-lg shadow-red-500/20 animate-pulse"
+                                     className="px-3 py-1 bg-red-600 hover:bg-red-500 cursor-pointer transition-colors text-white rounded-lg text-[10px] font-black uppercase tracking-widest bn:tracking-normal ring-1 ring-red-500 shadow-lg shadow-red-500/20 animate-pulse"
                                    >
                                        {match}
                                    </div>
                                  ))}
                                  {sensitiveMatches.length > 2 && (
-                                   <div className="px-3 py-1 bg-red-600/80 text-white rounded-lg text-[8px] font-black uppercase tracking-widest">
+                                   <div className="px-3 py-1 bg-red-600/80 text-white rounded-lg text-[10px] font-black uppercase tracking-widest bn:tracking-normal">
                                        +{sensitiveMatches.length - 2}
                                    </div>
                                  )}
@@ -77,13 +77,13 @@ export const ExpandedHistoryCard = ({
                     </div>
                     <h4 className={`text-sm font-black line-clamp-2 mb-8 uppercase tracking-tight leading-relaxed transition-colors font-stylish-bn group-hover:text-indigo-500 relative z-10 ${isDark ? 'text-white' : 'text-slate-800'}`}>{item.fileName}</h4>
                     <div className="mt-auto pt-6 border-t border-slate-100/50 flex items-center justify-between relative z-10">
-                       <div className="flex flex-col group/info-date"><span className="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1.5 group-hover/info-date:opacity-100 transition-opacity">{t.historyLabelDate}</span><span className={`text-[11px] font-black ${isDark ? 'text-white/80' : 'text-slate-600'}`}>{new Date(item.date).toLocaleDateString()}</span></div>
+                       <div className="flex flex-col group/info-date"><span className="text-[10px] font-black opacity-40 uppercase tracking-widest bn:tracking-normal mb-1.5 group-hover/info-date:opacity-100 transition-opacity">{t.historyLabelDate}</span><span className={`text-[11px] font-black ${isDark ? 'text-white/80' : 'text-slate-600'}`}>{new Date(item.date).toLocaleDateString()}</span></div>
                        <div className="flex flex-col items-end group/info-dur">
-                          <span className="text-[9px] font-black opacity-40 uppercase tracking-widest mb-1.5 group-hover/info-dur:opacity-100 transition-opacity">DURATION / TIME</span>
+                          <span className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-1.5 group-hover/info-dur:opacity-100 transition-opacity">DURATION / TIME</span>
                           <div className="flex items-center gap-1.5">
                               <span className={`text-[11px] font-black ${activeColors.text}`}>{item.duration}</span>
                               {item.bgbRemark && (
-                                  <span className={`text-[8px] font-black uppercase tracking-wider px-1 rounded ${
+                                  <span className={`text-[10px] font-black uppercase tracking-wider bn:tracking-normal px-1 rounded ${
                                       item.bgbRemark === 'Positive' ? 'text-green-500 bg-green-500/10' :
                                       item.bgbRemark === 'Negative' ? 'text-red-500 bg-red-500/10' :
                                       'text-yellow-500 bg-yellow-500/10'
@@ -91,7 +91,7 @@ export const ExpandedHistoryCard = ({
                                       {item.bgbRemark}
                                   </span>
                               )}
-                              <span className={`text-[9px] font-bold opacity-40 ${isDark ? 'text-white' : 'text-slate-600'}`}>({formatProcessingTime(item.timeTaken)})</span>
+                              <span className={`text-[10px] font-bold opacity-40 ${isDark ? 'text-white' : 'text-slate-600'}`}>({formatProcessingTime(item.timeTaken)})</span>
                           </div>
                        </div>
                     </div>

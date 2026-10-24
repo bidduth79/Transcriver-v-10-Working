@@ -23,7 +23,7 @@ export const HistoryPreviewOverlay = ({ item, isSensitive, sensitiveMatches, isD
                       onClick={(e) => e.stopPropagation()} // Prevent triggering load when interacting with popup text
                     >
                       <div className="flex items-center justify-between mb-3 shrink-0 border-b border-white/10 pb-2">
-                        <span className={`text-[9px] font-black uppercase tracking-widest ${activeColors.text}`}>TRANSCRIPT PREVIEW</span>
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${activeColors.text}`}>TRANSCRIPT PREVIEW</span>
                         <div onClick={() => loadHistoryItem(item)} className="cursor-pointer p-1.5 bg-white/10 rounded-full hover:bg-indigo-600 hover:text-white transition-all group" title="Open File">
                            <svg className="w-3 h-3 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                         </div>

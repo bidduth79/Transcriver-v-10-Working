@@ -24,7 +24,7 @@ export const PeakUsageChart = ({ title, peak, peakLabel, peakColor, barColor, li
             </div>
             <div className="flex-1 relative mt-2">
               <div className="absolute top-2 w-full border-t border-dashed border-red-500/50"></div>
-              <span className="absolute top-0 left-0 bg-red-500 text-white text-[8px] font-bold px-1 rounded-sm">Limit</span>
+              <span className="absolute top-0 left-0 bg-red-500 text-white text-[10px] font-bold px-1 rounded-sm">Limit</span>
               <span className="absolute top-0 right-0 text-slate-400 text-[10px]">{formatQuotaNumber(limit)}</span>
 
               <div className={`absolute bottom-0 w-full h-12 flex items-end justify-between ${barGap}`}>

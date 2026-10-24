@@ -11,6 +11,12 @@ interface ThemeState {
   setTranscriptionMode: (mode: 'normal' | 'pro') => void;
 }
 
+// The page's language follows the interface language (screen readers, and the `bn:` style variant)
+const applyPageLang = (lang: 'bn' | 'en') => {
+  if (typeof document !== 'undefined') document.documentElement.lang = lang;
+  return lang;
+};
+
 export const useThemeStore = create<ThemeState>((set) => ({
   theme: localStorage.getItem('app-theme') || 'default',
   setTheme: (theme) => {
@@ -18,10 +24,10 @@ export const useThemeStore = create<ThemeState>((set) => ({
     set({ theme });
   },
   
-  appLang: (localStorage.getItem('app-lang') as 'bn' | 'en') || 'bn',
+  appLang: applyPageLang((localStorage.getItem('app-lang') as 'bn' | 'en') || 'bn'),
   setAppLang: (appLang) => {
     localStorage.setItem('app-lang', appLang);
-    set({ appLang });
+    set({ appLang: applyPageLang(appLang) });
   },
   
   fontSize: parseInt(localStorage.getItem('app-font-size') || '16'),
@@ -37,3 +43,6 @@ export const useThemeStore = create<ThemeState>((set) => ({
     set({ transcriptionMode });
   }
 }));
+
+// The interface language, for code outside React (services, toasts)
+export const currentAppLang = () => useThemeStore.getState().appLang;

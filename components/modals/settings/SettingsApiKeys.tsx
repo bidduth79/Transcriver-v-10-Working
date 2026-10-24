@@ -27,7 +27,7 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
 
             {/* Input Area */}
             <div className={`p-6 rounded-3xl border flex flex-col gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                <h3 className="text-xs font-black uppercase tracking-widest opacity-60">{uiText(appLang, 'addNewKey')}</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest bn:tracking-normal opacity-60">{uiText(appLang, 'addNewKey')}</h3>
                 <div className="flex gap-4">
                     <input 
                         type="text" 
@@ -46,7 +46,7 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
                     <button 
                         onClick={handleAddKey}
                         disabled={isAddingKey || !newKeyInput}
-                        className={`px-6 py-3 ${activeColors.primary} text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all disabled:opacity-50`}
+                        className={`px-6 py-3 ${activeColors.primary} text-white rounded-xl font-black uppercase tracking-widest bn:tracking-normal text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all disabled:opacity-50`}
                     >
                         {isAddingKey ? 'ADDING...' : (uiText(appLang, 'add'))}
                     </button>

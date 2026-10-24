@@ -21,7 +21,7 @@ export const ShortcutCategoryList = ({ editor, isDark }: Props) => {
                    <div key={cat} className="space-y-4">
                       <div className="flex items-center gap-4">
                          <div className={`h-px flex-1 ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
-                         <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>{cat}</span>
+                         <span className={`text-[10px] font-black uppercase tracking-[0.2em] bn:tracking-normal ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>{cat}</span>
                          <div className={`h-px flex-1 ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}></div>
                       </div>
                       
@@ -33,7 +33,7 @@ export const ShortcutCategoryList = ({ editor, isDark }: Props) => {
                            return (
                              <div key={item.id} className={`p-4 rounded-2xl border flex items-center justify-between group hover:border-indigo-500/30 transition-all ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
                                 <div>
-                                   <p className={`text-xs font-black uppercase tracking-wide ${isDark ? 'text-white' : 'text-slate-800'}`}>{item.label}</p>
+                                   <p className={`text-xs font-black uppercase tracking-wide bn:tracking-normal ${isDark ? 'text-white' : 'text-slate-800'}`}>{item.label}</p>
                                    <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-400' : 'text-slate-400'}`}>{item.description}</p>
                                 </div>
                                 

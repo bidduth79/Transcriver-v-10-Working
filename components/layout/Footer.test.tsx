@@ -58,7 +58,7 @@ describe('Footer markup', () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ status: 'online' }) })));
     m.cloud.mockResolvedValue({ status: 'online', message: 'Synced' });
     const { container } = await setup({ isAiLoading: true, isDark: false, activeModelName: 'gemini-3.1-pro-preview' });
-    await waitFor(() => expect(container.textContent).toContain('LOCAL DB: ONLINE'));
+    await waitFor(() => expect(container.textContent).toContain('LOCAL SERVER: ONLINE'));
     expect(container.innerHTML).toMatchSnapshot();
     vi.unstubAllGlobals();
   });
@@ -146,7 +146,7 @@ describe('Footer behavior', () => {
     vi.useFakeTimers();
     const { container } = await setup();
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
-    expect(container.textContent).toContain('LOCAL DB: OFFLINE');
+    expect(container.textContent).toContain('LOCAL SERVER: OFFLINE');
     expect(m.cloud).toHaveBeenCalledTimes(1);
     await act(async () => { await vi.advanceTimersByTimeAsync(60000); });
     expect(m.cloud).toHaveBeenCalledTimes(2);

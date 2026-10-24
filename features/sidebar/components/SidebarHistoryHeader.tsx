@@ -32,14 +32,14 @@ export const SidebarHistoryHeader = ({
           <div className="peer/dot flex items-center group/dot cursor-pointer py-2 pr-4 z-20 shrink-0">
             <div className={`w-2.5 h-2.5 rounded-full bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.5)] shrink-0 animate-pulse`}></div>
             <div className="flex items-center overflow-hidden transition-all duration-500 max-w-0 opacity-0 group-hover/dot:max-w-[250px] group-hover/dot:opacity-100 group-hover/dot:ml-2">
-              <span className="text-[12px] font-black uppercase tracking-[0.15em] text-white whitespace-nowrap">{t.history}</span>
+              <span className="text-[12px] font-black uppercase tracking-[0.15em] bn:tracking-normal text-white whitespace-nowrap">{t.history}</span>
             </div>
           </div>
 
           <div className="transition-all duration-500 flex-1"></div>
 
           <div className="flex items-center gap-1 shrink-0 z-10 transition-transform duration-500">
-            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full bg-white/10 text-white/60 border border-white/5 shrink-0 hidden sm:inline-block mr-1`}>{totalHistoryCount !== undefined ? totalHistoryCount : (history?.length || 0)}</span>
+            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-white/10 text-white/60 border border-white/5 shrink-0 hidden sm:inline-block mr-1`}>{totalHistoryCount !== undefined ? totalHistoryCount : (history?.length || 0)}</span>
 
             <div className="static flex gap-1">
             <div className="static">

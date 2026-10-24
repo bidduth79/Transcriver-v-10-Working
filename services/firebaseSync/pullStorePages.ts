@@ -5,6 +5,8 @@ import { withoutSyncStamp } from './syncStamp';
 import { unpackFromCloud } from './transcriptCompression';
 import { isTombstone } from './tombstone';
 import type { StoredRecord } from '../../types';
+import { uiText } from '../../utils/uiText';
+import { currentAppLang } from '../../hooks/useThemeStore';
 
 // Documents fetched per request; only one page is held in memory at a time
 export const PULL_PAGE_SIZE = 50;
@@ -121,7 +123,7 @@ export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onMerge
     const missingDocs = await Promise.all(packedDocs.map(item => unpackFromCloud(item)));
 
     if (missingDocs.length > 0) {
-      syncStats.statusMessageBn = `${storeName} থেকে ${missingDocs.length}টি নতুন ডাটা ধীরে ধীরে যুক্ত হচ্ছে...`;
+      syncStats.statusMessageBn = uiText(currentAppLang(), 'firebaseAddingFromStore', { store: storeName, count: missingDocs.length });
       notifyListeners();
 
       // ১০টি করে ছোট ব্যাচে সেভ করুন এবং প্রতি ব্যাচের মাঝে ২৫০ms বিরতি দিন (Zero UI Pressure)

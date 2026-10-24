@@ -37,7 +37,7 @@ export const SystemStatusBar = ({ proModeLabel, primaryColor, serverStatus, clou
         <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${serverStatus === 'online' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)]'}`}></div>
             <span className={`${serverStatus === 'online' ? 'text-green-500' : 'text-red-500'}`}>
-                {serverStatus === 'online' ? 'LOCAL DB: ONLINE' : 'LOCAL DB: OFFLINE'}
+                {serverStatus === 'online' ? 'LOCAL SERVER: ONLINE' : 'LOCAL SERVER: OFFLINE'}
             </span>
         </div>
 

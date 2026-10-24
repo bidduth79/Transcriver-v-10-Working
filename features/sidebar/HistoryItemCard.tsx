@@ -86,7 +86,7 @@ export const HistoryItemCard = memo(({
           </button>
       </div>
       
-      <div className={`flex flex-col gap-2 text-[9px] relative z-10 ${isActive ? (isDark ? 'text-green-200/60' : 'text-green-700/60') : (isDark ? 'text-white/40' : 'text-slate-400')} font-black uppercase tracking-wider`}>
+      <div className={`flex flex-col gap-2 text-[10px] relative z-10 ${isActive ? (isDark ? 'text-green-200/60' : 'text-green-700/60') : (isDark ? 'text-white/40' : 'text-slate-400')} font-black uppercase tracking-wider bn:tracking-normal`}>
         {/* Date & Time Row */}
         <div className="flex items-center justify-between w-full" title="Creation Date">
             <div className="flex items-center gap-1.5">
@@ -103,17 +103,17 @@ export const HistoryItemCard = memo(({
             </div>
             <div className="flex items-center gap-1.5">
                 {isPressing && (
-                    <span className="shrink-0 px-1.5 py-0.5 text-[8px] font-black rounded uppercase tracking-wider bg-red-500 text-white animate-pulse">
+                    <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-black rounded uppercase tracking-wider bn:tracking-normal bg-red-500 text-white animate-pulse">
                         {uiText(appLang, 'deleting')}
                     </span>
                 )}
                 {!isPressing && isDuplicate && (
-                    <span className={`shrink-0 px-1.5 py-0.5 text-[8px] font-black rounded uppercase tracking-wider ${isDark ? 'bg-yellow-500/20 text-yellow-400' : 'bg-yellow-100 text-yellow-700'}`}>
+                    <span className={`shrink-0 px-1.5 py-0.5 text-[10px] font-black rounded uppercase tracking-wider ${isDark ? 'bg-yellow-500/20 text-yellow-400' : 'bg-yellow-100 text-yellow-700'}`}>
                         DUPLICATE
                     </span>
                 )}
                 {!isPressing && isActive && (
-                   <span className={`shrink-0 px-1.5 py-0.5 text-[8px] font-black rounded uppercase tracking-wider ${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'}`}>
+                   <span className={`shrink-0 px-1.5 py-0.5 text-[10px] font-black rounded uppercase tracking-wider ${isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-100 text-green-700'}`}>
                        LOADED
                    </span>
                 )}

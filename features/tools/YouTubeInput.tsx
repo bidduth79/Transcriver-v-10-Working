@@ -107,7 +107,7 @@ export const YouTubeInput: React.FC<YouTubeInputProps> = ({
       <button
         type="submit"
         disabled={loading || !url.trim()}
-        className={`w-full py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
+        className={`w-full py-2.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider bn:tracking-normal text-white transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
           loading || !url.trim()
             ? 'opacity-50 cursor-not-allowed bg-slate-700'
             : `${activeColors?.primary || 'bg-indigo-600'} hover:brightness-110 active:scale-95`

@@ -61,9 +61,9 @@ export const TranscriptIdleView: React.FC<TranscriptIdleViewProps> = ({
               </div>
           </div>
           
-          <h3 className={`text-lg md:text-xl font-black uppercase tracking-[0.4em] mb-4 opacity-70 ${isDark ? 'text-white' : 'text-slate-800'}`}>{t.noMedia}</h3>
+          <h3 className={`text-lg md:text-xl font-black uppercase tracking-[0.4em] bn:tracking-normal mb-4 opacity-70 ${isDark ? 'text-white' : 'text-slate-800'}`}>{t.noMedia}</h3>
           <p className={`text-[10px] md:text-xs font-bold max-w-sm leading-relaxed opacity-60 mx-auto ${isDark ? 'text-white' : 'text-slate-700'}`}>{t.noMediaDesc}</p>
-          <button onClick={() => setIsSidebarOpen(true)} className={`mt-8 md:mt-10 px-8 md:px-10 py-3 md:py-4 ${activeColors.primary} text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl hover:brightness-110 active:scale-95 transition-all group cursor-pointer`}>
+          <button onClick={() => setIsSidebarOpen(true)} className={`mt-8 md:mt-10 px-8 md:px-10 py-3 md:py-4 ${activeColors.primary} text-white rounded-2xl text-[10px] font-black uppercase tracking-widest bn:tracking-normal shadow-2xl hover:brightness-110 active:scale-95 transition-all group cursor-pointer`}>
             <svg className="w-4 h-4 mr-2 inline-block transition-transform group-hover:scale-125" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M4 6h16M4 12h16m-7 6h7"/>
             </svg>
@@ -75,9 +75,9 @@ export const TranscriptIdleView: React.FC<TranscriptIdleViewProps> = ({
           <div className="w-24 h-24 md:w-32 md:h-32 mb-6 animate-bounce">
               <img src="/logo.png" alt="Logo" className="w-full h-full object-contain drop-shadow-xl" onError={(e) => { const t = e.currentTarget; t.onerror = null; t.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1'/%3E%3Cstop offset='100%25' style='stop-color:%234f46e5'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='200' rx='40' fill='url(%23bg)'/%3E%3Crect x='80' y='40' width='40' height='70' rx='20' fill='white'/%3E%3Cpath d='M60 95 Q60 140 100 140 Q140 140 140 95' fill='none' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3Cline x1='100' y1='140' x2='100' y2='165' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3Cline x1='80' y1='165' x2='120' y2='165' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E"; }} />
           </div>
-          <h3 className={`text-xl md:text-2xl font-black uppercase tracking-[0.2em] mb-3 ${isDark ? 'text-white' : 'text-slate-800'}`}>{t.fileReady}</h3>
-          <p className={`text-[10px] md:text-[11px] font-black text-white/80 uppercase tracking-widest bg-black/20 backdrop-blur-md px-3 py-1 rounded-full mb-8 max-w-md truncate shadow-sm border border-white/10`}>{fileMeta.name}</p>
-          <button onClick={processTranscription} className={`px-12 md:px-16 py-4 md:py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-full text-xs md:text-sm font-black uppercase tracking-[0.2em] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] transition-all active:scale-95 border border-white/10 relative overflow-hidden group cursor-pointer`}>
+          <h3 className={`text-xl md:text-2xl font-black uppercase tracking-[0.2em] bn:tracking-normal mb-3 ${isDark ? 'text-white' : 'text-slate-800'}`}>{t.fileReady}</h3>
+          <p className={`text-[10px] md:text-[11px] font-black text-white/80 uppercase tracking-widest bn:tracking-normal bg-black/20 backdrop-blur-md px-3 py-1 rounded-full mb-8 max-w-md truncate shadow-sm border border-white/10`}>{fileMeta.name}</p>
+          <button onClick={processTranscription} className={`px-12 md:px-16 py-4 md:py-5 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-full text-xs md:text-sm font-black uppercase tracking-[0.2em] bn:tracking-normal shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] transition-all active:scale-95 border border-white/10 relative overflow-hidden group cursor-pointer`}>
             <span className="relative z-10">{t.startTranscribe}</span>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
           </button>

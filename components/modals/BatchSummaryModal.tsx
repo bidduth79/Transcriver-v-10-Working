@@ -49,7 +49,7 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
               )}
             </div>
             <div>
-              <h3 className={`text-xl font-black uppercase tracking-wider ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <h3 className={`text-xl font-black uppercase tracking-wider bn:tracking-normal ${isDark ? 'text-white' : 'text-slate-900'}`}>
                 {uiText(appLang, 'batchProcessingReport')}
               </h3>
               <p className={`text-sm mt-1 font-medium ${isDark ? 'text-white/50' : 'text-slate-500'}`}>
@@ -65,13 +65,13 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
         <div className="p-6 sm:p-8 flex-1 overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className={`p-5 rounded-2xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-100'}`}>
-              <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
+              <p className={`text-xs font-bold uppercase tracking-widest bn:tracking-normal mb-2 ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
                 {uiText(appLang, 'succeeded')}
               </p>
               <p className="text-4xl font-black text-emerald-500 tabular-nums">{processedCount}</p>
             </div>
             <div className={`p-5 rounded-2xl border ${isDark ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-100'}`}>
-              <p className={`text-xs font-bold uppercase tracking-widest mb-2 ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
+              <p className={`text-xs font-bold uppercase tracking-widest bn:tracking-normal mb-2 ${isDark ? 'text-white/40' : 'text-slate-400'}`}>
                 {uiText(appLang, 'failed')}
               </p>
               <p className={`text-4xl font-black tabular-nums ${hasFailed ? 'text-rose-500' : isDark ? 'text-white/20' : 'text-slate-300'}`}>{failedFiles.length}</p>
@@ -80,7 +80,7 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
 
           {hasFailed && (
             <div>
-              <h4 className={`text-sm font-bold uppercase tracking-wider mb-4 ${isDark ? 'text-white/70' : 'text-slate-700'}`}>
+              <h4 className={`text-sm font-bold uppercase tracking-wider bn:tracking-normal mb-4 ${isDark ? 'text-white/70' : 'text-slate-700'}`}>
                 {uiText(appLang, 'failedFiles')}
               </h4>
               <div className="space-y-3">
@@ -105,7 +105,7 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
             <>
               <button 
                 onClick={onClose}
-                className={`flex-1 py-3.5 rounded-xl font-bold uppercase tracking-wider text-sm transition-all border ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                className={`flex-1 py-3.5 rounded-xl font-bold uppercase tracking-wider bn:tracking-normal text-sm transition-all border ${isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}
               >
                 {uiText(appLang, 'close')}
               </button>
@@ -114,7 +114,7 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
                   onRetryFailed();
                   onClose();
                 }}
-                className={`flex-1 py-3.5 rounded-xl font-bold uppercase tracking-wider text-sm transition-all text-white shadow-lg hover:scale-[1.02] active:scale-[0.98] ${activeColors.primary}`}
+                className={`flex-1 py-3.5 rounded-xl font-bold uppercase tracking-wider bn:tracking-normal text-sm transition-all text-white shadow-lg hover:scale-[1.02] active:scale-[0.98] ${activeColors.primary}`}
               >
                 {uiText(appLang, 'retryFailed')}
               </button>
@@ -122,7 +122,7 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
           ) : (
             <button 
               onClick={onClose}
-              className={`w-full py-3.5 rounded-xl font-bold uppercase tracking-wider text-sm transition-all text-white shadow-lg hover:scale-[1.02] active:scale-[0.98] ${activeColors.primary}`}
+              className={`w-full py-3.5 rounded-xl font-bold uppercase tracking-wider bn:tracking-normal text-sm transition-all text-white shadow-lg hover:scale-[1.02] active:scale-[0.98] ${activeColors.primary}`}
             >
               {uiText(appLang, 'ok')}
             </button>

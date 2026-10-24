@@ -35,11 +35,11 @@ export const SummaryLiveReport: React.FC<SummaryLiveReportProps> = ({
   return (
     <div className="animate-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between mb-8">
-        <h3 className="text-sm font-black text-indigo-400 uppercase tracking-[0.3em]">{titleSuffix}</h3>
+        <h3 className="text-sm font-black text-indigo-400 uppercase tracking-[0.3em] bn:tracking-normal">{titleSuffix}</h3>
         {selectedHistoryItem && (
           <button 
             onClick={(e) => { e.stopPropagation(); setSelectedHistoryItem(null); }} 
-            className="flex items-center gap-2 px-6 py-2.5 bg-slate-900/10 hover:bg-slate-900/20 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest text-slate-800"
+            className="flex items-center gap-2 px-6 py-2.5 bg-slate-900/10 hover:bg-slate-900/20 rounded-xl transition-all text-[11px] font-black uppercase tracking-widest bn:tracking-normal text-slate-800"
           >
             <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             {uiText(appLang, 'backToList')}
@@ -49,26 +49,26 @@ export const SummaryLiveReport: React.FC<SummaryLiveReportProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
         <div className="p-10 rounded-[3rem] border shadow-inner bg-slate-900/5 border-slate-900/5">
-          <p className="text-[11px] font-black opacity-40 uppercase tracking-widest mb-3">{uiText(appLang, 'fileDuration')}</p>
+          <p className="text-[11px] font-black opacity-40 uppercase tracking-widest bn:tracking-normal mb-3">{uiText(appLang, 'fileDuration')}</p>
           <p className="text-4xl font-black tabular-nums tracking-tighter">{data.duration}</p>
         </div>
         <div className="bg-indigo-500/10 p-10 rounded-[3rem] border border-indigo-500/10 shadow-inner">
-          <p className="text-[11px] font-black text-indigo-600 uppercase tracking-widest mb-3">{uiText(appLang, 'totalTimes')}</p>
+          <p className="text-[11px] font-black text-indigo-600 uppercase tracking-widest bn:tracking-normal mb-3">{uiText(appLang, 'totalTimes')}</p>
           <div className="flex items-baseline gap-3"><p className="text-6xl font-black text-indigo-600 tabular-nums tracking-tighter">{data.matchCount}</p><span className="text-sm font-black text-indigo-600/50 uppercase">{uiText(appLang, 'timesUnit')}</span></div>
         </div>
         <div className={`p-10 rounded-[3rem] border shadow-inner flex flex-col justify-center transition-all duration-700 min-h-[160px] ${sentiment === 'positive' ? 'bg-emerald-500/10 border-emerald-500/10' : sentiment === 'negative' ? 'bg-rose-500/10 border-rose-500/10' : 'bg-slate-500/10 border-slate-500/10'}`}>
-          <p className="text-[11px] font-black opacity-40 uppercase tracking-widest mb-3">{uiText(appLang, 'remarkAi')}</p>
+          <p className="text-[11px] font-black opacity-40 uppercase tracking-widest bn:tracking-normal mb-3">{uiText(appLang, 'remarkAi')}</p>
           {isAnalyzing ? (
             <div className="flex items-center gap-3">
               <div className="w-4 h-4 border-2 border-slate-300 border-t-indigo-600 rounded-full animate-spin"></div>
-              <span className="text-xs font-bold uppercase tracking-widest opacity-40">{uiText(appLang, 'aiAnalyzing')}</span>
+              <span className="text-xs font-bold uppercase tracking-widest bn:tracking-normal opacity-40">{uiText(appLang, 'aiAnalyzing')}</span>
             </div>
           ) : (sentiment === 'pending' || isManualMode) ? (
             <div className="space-y-3">
-               <p className="text-[11px] font-bold opacity-30 uppercase tracking-widest">{uiText(appLang, 'notAnalyzed2')}</p>
+               <p className="text-[11px] font-bold opacity-30 uppercase tracking-widest bn:tracking-normal">{uiText(appLang, 'notAnalyzed2')}</p>
                <button 
                 onClick={performAIAnalysis}
-                className={`w-fit px-6 py-2.5 ${activeColors.primary} text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all`}
+                className={`w-fit px-6 py-2.5 ${activeColors.primary} text-white rounded-xl text-[10px] font-black uppercase tracking-widest bn:tracking-normal shadow-xl hover:scale-105 active:scale-95 transition-all`}
               >
                 {uiText(appLang, 'analyze')}
               </button>

@@ -92,14 +92,14 @@ export const TranscriptToolbar = ({
           <div className="flex items-center bg-white/5 rounded-2xl p-0.5 border border-white/10">
             <button 
               onClick={() => transformingType !== 'translate' && transformTranscript('translate', 'en')}
-              className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all cursor-pointer ${appLang === 'en' ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+              className={`px-2.5 py-1 min-h-6 rounded-xl text-[10px] font-black transition-all cursor-pointer ${appLang === 'en' ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
               title="Translate to English"
             >
               EN
             </button>
             <button 
               onClick={() => transformingType !== 'translate' && transformTranscript('translate', 'bn')}
-              className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all font-stylish-bn cursor-pointer ${uiText(appLang, 'textWhite40HoverTextWhite')}`}
+              className={`px-2.5 py-1 min-h-6 rounded-xl text-[10px] font-black transition-all font-stylish-bn cursor-pointer ${appLang === 'bn' ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
               title="Translate to Bengali"
             >
               বাংলা
@@ -115,7 +115,7 @@ export const TranscriptToolbar = ({
                   addToast(uiText(appLang, 'convertedToUnicode'), 'success');
                 }
               }}
-              className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all font-stylish-bn cursor-pointer ${isTranscriptUnicode ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+              className={`px-2.5 py-1 min-h-6 rounded-xl text-[10px] font-black transition-all font-stylish-bn cursor-pointer ${isTranscriptUnicode ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
               title={uiText(appLang, 'convertToUnicode')}
             >
               ইউ
@@ -127,7 +127,7 @@ export const TranscriptToolbar = ({
                   addToast(uiText(appLang, 'convertedToBijoy'), 'success');
                 }
               }}
-              className={`px-2.5 py-1 rounded-xl text-[10px] font-black transition-all font-stylish-bn cursor-pointer ${!isTranscriptUnicode ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+              className={`px-2.5 py-1 min-h-6 rounded-xl text-[10px] font-black transition-all font-stylish-bn cursor-pointer ${!isTranscriptUnicode ? 'bg-indigo-600 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
               title={uiText(appLang, 'convertToBijoy')}
             >
               বি

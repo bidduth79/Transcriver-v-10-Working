@@ -50,7 +50,7 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = (props) => {
         {transformingType !== null && (
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex flex-col items-center justify-center animate-in fade-in duration-300">
             <div className="w-16 h-16 border-4 border-indigo-400/20 border-t-indigo-500 rounded-full animate-spin mb-6"></div>
-            <p className="text-white font-black uppercase tracking-widest text-sm animate-pulse">{t.processingHeader}...</p>
+            <p className="text-white font-black uppercase tracking-widest bn:tracking-normal text-sm animate-pulse">{t.processingHeader}...</p>
           </div>
         )}
 

@@ -2,6 +2,8 @@ import { forEachHistoryRecord } from './historyRecords';
 import { scanTranscriptForSpeaker, type SpeakerScanRecord } from './speakerArchiveScan';
 import { SpeakerBgbMention, SpeakerDatabaseStats, SpeakerCustomNote } from '../types/speaker';
 import { useHistoryStore } from '../hooks/useHistoryStore';
+import { uiText } from '../utils/uiText';
+import { currentAppLang } from '../hooks/useThemeStore';
 
 const CUSTOM_NOTES_STORE_KEY = 'speaker_custom_dossier_notes';
 
@@ -37,7 +39,7 @@ export const scanDatabaseForSpeaker = async (
   if (currentTranscript && currentTranscript.trim().length > 0) {
     scanned.push(scan({
       id: 'current_session',
-      fileName: 'বর্তমান অডিও/ভিডিও ফাইল',
+      fileName: uiText(currentAppLang(), 'currentMediaFile'),
       date: new Date().toLocaleDateString('bn-BD'),
       transcript: currentTranscript
     }));
@@ -50,8 +52,8 @@ export const scanDatabaseForSpeaker = async (
       if (item && item.transcript) {
         const rec = {
           id: String(item.id || item.timestamp || Math.random()),
-          fileName: item.fileName || item.title || 'নামবিহীন রেকর্ড',
-          date: item.date || (item.timestamp ? new Date(item.timestamp as string | number).toLocaleDateString('bn-BD') : 'অজানা তারিখ'),
+          fileName: item.fileName || item.title || uiText(currentAppLang(), 'untitledRecord'),
+          date: item.date || (item.timestamp ? new Date(item.timestamp as string | number).toLocaleDateString('bn-BD') : uiText(currentAppLang(), 'unknownDate')),
           transcript: item.transcript
         };
         fromHistory.set(rec.id, scan(rec));

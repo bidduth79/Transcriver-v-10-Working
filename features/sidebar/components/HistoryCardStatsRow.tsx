@@ -19,7 +19,7 @@ export const HistoryCardStatsRow = ({ item, isActive, isDark, activeColors, form
                     {item.duration}
                 </span>
                 {item.bgbRemark && (
-                    <span className={`text-[8px] font-black uppercase tracking-wider px-1 rounded ${
+                    <span className={`text-[10px] font-black uppercase tracking-wider bn:tracking-normal px-1 rounded ${
                         item.bgbRemark === 'Positive' ? 'text-green-500 bg-green-500/10' :
                         item.bgbRemark === 'Negative' ? 'text-red-500 bg-red-500/10' :
                         'text-yellow-500 bg-yellow-500/10'

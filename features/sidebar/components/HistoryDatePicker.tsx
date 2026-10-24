@@ -49,7 +49,7 @@ export const HistoryDatePicker = ({ t, list, isDark, appLang }: Props) => {
               {/* Weekdays */}
               <div className="grid grid-cols-7 gap-1 mb-1.5 text-center border-b pb-1.5 border-slate-500/20">
                 {(appLang === 'bn' ? ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহঃ', 'শুক্র', 'শনি'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']).map(day => (
-                  <span key={day} className="text-[9px] font-medium text-slate-500">{day}</span>
+                  <span key={day} className="text-[10px] font-medium text-slate-500">{day}</span>
                 ))}
               </div>
 

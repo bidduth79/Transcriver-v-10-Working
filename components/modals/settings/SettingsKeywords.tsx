@@ -40,7 +40,7 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
         <div className="flex flex-col h-full space-y-6">
             {/* Input Area */}
             <div className={`p-6 rounded-3xl border flex flex-col gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-                <h3 className="text-xs font-black uppercase tracking-widest opacity-60">
+                <h3 className="text-xs font-black uppercase tracking-widest bn:tracking-normal opacity-60">
                     {uiText(appLang, 'addNewSensitiveKeywordsCommaSeparated')}
                 </h3>
                 <div className="flex gap-4">
@@ -55,7 +55,7 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
                     <button 
                         onClick={handleAddKeyword}
                         disabled={!newKeywordInput.trim()}
-                        className={`px-6 py-3 ${activeColors.primary} text-white rounded-xl font-black uppercase tracking-widest text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all disabled:opacity-50`}
+                        className={`px-6 py-3 ${activeColors.primary} text-white rounded-xl font-black uppercase tracking-widest bn:tracking-normal text-xs shadow-lg hover:brightness-110 active:scale-95 transition-all disabled:opacity-50`}
                     >
                         {uiText(appLang, 'add')}
                     </button>
@@ -66,7 +66,7 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
             <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                 {keywords.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center opacity-30">
-                        <p className="text-sm font-black uppercase tracking-widest">{uiText(appLang, 'noKeywordsFound')}</p>
+                        <p className="text-sm font-black uppercase tracking-widest bn:tracking-normal">{uiText(appLang, 'noKeywordsFound')}</p>
                     </div>
                 ) : (
                     <div className="flex flex-wrap gap-3">

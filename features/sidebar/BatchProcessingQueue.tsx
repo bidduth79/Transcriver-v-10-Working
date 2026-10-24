@@ -39,7 +39,7 @@ export const BatchProcessingQueue = ({
       <div className="flex items-center justify-between bg-slate-950 px-5 py-3 rounded-2xl shadow-[0_15px_35px_rgba(0,0,0,0.4)] border border-white/10 mb-4 h-[52px]">
         <div className="flex items-center gap-3">
           <div className={`w-2.5 h-2.5 rounded-full ${activeColors?.primary || 'bg-indigo-600'} shadow-[0_0_12px_rgba(255,255,255,0.4)] shrink-0`}></div>
-          <span className="text-[12px] font-black uppercase tracking-[0.15em] text-white truncate">
+          <span className="text-[12px] font-black uppercase tracking-[0.15em] bn:tracking-normal text-white truncate">
             {uiText(appLang, 'batchProcessing')}
           </span>
         </div>

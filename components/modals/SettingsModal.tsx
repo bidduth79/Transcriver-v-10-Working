@@ -53,7 +53,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                  className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border cursor-pointer hover:scale-105 transition-transform ${isDark ? 'bg-slate-900 border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
                >
                   <div className={`w-3 h-3 rounded-full ${activeColors.primary}`}></div>
-                  <span className="text-xs font-bold uppercase tracking-widest">{uiText(appLang, 'settings')}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest bn:tracking-normal">{uiText(appLang, 'settings')}</span>
                   <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" /></svg>
                </div>
             </motion.div>
@@ -107,31 +107,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
         <div className={`flex items-center px-10 pt-6 gap-6 border-b shrink-0 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
             <button 
                 onClick={() => setActiveTab('keys')}
-                className={`pb-4 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'keys' ? `border-b-4 ${activeColors.border} ${activeColors.text}` : 'border-transparent opacity-40 hover:opacity-100'}`}
+                className={`pb-4 text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all ${activeTab === 'keys' ? `border-b-4 ${activeColors.border} ${activeColors.text}` : 'border-transparent opacity-40 hover:opacity-100'}`}
             >
                 {uiText(appLang, 'apiKeyManagement')}
             </button>
             <button 
                 onClick={() => setActiveTab('quota')}
-                className={`pb-4 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'quota' ? `border-b-4 ${activeColors.border} ${activeColors.text}` : 'border-transparent opacity-40 hover:opacity-100'}`}
+                className={`pb-4 text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all ${activeTab === 'quota' ? `border-b-4 ${activeColors.border} ${activeColors.text}` : 'border-transparent opacity-40 hover:opacity-100'}`}
             >
                 {uiText(appLang, 'quotaMonitor')}
             </button>
             <button 
                 onClick={() => setActiveTab('keywords')}
-                className={`pb-4 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'keywords' ? `border-b-4 ${activeColors.border} ${activeColors.text}` : 'border-transparent opacity-40 hover:opacity-100'}`}
+                className={`pb-4 text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all ${activeTab === 'keywords' ? `border-b-4 ${activeColors.border} ${activeColors.text}` : 'border-transparent opacity-40 hover:opacity-100'}`}
             >
                 {uiText(appLang, 'sensitiveKeywords')}
             </button>
             <button 
                 onClick={() => setActiveTab('sync')}
-                className={`pb-4 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'sync' ? `border-b-4 ${activeColors.border} ${activeColors.text}` : 'border-transparent opacity-40 hover:opacity-100'}`}
+                className={`pb-4 text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all ${activeTab === 'sync' ? `border-b-4 ${activeColors.border} ${activeColors.text}` : 'border-transparent opacity-40 hover:opacity-100'}`}
             >
                 {uiText(appLang, 'cloudSync')}
             </button>
             <button 
                 onClick={() => setActiveTab('system')}
-                className={`pb-4 text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'system' ? `border-b-4 ${activeColors.border} ${activeColors.text}` : 'border-transparent opacity-40 hover:opacity-100'}`}
+                className={`pb-4 text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all ${activeTab === 'system' ? `border-b-4 ${activeColors.border} ${activeColors.text}` : 'border-transparent opacity-40 hover:opacity-100'}`}
             >
                 {uiText(appLang, 'system')}
             </button>

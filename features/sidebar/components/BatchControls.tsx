@@ -24,11 +24,11 @@ export const BatchControls = ({
           {!hasBatchStarted ? (
             <>
               {failedCount > 0 && !isBatchProcessing ? (
-                <button onClick={retryFailedFiles} className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:shadow-blue-500/25">
+                <button onClick={retryFailedFiles} className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all shadow-lg hover:shadow-blue-500/25">
                   {uiText(appLang, 'retryFailedAlt')}
                 </button>
               ) : (
-                <button onClick={startBatch} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:shadow-emerald-500/25">
+                <button onClick={startBatch} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all shadow-lg hover:shadow-emerald-500/25">
                   {uiText(appLang, 'startBatch')}
                 </button>
               )}
@@ -36,20 +36,20 @@ export const BatchControls = ({
           ) : (
             <>
               {isBatchPaused ? (
-                <button onClick={resumeBatch} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:shadow-emerald-500/25">
+                <button onClick={resumeBatch} className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all shadow-lg hover:shadow-emerald-500/25">
                   {uiText(appLang, 'resume')}
                 </button>
               ) : (
-                <button onClick={pauseBatch} className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:shadow-amber-500/25">
+                <button onClick={pauseBatch} className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all shadow-lg hover:shadow-amber-500/25">
                   {uiText(appLang, 'pause')}
                 </button>
               )}
-              <button onClick={skipNextBatchFile} className="flex-1 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:shadow-indigo-500/25">
+              <button onClick={skipNextBatchFile} className="flex-1 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all shadow-lg hover:shadow-indigo-500/25">
                 {uiText(appLang, 'skip')}
               </button>
             </>
           )}
-          <button onClick={cancelBatch} className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:shadow-red-500/25">
+          <button onClick={cancelBatch} className="flex-1 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-widest bn:tracking-normal transition-all shadow-lg hover:shadow-red-500/25">
             {uiText(appLang, 'cancel')}
           </button>
         </div>

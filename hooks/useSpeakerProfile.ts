@@ -6,6 +6,8 @@ import { getCachedProfile, setCachedProfile } from './speakerProfileUtils';
 import { buildSpeakerProfilePrompt } from './speakerProfile/speakerProfilePrompt';
 import { generateProfileResponse, parseProfileJson, enrichProfileFromWiki, getSpeakerProfileErrorMessage } from './speakerProfile/fetchSpeakerProfile';
 import { createGeminiClient } from '../services/apiKeys/geminiClient';
+import { uiText } from '../utils/uiText';
+import { currentAppLang } from './useThemeStore';
 
 export const useSpeakerProfile = (transcriptContext: string) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -56,7 +58,7 @@ export const useSpeakerProfile = (transcriptContext: string) => {
     try {
       const provider = await getActiveProvider();
       const apiKey = provider?.key;
-      if (!apiKey) throw new Error("এপিআই কি (API Key) কনফিগার করা নেই। Settings থেকে ঠিক করুন।");
+      if (!apiKey) throw new Error(uiText(currentAppLang(), 'apiKeyNotConfigured'));
 
       const ai = await createGeminiClient(apiKey);
       const { response, modelToUse } = await generateProfileResponse(ai, buildSpeakerProfilePrompt(name, transcriptContext), provider?.model);

@@ -36,7 +36,7 @@ export const AudioVideoInput = ({
     <div className="px-6 pt-6 shrink-0 mt-8 md:mt-0">
       <div className="flex items-center gap-3 bg-slate-950 px-5 py-3 rounded-2xl shadow-[0_15px_35px_rgba(0,0,0,0.4)] border border-white/10 mb-4 h-[52px]">
         <div className={`w-2.5 h-2.5 rounded-full ${isRecording ? 'bg-red-500 animate-ping' : (activeColors?.primary || 'bg-indigo-600')} shadow-[0_0_12px_rgba(255,255,255,0.4)] shrink-0`}></div>
-        <span className="text-[12px] font-black uppercase tracking-[0.15em] text-white truncate">
+        <span className="text-[12px] font-black uppercase tracking-[0.15em] bn:tracking-normal text-white truncate">
           {getHeaderTitle()}
         </span>
       </div>
@@ -44,7 +44,7 @@ export const AudioVideoInput = ({
       <div className={`${cardBg} p-1 rounded-3xl border ${cardBorder} shadow-[0_25px_50px_rgba(0,0,0,0.2)] overflow-hidden transition-all hover:translate-y-[-2px]${isDragging ? ' relative ring-4 ring-inset ring-emerald-500' : ''}`} {...dropHandlers}>
         {isDragging && (
           <div className={`absolute inset-0 z-20 flex items-center justify-center rounded-3xl pointer-events-none ${isDark ? 'bg-slate-900/95' : 'bg-emerald-50/95'}`}>
-            <p className="px-4 text-[11px] text-center font-black uppercase tracking-widest text-emerald-600">{t.dropFilesHere}</p>
+            <p className="px-4 text-[11px] text-center font-black uppercase tracking-widest bn:tracking-normal text-emerald-600">{t.dropFilesHere}</p>
           </div>
         )}
         
@@ -101,11 +101,11 @@ export const AudioVideoInput = ({
 
             {/* Contextual Area based on Selection */}
             {activeTab === 'upload' && (
-                <p className="text-[10px] text-center font-bold opacity-40 uppercase tracking-widest">{t.clickToUpload} (MP3, WAV, MP4, OPUS)</p>
+                <p className="text-[10px] text-center font-bold opacity-40 uppercase tracking-widest bn:tracking-normal">{t.clickToUpload} (MP3, WAV, MP4, OPUS)</p>
             )}
             
             {activeTab === 'folder' && (
-                <p className="text-[10px] text-center font-bold opacity-40 uppercase tracking-widest">{uiText(appLang, 'clickToUploadMultipleFiles')}</p>
+                <p className="text-[10px] text-center font-bold opacity-40 uppercase tracking-widest bn:tracking-normal">{uiText(appLang, 'clickToUploadMultipleFiles')}</p>
             )}
 
             {activeTab === 'record' && (
@@ -142,7 +142,7 @@ export const AudioVideoInput = ({
              </div>
              <button 
                onClick={onStopRecording}
-               className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg transition-all active:scale-95 flex items-center gap-2"
+               className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] bn:tracking-normal shadow-lg transition-all active:scale-95 flex items-center gap-2"
              >
                <div className="w-2 h-2 bg-white rounded-sm"></div>
                {uiText(appLang, 'stop')}

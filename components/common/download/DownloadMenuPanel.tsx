@@ -20,7 +20,7 @@ export const DownloadMenuPanel = ({ onTxt, onWord, onSrt, onPdf, showKeywordTogg
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] font-black tracking-widest uppercase">Notepad</span>
-                <span className="text-[9px] text-white/40 font-bold uppercase">Plain Text File</span>
+                <span className="text-[10px] text-white/40 font-bold uppercase">Plain Text File</span>
               </div>
             </button>
 
@@ -30,7 +30,7 @@ export const DownloadMenuPanel = ({ onTxt, onWord, onSrt, onPdf, showKeywordTogg
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] font-black tracking-widest uppercase">Word Document</span>
-                <span className="text-[9px] text-white/40 font-bold uppercase">Editable MS Word</span>
+                <span className="text-[10px] text-white/40 font-bold uppercase">Editable MS Word</span>
               </div>
             </button>
 
@@ -40,7 +40,7 @@ export const DownloadMenuPanel = ({ onTxt, onWord, onSrt, onPdf, showKeywordTogg
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] font-black tracking-widest uppercase">Subtitle SRT</span>
-                <span className="text-[9px] text-white/40 font-bold uppercase">Captions with Time</span>
+                <span className="text-[10px] text-white/40 font-bold uppercase">Captions with Time</span>
               </div>
             </button>
 
@@ -50,7 +50,7 @@ export const DownloadMenuPanel = ({ onTxt, onWord, onSrt, onPdf, showKeywordTogg
               </div>
               <div className="flex flex-col">
                 <span className="text-[11px] font-black tracking-widest uppercase">PDF Document</span>
-                <span className="text-[9px] text-white/40 font-bold uppercase">Ready to Print</span>
+                <span className="text-[10px] text-white/40 font-bold uppercase">Ready to Print</span>
               </div>
             </button>
 
