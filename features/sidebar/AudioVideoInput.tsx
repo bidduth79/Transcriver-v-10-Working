@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { YouTubeInput } from '../tools/YouTubeInput.tsx';
 import { isMicrophoneEnabled } from '../../hooks/useAudioRecorder.ts';
+import { useFileDrop } from './hooks/useFileDrop';
 
 export const AudioVideoInput = ({
   t,
@@ -22,6 +23,7 @@ export const AudioVideoInput = ({
   formatTime
 }: any) => {
   const [micActive, setMicActive] = useState(isMicrophoneEnabled());
+  const { isDragging, dropHandlers } = useFileDrop(handleFileChange, isRecording);
 
   useEffect(() => {
     const handleToggle = () => setMicActive(isMicrophoneEnabled());
@@ -37,7 +39,12 @@ export const AudioVideoInput = ({
         </span>
       </div>
       
-      <div className={`${cardBg} p-1 rounded-3xl border ${cardBorder} shadow-[0_25px_50px_rgba(0,0,0,0.2)] overflow-hidden transition-all hover:translate-y-[-2px]`}>
+      <div className={`${cardBg} p-1 rounded-3xl border ${cardBorder} shadow-[0_25px_50px_rgba(0,0,0,0.2)] overflow-hidden transition-all hover:translate-y-[-2px]${isDragging ? ' relative ring-4 ring-inset ring-emerald-500' : ''}`} {...dropHandlers}>
+        {isDragging && (
+          <div className={`absolute inset-0 z-20 flex items-center justify-center rounded-3xl pointer-events-none ${isDark ? 'bg-slate-900/95' : 'bg-emerald-50/95'}`}>
+            <p className="px-4 text-[11px] text-center font-black uppercase tracking-widest text-emerald-600">{t.dropFilesHere}</p>
+          </div>
+        )}
         
         {!isRecording ? (
           <div className={`rounded-2xl p-4 flex flex-col gap-4 transition-all duration-300`}>
