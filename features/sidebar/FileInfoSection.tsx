@@ -1,4 +1,11 @@
 import React from 'react';
+import { AudioWaveform } from './components/AudioWaveform';
+import { useWaveform } from './hooks/useWaveform';
+
+const isVideoMeta = (name: string, type: string) =>
+  type.startsWith('video/') || name.endsWith('.mp4') || name.endsWith('.mkv') || name.endsWith('.mov') || name.endsWith('.webm');
+const isOpusOrOggMeta = (name: string, type: string) =>
+  name.endsWith('.opus') || name.endsWith('.ogg') || type.includes('opus') || type.includes('ogg');
 
 export const FileInfoSection = ({
   fileUrl,
@@ -20,6 +27,11 @@ export const FileInfoSection = ({
   setIsSidebarOpen,
   status
 }: any) => {
+  const metaName = fileMeta?.name?.toLowerCase() || '';
+  const metaType = fileMeta?.type || '';
+  const isPlainAudio = !!fileMeta && !isVideoMeta(metaName, metaType) && !isOpusOrOggMeta(metaName, metaType);
+  const peaks = useWaveform(fileUrl, isPlainAudio && !isRecording);
+
   if (!fileUrl || isRecording) return null;
 
   return (
@@ -43,10 +55,8 @@ export const FileInfoSection = ({
         {(() => {
             // Check opus/ogg from BOTH fileMeta AND fileUrl to prevent race condition crash
             // fileUrl is a blob: URL so we need fileMeta or the raw file name
-            const nameFromMeta = fileMeta?.name?.toLowerCase() || '';
-            const typeFromMeta = fileMeta?.type || '';
-            const isVideo = typeFromMeta.startsWith('video/') || nameFromMeta.endsWith('.mp4') || nameFromMeta.endsWith('.mkv') || nameFromMeta.endsWith('.mov') || nameFromMeta.endsWith('.webm');
-            const isOpusOrOgg = nameFromMeta.endsWith('.opus') || nameFromMeta.endsWith('.ogg') || typeFromMeta.includes('opus') || typeFromMeta.includes('ogg');
+            const isVideo = isVideoMeta(metaName, metaType);
+            const isOpusOrOgg = isOpusOrOggMeta(metaName, metaType);
             
             // CRITICAL: If fileMeta is not yet loaded, do NOT render any media element at all
             // This prevents the browser from attempting to decode opus before we know the file type
@@ -80,14 +90,17 @@ export const FileInfoSection = ({
             }
             
             return (
-                <audio 
-                    ref={audioRef} 
-                    onTimeUpdate={handleTimeUpdate} 
-                    src={fileUrl} 
-                    controls 
-                    preload="metadata" 
-                    className="w-full h-10 bg-slate-50 rounded-lg p-1" 
-                />
+                <>
+                    <audio 
+                        ref={audioRef} 
+                        onTimeUpdate={handleTimeUpdate} 
+                        src={fileUrl} 
+                        controls 
+                        preload="metadata" 
+                        className="w-full h-10 bg-slate-50 rounded-lg p-1" 
+                    />
+                    {peaks && <AudioWaveform peaks={peaks} audioRef={audioRef} isDark={isDark} title={t.waveformSeekHint} />}
+                </>
             );
         })()}
             

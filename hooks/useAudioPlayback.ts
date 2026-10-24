@@ -10,7 +10,8 @@ export const useAudioPlayback = () => {
 
   const handleSeek = useCallback((time: string) => {
     if (!audioRef.current) return;
-    const cleanTime = time.replace(/[\[\]]/g, '');
+    // Timestamps may be written with Bengali digits
+    const cleanTime = time.replace(/[\[\]]/g, '').replace(/[০-৯]/g, d => String('০১২৩৪৫৬৭৮৯'.indexOf(d)));
     const parts = cleanTime.split(/[-:]/).map(s => s.trim()).filter(s => s);
     const target = parts.length > 0 ? parts.slice(0, 3).join(':') : "00:00"; 
     
@@ -20,8 +21,9 @@ export const useAudioPlayback = () => {
     else if (tParts.length === 2) seconds = tParts[0] * 60 + tParts[1];
     else if (tParts.length === 3) seconds = tParts[0] * 3600 + tParts[1] * 60 + tParts[2];
     
+    if (!Number.isFinite(seconds)) return;
     audioRef.current.currentTime = seconds;
-    audioRef.current.play();
+    audioRef.current.play().catch(() => {});
   }, []);
 
   return { audioRef, audioCurrentTime, handleSeek, handleTimeUpdate };
