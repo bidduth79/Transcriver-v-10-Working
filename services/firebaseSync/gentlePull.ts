@@ -4,7 +4,8 @@ import { runtime, syncStats, notifyListeners, isHeavyProcessingActive, sleep } f
 import { pullStoreInPages } from './pullStorePages';
 import { removeCloudSecretCopies } from './secretCleanup';
 import { SYNC_STAMP_FIELD } from './syncStamp';
-import { startOfYesterday, getPullCheckpoint, savePullCheckpoint, countCloudDocs } from './pullWindow';
+import { getPullCheckpoint, savePullCheckpoint, countCloudDocs } from './pullWindow';
+import { rangesMissingLocally, type DateRange } from './cloudReconcile';
 import { messageOf } from '../../utils/errorMessage';
 import { pullFailureOf, PULL_FAILURE_TEXT, type PullFailure } from './pullFailure';
 import { uiText } from '../../utils/uiText';
@@ -75,16 +76,10 @@ export const scheduleGentleFirebasePull = (
 
           try {
             const isHistory = storeName === STORES.HISTORY;
-            // A manual sync reads every history document, so it also re-sends long ones in compressed form
-            const repair = isHistory && forceManual ? (await import('./cloudRepair')).createHistoryRepair() : null;
-            const pull = (since?: { field: string; min: string | Date }) => pullStoreInPages({
+            // A manual sync also re-sends, compressed, the long history items it comes across
+            const repair = isHistory && forceManual ? (await import('./cloudRepair')).createHistoryRepair(cloudDb) : null;
+            const pull = (since?: DateRange | { field: string; min: Date }) => pullStoreInPages({
               db: cloudDb, idb, storeName, shouldStop, since, onCloudDoc: repair?.onCloudDoc,
-              onCloudCount: (count) => {
-                if (!isHistory || !forceManual) return;
-                cloudHistoryTotal = count;
-                syncStats.totalCloudHistoryDocs = cloudHistoryTotal;
-                notifyListeners();
-              },
               onMerged: (count) => {
                 totalNewItemsMerged += count;
                 syncStats.lastPulledCount = totalNewItemsMerged;
@@ -95,11 +90,12 @@ export const scheduleGentleFirebasePull = (
               },
             });
 
-            // App start: only documents saved since the last pull, plus every transcript dated today or
-            // yesterday. A manual sync from Settings still compares the whole collection.
-            const parts = [await pull(forceManual ? undefined : { field: SYNC_STAMP_FIELD, min: getPullCheckpoint(storeName) })];
-            if (isHistory && !forceManual && !shouldStop()) {
-              parts.push(await pull({ field: 'date', min: startOfYesterday().toISOString() }));
+            // First the documents saved since the last pull; then only the parts where counting shows the
+            // cloud has more than this device (counting costs about one read per 1000 documents)
+            const parts = [await pull({ field: SYNC_STAMP_FIELD, min: getPullCheckpoint(storeName) })];
+            for (const range of shouldStop() ? [] : await rangesMissingLocally(cloudDb, idb, storeName, forceManual)) {
+              if (shouldStop()) break;
+              parts.push(await pull(range));
             }
             if (parts.every(part => part.completed)) {
               savePullCheckpoint(storeName, pullStartedAt);
@@ -107,7 +103,7 @@ export const scheduleGentleFirebasePull = (
               if (resent) console.debug(`[Firebase Gentle Pull] Re-sending ${resent} history items compressed`);
             }
 
-            if (isHistory && !forceManual) {
+            if (isHistory) {
               cloudHistoryTotal = await countCloudDocs(cloudDb, storeName);
               syncStats.totalCloudHistoryDocs = cloudHistoryTotal;
               notifyListeners();

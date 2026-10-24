@@ -51,23 +51,21 @@ beforeEach(() => {
 
 const cloudDocs = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `id${String(i).padStart(4, '0')}`, data: { n: i } }));
 const run = (shouldStop = () => false, since?: { field: string; min: string | Date }) => {
-  const counts: number[] = [];
   const onMerged = vi.fn();
-  const result = pullStoreInPages({ db: { app: 'APP' } as any, idb: fakeIdb, storeName: 'studio_history', shouldStop, onCloudCount: c => counts.push(c), onMerged, since });
-  return { result, counts, onMerged };
+  const result = pullStoreInPages({ db: { app: 'APP' } as any, idb: fakeIdb, storeName: 'studio_history', shouldStop, onMerged, since });
+  return { result, onMerged };
 };
 
 describe('pullStoreInPages', () => {
   it('reads the collection one page at a time and merges only missing docs', async () => {
     m.cloud = cloudDocs(120);
     m.local.set('id0000', { id: 'id0000', local: true });
-    const { result, counts, onMerged } = run();
+    const { result, onMerged } = run();
     expect(await result).toEqual({ cloudCount: 120, merged: 119, removed: 0, completed: true });
     expect(m.getDocs).toHaveBeenCalledTimes(3);
     expect(m.getDocs.mock.calls.map(c => [c[0].after, c[0].lim])).toEqual([
       [undefined, PULL_PAGE_SIZE], ['id0049', PULL_PAGE_SIZE], ['id0099', PULL_PAGE_SIZE],
     ]);
-    expect(counts).toEqual([50, 100, 120]);
     expect(onMerged.mock.calls.reduce((s, c) => s + c[0], 0)).toBe(119);
     expect(m.local.get('id0000')).toEqual({ id: 'id0000', local: true });
     expect(m.local.get('id0119')).toEqual({ id: 'id0119', n: 119 });
@@ -79,10 +77,9 @@ describe('pullStoreInPages', () => {
     expect(m.getDocs).toHaveBeenCalledTimes(3);
     m.getDocs.mockClear();
     m.cloud = [];
-    const { result, counts } = run();
+    const { result } = run();
     expect(await result).toEqual({ cloudCount: 0, merged: 0, removed: 0, completed: true });
     expect(m.getDocs).toHaveBeenCalledTimes(1);
-    expect(counts).toEqual([0]);
   });
 
   it('stops between pages when asked to (e.g. a transcription starts)', async () => {
@@ -117,11 +114,9 @@ describe('pullStoreInPages', () => {
     ];
     m.local.set('gone', { id: 'gone', transcript: 'x' });
     const onRemoved = vi.fn();
-    const counts: number[] = [];
-    const result = await pullStoreInPages({ db: { app: 'APP' } as any, idb: fakeIdb, storeName: 'studio_history', shouldStop: () => false, onCloudCount: c => counts.push(c), onMerged: vi.fn(), onRemoved });
+    const result = await pullStoreInPages({ db: { app: 'APP' } as any, idb: fakeIdb, storeName: 'studio_history', shouldStop: () => false, onMerged: vi.fn(), onRemoved });
     expect(result).toEqual({ cloudCount: 1, merged: 1, removed: 1, completed: true });
     expect([...m.local.keys()]).toEqual(['kept']);
     expect(onRemoved).toHaveBeenCalledWith(1);
-    expect(counts).toEqual([1]);
   });
 });

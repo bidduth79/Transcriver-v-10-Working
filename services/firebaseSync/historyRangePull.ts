@@ -3,6 +3,7 @@ import { STORES } from '../../constants/storeNames';
 import { useAppStore } from '../../hooks/useAppStore';
 import { pullStoreInPages } from './pullStorePages';
 import { startOfYesterday } from './pullWindow';
+import { isRangeMissingLocally, localHistoryDates, type DateRange } from './cloudReconcile';
 
 // Days (YYYY-MM-DD) already brought from the cloud, so looking at them again costs no reads
 const FETCHED_DAYS_KEY = 'firebase_fetched_history_days';
@@ -33,14 +34,13 @@ export const fetchHistoryDaysFromCloud = async (from: Date, days = 1): Promise<n
   if (dayKeys.every(key => fetched.has(key))) return 0;
 
   await authPromise;
+  const range: DateRange = { field: 'date', min: start.toISOString(), max: end.toISOString() };
+  // Counting first costs one read; days this device already has in full are then not read at all
+  const missing = await isRangeMissingLocally(db, STORES.HISTORY, range, await localHistoryDates());
   const { initDB } = await import('../db');
-  const { merged, completed } = await pullStoreInPages({
-    db, idb: await initDB(), storeName: STORES.HISTORY,
-    since: { field: 'date', min: start.toISOString(), max: end.toISOString() },
-    shouldStop: () => !navigator.onLine,
-    onCloudCount: () => {},
-    onMerged: () => {},
-  });
+  const { merged, completed } = missing
+    ? await pullStoreInPages({ db, idb: await initDB(), storeName: STORES.HISTORY, since: range, shouldStop: () => !navigator.onLine, onMerged: () => {} })
+    : { merged: 0, completed: true };
 
   // Recent days can still change, so only older ones are remembered
   if (completed) {

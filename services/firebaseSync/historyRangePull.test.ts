@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const m = vi.hoisted(() => ({ configured: true, pull: vi.fn(), trigger: vi.fn() }));
+const m = vi.hoisted(() => ({ configured: true, pull: vi.fn(), trigger: vi.fn(), missing: vi.fn() }));
 vi.mock('../firebase', () => ({ get db() { return m.configured ? { app: 'APP' } : null; }, get isFirebaseConfigured() { return m.configured; }, authPromise: Promise.resolve() }));
 vi.mock('../db', () => ({ initDB: async () => ({ fake: true }) }));
 vi.mock('./pullStorePages', () => ({ pullStoreInPages: m.pull }));
+vi.mock('./cloudReconcile', () => ({ isRangeMissingLocally: m.missing, localHistoryDates: async () => [] }));
 vi.mock('../../hooks/useAppStore', () => ({ useAppStore: { getState: () => ({ triggerStoreUpdate: m.trigger }) } }));
 
 import { fetchHistoryDaysFromCloud, fetchOlderHistoryFromCloud } from './historyRangePull';
@@ -15,6 +16,7 @@ beforeEach(() => {
   localStorage.clear();
   m.configured = true;
   m.pull.mockResolvedValue({ cloudCount: 3, merged: 2, completed: true });
+  m.missing.mockResolvedValue(true);
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-10-23T12:00:00'));
   vi.stubGlobal('navigator', { onLine: true });
@@ -28,6 +30,15 @@ describe('fetchHistoryDaysFromCloud', () => {
     expect(m.trigger).toHaveBeenCalledWith('studio_history');
     expect(await fetchHistoryDaysFromCloud(new Date(2026, 9, 5))).toBe(0);
     expect(m.pull).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not read a day whose items this device already has (counting showed nothing missing)', async () => {
+    m.missing.mockResolvedValue(false);
+    expect(await fetchHistoryDaysFromCloud(new Date(2026, 9, 5))).toBe(0);
+    expect(m.missing.mock.calls[0][2]).toEqual({ field: 'date', min: '2026-10-05T00:00:00.000Z', max: '2026-10-06T00:00:00.000Z' });
+    expect(m.pull).not.toHaveBeenCalled();
+    expect(await fetchHistoryDaysFromCloud(new Date(2026, 9, 5))).toBe(0);
+    expect(m.missing).toHaveBeenCalledTimes(1);
   });
 
   it('does not remember yesterday or today, or an interrupted read', async () => {

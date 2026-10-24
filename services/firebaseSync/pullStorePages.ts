@@ -54,7 +54,6 @@ interface PullStoreOptions {
   idb: IDBDatabase;
   storeName: string;
   shouldStop: () => boolean;
-  onCloudCount: (count: number) => void;
   onMerged: (count: number) => void;
   // Local items removed because they were deleted on another device
   onRemoved?: (count: number) => void;
@@ -70,7 +69,7 @@ interface PullStoreOptions {
  * A deletion marker removes the local copy instead. Returns how many cloud items were seen, how many were
  * added and removed locally, and whether it read to the end.
  */
-export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloudCount, onMerged, onRemoved, since, onCloudDoc }: PullStoreOptions) => {
+export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onMerged, onRemoved, since, onCloudDoc }: PullStoreOptions) => {
   // Read through the cache-free Lite SDK: the full SDK's memory cache keeps every pulled document
   // (all transcripts) in memory for the rest of the session. Loaded only when a pull runs.
   const { getFirestore, collection, getDocs, query, orderBy, limit, startAfter, documentId, setLogLevel, where, Timestamp } = await import('firebase/firestore/lite');
@@ -96,7 +95,6 @@ export const pullStoreInPages = async ({ db, idb, storeName, shouldStop, onCloud
       : [...filter, limit(PULL_PAGE_SIZE)];
     const snap: QuerySnapshot = await getDocs(query(collection(liteDb, storeName), ...constraints));
     cloudCount += snap.docs.filter(docSnap => !isTombstone(docSnap.data())).length;
-    onCloudCount(cloudCount);
     if (snap.empty) { completed = true; break; }
     if (!existingKeys) existingKeys = await getLocalKeys(idb, storeName);
 

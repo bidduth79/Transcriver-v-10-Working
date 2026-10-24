@@ -13,9 +13,7 @@ const m = vi.hoisted(() => ({
 }));
 
 vi.mock('./firebase', () => ({
-  get db() { return m.configured.value ? { fake: true } : null; },
-  get isFirebaseConfigured() { return m.configured.value; },
-  authPromise: Promise.resolve(),
+  get db() { return m.configured.value ? { fake: true } : null; }, get isFirebaseConfigured() { return m.configured.value; }, authPromise: Promise.resolve(),
 }));
 vi.mock('firebase/firestore', () => ({
   doc: (_db: any, store: string, id: string) => `${store}/${id}`, setDoc: m.setDoc, deleteDoc: m.deleteDoc,
@@ -23,29 +21,28 @@ vi.mock('firebase/firestore', () => ({
 }));
 vi.mock('firebase/firestore/lite', () => ({
   setLogLevel: vi.fn(), getFirestore: () => ({}), collection: (_db: any, name: string) => name,
-  query: (name: string, ...c: any[]) => Object.assign({ name }, ...c),
+  query: (name: string, ...c: any[]) => ({ name, wheres: c.filter(x => x.w).map(x => x.w), ...Object.assign({}, ...c.filter(x => !x.w)) }),
   orderBy: () => ({}), documentId: () => '__name__', startAfter: (d: any) => ({ after: d.id }), limit: (n: number) => ({ lim: n }),
-  where: (field: string, _op: string, min: any) => ({ field, min }), Timestamp: { fromDate: (d: Date) => ({ ms: d.getTime() }) },
-  // A query object here is the count of deletion markers
+  where: (...w: any[]) => ({ w }), Timestamp: { fromDate: (d: Date) => ({ ms: d.getTime() }) },
   getCount: async (q: any) => {
     m.counts++;
-    const docs = typeof q === 'string' ? (m.cloud[q] || []) : (m.cloud[q.name] || []).filter((d: any) => d.data[q.field] === q.min);
+    const docs = typeof q === 'string' ? (m.cloud[q] || []) : (m.cloud[q.name] || []).filter((d: any) => matches(q, d.data));
     return { data: () => ({ count: docs.length }) };
   },
   getDocs: m.getDocs,
+  doc: (_db: any, store: string, id: string) => ({ store, id }),
+  getDoc: async (r: any) => { m.docsRead++; return { exists: () => (m.cloud[r.store] || []).some(d => d.id === r.id) }; },
 }));
 
 // In-memory IndexedDB stand-in: keys are "store::id"
+const answer = (get: () => unknown) => { const req: any = {}; queueMicrotask(() => { req.result = get(); req.onsuccess(); }); return req; };
 const fakeIdb = {
   transaction: (stores: string[]) => {
     const store = stores[0];
     const tx: any = {};
     tx.objectStore = () => ({
-      getAllKeys: () => {
-        const req: any = {};
-        queueMicrotask(() => { req.result = [...m.local.keys()].filter(k => k.startsWith(store + '::')).map(k => k.split('::')[1]); req.onsuccess(); });
-        return req;
-      },
+      getAllKeys: () => answer(() => [...m.local.keys()].filter(k => k.startsWith(store + '::')).map(k => k.split('::')[1])),
+      count: () => answer(() => [...m.local.keys()].filter(k => k.startsWith(store + '::')).length),
       put: (item: any) => { m.local.set(`${store}::${item.id}`, item); queueMicrotask(() => tx.oncomplete?.()); },
       delete: (id: string) => { m.local.delete(`${store}::${id}`); queueMicrotask(() => tx.oncomplete?.()); },
     });
@@ -55,10 +52,7 @@ const fakeIdb = {
 vi.mock('./historyRecords', () => ({
   forEachHistoryRecord: async (visit: any) => [...m.local].filter(([k]) => k.startsWith('studio_history::')).forEach(([, v]) => visit(v)),
 }));
-vi.mock('./db', () => ({
-  getFromStore: vi.fn(async (store: string, id: string) => m.local.get(`${store}::${id}`)),
-  initDB: vi.fn(async () => fakeIdb),
-}));
+vi.mock('./db', () => ({ getFromStore: vi.fn(async (store: string, id: string) => m.local.get(`${store}::${id}`)), initDB: vi.fn(async () => fakeIdb) }));
 
 // Captured before fake timers: gzip runs on Node's zlib threads, which need real time
 const realSetTimeout = globalThis.setTimeout;
@@ -67,9 +61,11 @@ const realWait = (ms: number) => new Promise(r => realSetTimeout(r, ms));
 const load = async () => { await import('./firebaseSync/cloudRepair'); return import('./firebaseThrottledQueue'); };
 // Compare Bengali status text after NFC normalization (source and test may encode "য়" differently)
 const stats = (q: any) => { const s = q.getFirebaseSyncStats(); return { ...s, statusMessageBn: s.statusMessageBn.normalize('NFC') }; };
-// One page of a collection; where(field, '>=', min) compares timestamps ({ ms }) or strings
-const atLeast = (q: any, v: any) => (q.min?.ms !== undefined ? (v?.ms ?? -1) >= q.min.ms : v >= q.min);
-const page = (q: any) => (m.cloud[q.name] || []).filter(d => (q.after === undefined || d.id > q.after) && (!q.field || atLeast(q, d.data[q.field])))
+// where() filters compare timestamps ({ ms }), strings or booleans; one page is sorted by id
+const cmp = (v: any, x: any) => (x?.ms !== undefined ? (v?.ms ?? -Infinity) - x.ms : typeof v !== typeof x ? NaN : v < x ? -1 : v > x ? 1 : 0);
+const OPS: Record<string, (c: number) => boolean> = { '>=': c => c >= 0, '<': c => c < 0, '==': c => c === 0 };
+function matches(q: any, data: any) { return (q.wheres || []).every(([f, op, x]: any[]) => OPS[op](cmp(data[f], x))); }
+const page = (q: any) => (m.cloud[q.name] || []).filter(d => (q.after === undefined || d.id > q.after) && matches(q, d.data))
   .sort((a, b) => (a.id < b.id ? -1 : 1)).slice(0, q.lim)
   .map(d => ({ id: d.id, data: () => d.data }));
 const snap = (docs: any[]) => ({ size: docs.length, empty: docs.length === 0, docs, forEach: (fn: any) => docs.forEach(fn) });
@@ -101,7 +97,7 @@ describe('gentle pull', () => {
       { id: 't', data: { fileName: 'today', date: new Date(NOW - 3600000).toISOString(), _syncedAt: { ms: NOW - 3600000 } } },
     ];
     m.cloud.studio_reports = [{ id: 'r-old', data: { a: 0 } }, { id: 'r-new', data: { a: 1, _syncedAt: { ms: NOW - 60000 } } }];
-    m.local.set('studio_history::old0', { id: 'old0', fileName: 'local' });
+    m.local.set('studio_history::old0', { id: 'old0', fileName: 'local', date: old[0].data.date });
   };
   const runPull = async (q: any, onHistory?: () => void, forced = false) => {
     const p = q.scheduleGentleFirebasePull(onHistory, forced);
@@ -109,7 +105,7 @@ describe('gentle pull', () => {
     return p;
   };
 
-  it('at app start reads only today, yesterday and newly saved docs, and counts the cloud total', async () => {
+  it('at app start reads newly saved docs, and today and yesterday only if counting shows some are missing', async () => {
     seed();
     const q = await load();
     const onHistory = vi.fn();
@@ -121,7 +117,7 @@ describe('gentle pull', () => {
     expect([...m.local.keys()].sort()).toEqual(['studio_history::old0', 'studio_history::t', 'studio_history::y', 'studio_reports::r-new']);
     expect(m.local.get('studio_history::t')).toEqual({ id: 't', fileName: 'today', date: new Date(NOW - 3600000).toISOString() });
     expect(m.docsRead).toBe(4);
-    expect(m.counts).toBe(2);
+    expect(m.counts).toBe(3);
     expect(onHistory).toHaveBeenCalledTimes(1);
     expect(stats(q)).toMatchObject({ isPulling: false, lastPulledCount: 3, totalCloudHistoryDocs: 12 });
     // The pull started 4s after launch; the checkpoint keeps a 10-minute overlap for clock differences
@@ -137,8 +133,8 @@ describe('gentle pull', () => {
     m.docsRead = 0;
     expect(await runPull(await load())).toEqual({ pulledCount: 1, cloudTotal: 13 });
     expect(m.local.get('studio_history::n').fileName).toBe('next');
-    // 'n' via the stamp and via its date, 't' via its date, and 'r-new' again inside the 10-minute overlap
-    expect(m.docsRead).toBe(4);
+    // 'n' via its stamp and 'r-new' again inside the 10-minute overlap; today and yesterday count as complete
+    expect(m.docsRead).toBe(2);
     expect(m.local.size).toBe(5);
   });
 
@@ -155,21 +151,23 @@ describe('gentle pull', () => {
     expect(onHistory).toHaveBeenCalledTimes(1);
   });
 
-  it('a manual sync from Settings still brings every missing document', async () => {
+  it('a manual sync brings every missing document, then costs only a few reads when nothing is missing', async () => {
     seed();
     const q = await load();
     expect(await runPull(q, undefined, true)).toEqual({ pulledCount: 13, cloudTotal: 12 });
     expect(m.local.get('studio_history::old0').fileName).toBe('local');
     expect(m.local.get('studio_history::old9')).toMatchObject({ fileName: 'o9' });
-    expect(m.counts).toBe(0);
+    m.docsRead = 0;
     expect(await runPull(q, undefined, true)).toEqual({ pulledCount: 0, cloudTotal: 12 });
+    // The oldest date and 'r-new' inside the overlap; every month and store count as complete
+    expect(m.docsRead).toBe(2);
   });
 
   it('a manual sync re-sends long plain cloud transcripts compressed, and huge ones the cloud lacks', async () => {
     seed();
     const long = 'ক'.repeat(8000);
     const huge = 'খ'.repeat(320000);
-    m.cloud.studio_history.push({ id: 'big', data: { fileName: 'big', transcript: long } });
+    m.cloud.studio_history.push({ id: 'big', data: { fileName: 'big', transcript: long, date: '2026-10-11T08:00:00.000Z' } });
     m.local.set('studio_history::big', { id: 'big', fileName: 'big', transcript: long });
     m.local.set('studio_history::huge', { id: 'huge', fileName: 'huge', transcript: huge });
     m.local.set('studio_history::gone', { id: 'gone', fileName: 'deleted elsewhere', transcript: 'short' });
