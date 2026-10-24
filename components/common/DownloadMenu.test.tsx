@@ -18,6 +18,8 @@ const bn = (expected: string) => ({ asymmetricMatch: (a: any) => typeof a === 's
 
 let blobs: { blob: Blob; name: string }[] = [];
 const toText = async (b: Blob) => new TextDecoder().decode(await b.arrayBuffer());
+// Entries are stored uncompressed, so the Word body can be read straight from the bytes
+const docxBody = async (b: Blob) => (await toText(b)).match(/<w:body>.*<\/w:body>/)?.[0];
 
 const setup = (over: any = {}) => {
   const addToast = vi.fn();
@@ -70,13 +72,14 @@ describe('DownloadMenu exports', () => {
   it('exports Word with and without keyword highlight', async () => {
     const a = setup();
     a.open(); a.pick('Word Document');
-    expect(blobs[0].name).toBe('news_transcript.doc');
-    expect(blobs[0].blob.type).toBe('application/msword');
-    expect(await toText(blobs[0].blob)).toMatchSnapshot('highlighted');
+    expect(blobs[0].name).toBe('news_transcript.docx');
+    expect(blobs[0].blob.type).toBe('application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    expect((await toText(blobs[0].blob)).startsWith('PK')).toBe(true);
+    expect(await docxBody(blobs[0].blob)).toMatchSnapshot('highlighted');
     a.open();
     fireEvent.click(a.container.querySelector('input[type="checkbox"]')!);
     a.pick('Word Document');
-    expect(await toText(blobs[1].blob)).toMatchSnapshot('plain');
+    expect(await docxBody(blobs[1].blob)).toMatchSnapshot('plain');
   });
 
   it('exports SRT with Bengali digits converted', async () => {

@@ -1,4 +1,4 @@
-// Pure builders for transcript export files (TXT, Word, SRT)
+// Pure builders for transcript export files (TXT, SRT); Word is in docxExport.ts
 
 const TIMESTAMP_REGEX = /([\[\(](?:[0-9০-৯]{1,2}:)?[0-9০-৯]{1,2}:[0-9০-৯]{2}[\]\)])/g;
 
@@ -23,19 +23,6 @@ export const buildTxtBlob = (transcript: any) => {
     safeTranscript = normalizeTimestamps(safeTranscript);
   }
   return new Blob([safeTranscript], { type: 'text/plain;charset=utf-8' });
-};
-
-export const buildWordBlob = (transcript: any, keywordRegex: RegExp | null) => {
-  // Convert speaker tags for Word
-  const processedTranscript = normalizeTimestamps(transcript).replace(/\*\*(.*?)\*\*/g, '<strong style="color: #4338ca;">$1</strong>');
-  let htmlContent = processedTranscript.replace(/\n/g, '<br>');
-  if (keywordRegex) {
-    htmlContent = htmlContent.replace(keywordRegex, `<span style="background-color: #ef4444; color: white; font-weight: bold;">$1</span>`);
-  }
-
-  const header = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Transcript</title><style>body { font-family: "Hind Siliguri", sans-serif; }</style></head><body>`;
-  const footer = "</body></html>";
-  return new Blob(['﻿', header + htmlContent + footer], { type: 'application/msword' });
 };
 
 const toLatinDigits = (s: string) => s.replace(/[০-৯]/g, m => '0123456789'['০১২৩৪৫৬৭৮৯'.indexOf(m)]);

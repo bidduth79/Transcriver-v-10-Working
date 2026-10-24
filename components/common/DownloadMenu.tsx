@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { baseFileName, buildKeywordRegex, buildTxtBlob, buildWordBlob, buildSrtBlob } from './download/exportContent';
+import { baseFileName, buildKeywordRegex, buildTxtBlob, buildSrtBlob } from './download/exportContent';
+import { buildDocxBlob } from './download/docxExport';
 import { printTranscriptAsPdf } from './download/pdfExport';
 import { DownloadMenuPanel } from './download/DownloadMenuPanel';
 
@@ -78,7 +79,7 @@ export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMat
       {isOpen && (
         <DownloadMenuPanel
           onTxt={exportAs('TXT', 'txt', () => buildTxtBlob(transcript))}
-          onWord={exportAs('Word', 'doc', () => buildWordBlob(transcript, keywordRegex()))}
+          onWord={exportAs('Word', 'docx', () => buildDocxBlob(transcript, keywordRegex()))}
           onSrt={exportAs('SRT', 'srt', () => buildSrtBlob(transcript))}
           onPdf={exportPDF}
           showKeywordToggle={!!(sensitiveMatches && sensitiveMatches.length > 0)}
