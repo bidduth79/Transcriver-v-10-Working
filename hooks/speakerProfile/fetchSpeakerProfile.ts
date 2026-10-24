@@ -1,4 +1,4 @@
-import { GoogleGenAI, type GenerateContentResponse } from '@google/genai';
+import type { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 import { SpeakerProfile } from '../../types/speaker';
 import { fetchWikiSummary, fetchWikiImageByTitle, searchWikiImage, searchCommonsImage } from '../speakerProfileUtils';
 import { DEFAULT_MODEL } from '../../constants/aiModels';

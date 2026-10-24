@@ -1,13 +1,13 @@
-import { HarmCategory, HarmBlockThreshold, ThinkingLevel, type Part, type GenerateContentConfig, type GenerateContentParameters, type ThinkingConfig } from "@google/genai";
+import type { HarmCategory, HarmBlockThreshold, ThinkingLevel, Part, GenerateContentConfig, GenerateContentParameters, ThinkingConfig } from "@google/genai";
 import { getModelDefinition, isSpeedOptimizationEnabled } from '../../services/ApiKeyManager';
 import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL, TRANSCRIPTION_PROMPT_TEXT_NORMAL } from '../../constants/instructions';
 import { isTranscribeModel, TRANSCRIBE_HTTP_OPTIONS, formatAudioTranscription } from './transcribeModel';
 
 const SAFETY_SETTINGS = [
-  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
+  { category: 'HARM_CATEGORY_HARASSMENT' as HarmCategory, threshold: 'BLOCK_NONE' as HarmBlockThreshold },
+  { category: 'HARM_CATEGORY_HATE_SPEECH' as HarmCategory, threshold: 'BLOCK_NONE' as HarmBlockThreshold },
+  { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT' as HarmCategory, threshold: 'BLOCK_NONE' as HarmBlockThreshold },
+  { category: 'HARM_CATEGORY_DANGEROUS_CONTENT' as HarmCategory, threshold: 'BLOCK_NONE' as HarmBlockThreshold },
 ];
 
 const HIGH_SENSITIVITY_PROMPT = "You are an assistive speech-to-text accessibility tool. Listen carefully through any intro music, background noise, or low-volume sections, and transcribe all spoken words and dialogue in this recording into Bengali (Bangla). Format with [MM:SS] **Speaker 1:** when speech occurs.";
@@ -43,7 +43,7 @@ const buildAudioRequest = (model: string, audioPart: Part, text: string, config:
 // Also used by the short AI analyses (search analysis, report, BGB), which do not need deep thinking
 export const buildThinkingConfig = (modelName: string): ThinkingConfig | undefined => {
   if (!isSpeedOptimizationEnabled() || getModelDefinition(modelName).category === 'thinking') return undefined;
-  if (modelName.startsWith('gemini-3') && !modelName.includes('transcribe')) return { thinkingLevel: ThinkingLevel.LOW };
+  if (modelName.startsWith('gemini-3') && !modelName.includes('transcribe')) return { thinkingLevel: 'LOW' as ThinkingLevel };
   return undefined;
 };
 

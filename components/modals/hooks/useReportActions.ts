@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { GenerateContentResponse, Type } from "@google/genai";
+import type { GenerateContentResponse, Type } from "@google/genai";
 import { addToStore, getAllFromStore, deleteFromStore, STORES } from '../../../services/db';
 import { getActiveProvider, incrementTotalCalls } from '../../../services/ApiKeyManager';
 import { logSystemActivity } from '../../../services/SystemLogger';
@@ -54,7 +54,7 @@ export const useReportActions = (
           throw new Error("No Active API Key Selected.");
       }
 
-      const ai = createGeminiClient(provider.key);
+      const ai = await createGeminiClient(provider.key);
       const prompt = `Analyze these snippets about "${searchTerm}".
       Task:
       1. Provide a brief Bengali summary (strictly under 5 words, e.g., "রাজনৈতিক আলোচনা" or "অর্থনৈতিক বিষয়").
@@ -74,8 +74,8 @@ export const useReportActions = (
           ...(buildThinkingConfig(provider.model) ? { thinkingConfig: buildThinkingConfig(provider.model) } : {}),
           responseMimeType: 'application/json',
           responseSchema: {
-            type: Type.OBJECT,
-            properties: { summary: { type: Type.STRING }, sentiment: { type: Type.STRING } },
+            type: 'OBJECT' as Type,
+            properties: { summary: { type: 'STRING' as Type }, sentiment: { type: 'STRING' as Type } },
             required: ['summary', 'sentiment'],
           },
         },

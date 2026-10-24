@@ -21,7 +21,7 @@ export const useTransformTranscript = (
         const provider = await getActiveProvider();
         if (!provider) throw new Error("No API Key");
         
-        const ai = createGeminiClient(provider.key);
+        const ai = await createGeminiClient(provider.key);
         let prompt = "";
         
         if (type === 'translate') {

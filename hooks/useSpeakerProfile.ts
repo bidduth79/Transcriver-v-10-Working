@@ -58,7 +58,7 @@ export const useSpeakerProfile = (transcriptContext: string) => {
       const apiKey = provider?.key;
       if (!apiKey) throw new Error("এপিআই কি (API Key) কনফিগার করা নেই। Settings থেকে ঠিক করুন।");
 
-      const ai = createGeminiClient(apiKey);
+      const ai = await createGeminiClient(apiKey);
       const { response, modelToUse } = await generateProfileResponse(ai, buildSpeakerProfilePrompt(name, transcriptContext), provider?.model);
 
       await incrementTotalCalls('Speaker Profile', modelToUse, provider.source);

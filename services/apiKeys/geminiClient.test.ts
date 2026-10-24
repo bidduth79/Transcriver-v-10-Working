@@ -20,7 +20,7 @@ beforeEach(() => { m.logged = []; m.queue = []; m.models = []; });
 
 describe('createGeminiClient', () => {
   it('logs every request with Gemini token counts and the key tail', async () => {
-    const ai = createGeminiClient('SECRET-KEY-WXYZ');
+    const ai = await createGeminiClient('SECRET-KEY-WXYZ');
     m.next = { text: 'ok', usageMetadata: { promptTokenCount: 4100, totalTokenCount: 4500 } };
     expect(await ai.models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' })).toBe(m.next);
     m.next = Object.assign(new Error('{"error":{"code":429,"status":"RESOURCE_EXHAUSTED"}}'), { status: 429 });
@@ -43,7 +43,7 @@ describe('busy model (503)', () => {
     vi.useFakeTimers();
     vi.spyOn(console, 'info').mockImplementation(() => {});
     m.queue = [busy(), busy(), { text: 'ok' }];
-    const p = createGeminiClient('KEY-1234').models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' });
+    const p = (await createGeminiClient('KEY-1234')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' });
     await vi.advanceTimersByTimeAsync(7999);
     expect(m.models).toHaveLength(2);
     await vi.advanceTimersByTimeAsync(1);
@@ -56,7 +56,7 @@ describe('busy model (503)', () => {
     vi.useFakeTimers();
     vi.spyOn(console, 'info').mockImplementation(() => {});
     m.queue = [busy(), busy(), busy(), { text: 'from 3.5' }];
-    const p = createGeminiClient('KEY-1234').models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' });
+    const p = (await createGeminiClient('KEY-1234')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' });
     await vi.advanceTimersByTimeAsync(8000);
     expect(await p).toEqual({ text: 'from 3.5' });
     expect(m.models.at(-1)).toBe('gemini-3.5-flash');
@@ -64,7 +64,7 @@ describe('busy model (503)', () => {
       ['gemini-3.8-flash', 'error'], ['gemini-3.8-flash', 'error'], ['gemini-3.8-flash', 'error'], ['gemini-3.5-flash', 'success'],
     ]);
     m.models = []; m.queue = [new Error('400 bad request')];
-    await expect(createGeminiClient('K').models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' })).rejects.toThrow('400');
+    await expect((await createGeminiClient('K')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' })).rejects.toThrow('400');
     expect(m.models).toHaveLength(1);
     vi.useRealTimers();
   });
@@ -75,7 +75,7 @@ describe('request time limit', () => {
     vi.useFakeTimers();
     vi.spyOn(console, 'info').mockImplementation(() => {});
     m.queue = ['hang', 'hang', 'hang', { text: 'fallback' }];
-    const p = createGeminiClient('K').models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' });
+    const p = (await createGeminiClient('K')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' });
     await vi.advanceTimersByTimeAsync(90000);
     expect(m.models).toHaveLength(1);
     await vi.advanceTimersByTimeAsync(2000 + 90000 + 6000 + 90000);
@@ -89,7 +89,7 @@ describe('request time limit', () => {
     m.queue = ['hang'];
     let settled = false;
     const contents = [{ role: 'user', parts: [{ fileData: { fileUri: 'u', mimeType: 'audio/mpeg' } }] }];
-    createGeminiClient('K').models.generateContent({ model: 'gemini-3.5-flash-lite', contents }).catch(() => {}).finally(() => { settled = true; });
+    (await createGeminiClient('K')).models.generateContent({ model: 'gemini-3.5-flash-lite', contents }).catch(() => {}).finally(() => { settled = true; });
     await vi.advanceTimersByTimeAsync(599000);
     expect(settled).toBe(false);
     expect(m.logged).toHaveLength(0);

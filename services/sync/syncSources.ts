@@ -1,7 +1,7 @@
 import { db, authPromise, isFirebaseConfigured } from '../firebase';
 import { collection, getDocs } from "firebase/firestore";
 import { getApiUrl, isLocalServerEnabled } from '../../utils/config';
-import { supabase, isSupabaseConfigured } from '../supabase';
+import { getSupabase, isSupabaseConfigured } from '../supabase';
 import { withoutSyncStamp } from '../firebaseSync/syncStamp';
 import { unpackFromCloud } from '../firebaseSync/transcriptCompression';
 import { isTombstone } from '../firebaseSync/tombstone';
@@ -96,7 +96,7 @@ export const fetchFromSupabase = async (storeName: string): Promise<StoredRecord
     const limit = 50;
 
     while (true) {
-      const { data, error } = await supabase.from(storeName).select('*').range(from, from + limit - 1);
+      const { data, error } = await (await getSupabase()).from(storeName).select('*').range(from, from + limit - 1);
 
       if (error) {
         console.warn(`[Supabase Fetch] Info for ${storeName}:`, error.message || error);

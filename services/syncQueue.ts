@@ -2,7 +2,7 @@ import { get, set } from 'idb-keyval';
 import { db, authPromise } from './firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { tombstoneFor } from './firebaseSync/tombstone';
-import { supabase } from './supabase';
+import { getSupabase } from './supabase';
 import { getApiUrl, isLocalServerEnabled } from '../utils/config';
 import { AUTO_SYNC_SUPABASE_ENABLED, AUTO_SYNC_FIREBASE_ENABLED } from './syncEngine';
 
@@ -73,10 +73,10 @@ export const processQueue = async () => {
                     success = true;
                 } else if (task.target === 'supabase' && AUTO_SYNC_SUPABASE_ENABLED) {
                     if (task.action === 'save') {
-                        const { error } = await supabase.from(task.storeName).upsert({ id: task.id, data: task.payload });
+                        const { error } = await (await getSupabase()).from(task.storeName).upsert({ id: task.id, data: task.payload });
                         if (!error) success = true;
                     } else if (task.action === 'delete') {
-                        const { error } = await supabase.from(task.storeName).delete().eq('id', task.id);
+                        const { error } = await (await getSupabase()).from(task.storeName).delete().eq('id', task.id);
                         if (!error) success = true;
                     }
                 } else if (task.target === 'local' && isLocalServerEnabled()) {

@@ -16,13 +16,13 @@ vi.mock('firebase/firestore', () => ({
 vi.mock('../utils/config', () => ({ getApiUrl: (p: string) => `http://local/${p}`, isLocalServerEnabled: () => m.local.value }));
 vi.mock('./supabase', () => ({
   get isSupabaseConfigured() { return m.sbConfigured.value; },
-  supabase: {
+  getSupabase: async () => ({
     from: () => ({
       select: () => ({ range: async (from: number) => ({ data: m.sbPages[from / 50] || [], error: m.sbError }) }),
       upsert: (row: any) => { m.upsert(row); return Promise.resolve({ error: m.sbError }); },
       delete: () => ({ eq: (_k: string, id: string) => { m.sbDelete(id); return Promise.resolve({ error: m.sbError }); } }),
     }),
-  },
+  }),
 }));
 vi.mock('./syncQueue', () => ({ addToQueue: m.addToQueue }));
 vi.mock('./firebaseThrottledQueue', () => ({ enqueueFirebaseWrite: m.enqueueWrite, enqueueFirebaseDelete: m.enqueueDelete }));

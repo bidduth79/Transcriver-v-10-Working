@@ -1,7 +1,7 @@
 import { db, authPromise, isFirebaseConfigured } from './firebase';
 import { doc, setDoc } from "firebase/firestore";
 import { getApiUrl, isLocalServerEnabled } from '../utils/config';
-import { supabase, isSupabaseConfigured } from './supabase';
+import { getSupabase, isSupabaseConfigured } from './supabase';
 import { addToQueue } from './syncQueue';
 import { FIREBASE_SYNCED_STORES } from '../constants/storeNames';
 import { enqueueFirebaseWrite, enqueueFirebaseDelete } from './firebaseThrottledQueue';
@@ -97,7 +97,7 @@ export const saveDataDual = async (storeName: string, data: StoredRecord, forceA
     // 3. Supabase Write (with config guard)
     if ((forceAll || AUTO_SYNC_SUPABASE_ENABLED) && isSupabaseConfigured) {
       promises.push(
-        Promise.resolve(supabase.from(storeName).upsert({ id: id, data: payload })).then(({ error }) => {
+        getSupabase().then(client => client.from(storeName).upsert({ id: id, data: payload })).then(({ error }) => {
             if (error) throw error;
         }).catch((e: Error) => {
             console.warn("Supabase save failed, queuing...", e.message);
@@ -146,7 +146,7 @@ export const deleteDataDual = async (storeName: string, id: string, forceAll = f
     // Supabase delete (with config guard)
     if ((forceAll || AUTO_SYNC_SUPABASE_ENABLED) && isSupabaseConfigured) {
       promises.push(
-        Promise.resolve(supabase.from(storeName).delete().eq('id', id)).then(({ error }) => {
+        getSupabase().then(client => client.from(storeName).delete().eq('id', id)).then(({ error }) => {
             if (error) throw error;
         }).catch(() => {
           if (AUTO_SYNC_SUPABASE_ENABLED) {

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { GenerateContentResponse, Type } from "@google/genai";
+import type { GenerateContentResponse, Type } from "@google/genai";
 import { getActiveProvider, incrementTotalCalls } from '../../../services/ApiKeyManager';
 import { logSystemActivity } from '../../../services/SystemLogger';
 import { createGeminiClient } from '../../../services/apiKeys/geminiClient';
@@ -36,7 +36,7 @@ export function useSummaryAnalysis(
           throw new Error("No Active API Key Selected. Please select one in Settings.");
       }
 
-      const ai = createGeminiClient(provider.key);
+      const ai = await createGeminiClient(provider.key);
       const prompt = `Analyze the context of the word/phrase "${searchTerm}" in this transcript.
       Task:
       1. Determine if the discussion about "${searchTerm}" is Positive, Negative, or Neutral.
@@ -56,8 +56,8 @@ export function useSummaryAnalysis(
           ...(buildThinkingConfig(provider.model) ? { thinkingConfig: buildThinkingConfig(provider.model) } : {}),
           responseMimeType: 'application/json',
           responseSchema: {
-            type: Type.OBJECT,
-            properties: { sentiment: { type: Type.STRING, enum: ['Positive', 'Negative', 'Neutral'] }, remark: { type: Type.STRING } },
+            type: 'OBJECT' as Type,
+            properties: { sentiment: { type: 'STRING' as Type, enum: ['Positive', 'Negative', 'Neutral'] }, remark: { type: 'STRING' as Type } },
             required: ['sentiment', 'remark'],
           },
         },

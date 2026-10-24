@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 const defaultSupabaseUrl = 'https://ftrjvvsfjxmxwqvbskic.supabase.co';
 
@@ -82,20 +82,24 @@ const dummyClient = {
 
 // The dummy covers only the calls this app makes
 const dummyAsClient = dummyClient as unknown as SupabaseClient;
-let clientInstance: SupabaseClient = dummyAsClient;
 
-if (isConfigValid) {
-  try {
-    clientInstance = createClient(supabaseUrl, supabaseKey);
-  } catch (err) {
-    console.warn('Could not initialize Supabase client, falling back to safe dummy client:', err);
-    clientInstance = dummyAsClient;
-  }
-} else if (supabaseKey) {
+if (!isConfigValid && supabaseKey) {
   console.warn('Supabase Anon Key appears invalid (not a valid JWT format). Please update VITE_SUPABASE_ANON_KEY in .env');
 }
 
 /** Whether Supabase is properly configured */
-export const isSupabaseConfigured = isConfigValid && clientInstance !== dummyAsClient;
+export const isSupabaseConfigured = isConfigValid;
 
-export const supabase = clientInstance;
+let clientPromise: Promise<SupabaseClient> | null = null;
+
+// The Supabase SDK (about 220 KB) is downloaded only when Supabase is configured and first used
+export const getSupabase = (): Promise<SupabaseClient> => {
+  if (!isConfigValid) return Promise.resolve(dummyAsClient);
+  clientPromise ??= import('@supabase/supabase-js')
+    .then(({ createClient }) => createClient(supabaseUrl, supabaseKey))
+    .catch((err: unknown) => {
+      console.warn('Could not initialize Supabase client, falling back to safe dummy client:', err);
+      return dummyAsClient;
+    });
+  return clientPromise;
+};

@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import type { GoogleGenAI } from '@google/genai';
 import { logApiCall } from './apiCallStats';
 import { messageOf } from '../../utils/errorMessage';
 
@@ -34,8 +34,10 @@ const hasMedia = (contents: unknown) =>
  * so the quota monitor shows real usage. A model that is temporarily busy (503, or no answer within the
  * time limit) is retried after short waits and then replaced by a similar model on the same key.
  */
-export const createGeminiClient = (apiKey: string) => {
-  const ai = new GoogleGenAI({ apiKey });
+export const createGeminiClient = async (apiKey: string): Promise<GoogleGenAI> => {
+  // The SDK (about 270 KB) is downloaded with the first AI request, not when the app opens
+  const { GoogleGenAI: Client } = await import('@google/genai');
+  const ai = new Client({ apiKey });
   const generate = ai.models.generateContent.bind(ai.models);
   const keyTail = apiKey.slice(-4);
 

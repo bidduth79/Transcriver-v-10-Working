@@ -1,4 +1,4 @@
-import { FileState, type GoogleGenAI, type Part } from "@google/genai";
+import type { FileState, GoogleGenAI, Part } from "@google/genai";
 import { blobToBase64 } from './transcriptionUtils';
 
 // Gemini rejects inline requests over 20 MB and base64 adds about a third, so larger audio goes through the Files API
@@ -8,11 +8,11 @@ const MAX_POLLS = 150;
 
 const uploadAndWait = async (ai: GoogleGenAI, blob: Blob, mimeType: string) => {
   let file = await ai.files.upload({ file: blob, config: { mimeType } });
-  for (let i = 0; file.state === FileState.PROCESSING && i < MAX_POLLS; i++) {
+  for (let i = 0; file.state === 'PROCESSING' as FileState && i < MAX_POLLS; i++) {
     await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
     file = await ai.files.get({ name: file.name! });
   }
-  if (file.state !== FileState.ACTIVE || !file.uri || !file.name) {
+  if (file.state !== 'ACTIVE' as FileState || !file.uri || !file.name) {
     throw new Error('Gemini could not process the uploaded audio file');
   }
   return { name: file.name, uri: file.uri };

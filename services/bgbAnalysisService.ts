@@ -1,7 +1,7 @@
 import { BgbRemarkType, BgbAnalysisResult } from '../types/bgb';
 import { getActiveProvider } from './ApiKeyManager';
 import { DEFAULT_MODEL } from '../constants/aiModels';
-import { Type } from '@google/genai';
+import type { Type } from '@google/genai';
 import { createGeminiClient } from './apiKeys/geminiClient';
 import { parseJsonAnswer } from '../utils/aiAnswer';
 import { buildThinkingConfig } from '../hooks/transcription/geminiRequest';
@@ -19,7 +19,7 @@ export const analyzeTranscriptForBgb = async (transcript: string, sensitiveMatch
       throw new Error('API Key missing');
     }
 
-    const ai = createGeminiClient(apiKey);
+    const ai = await createGeminiClient(apiKey);
     
     const prompt = `
       You are an intelligent transcript analyzer. 
@@ -48,8 +48,8 @@ export const analyzeTranscriptForBgb = async (transcript: string, sensitiveMatch
         ...(buildThinkingConfig(modelToUse) ? { thinkingConfig: buildThinkingConfig(modelToUse) } : {}),
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.OBJECT,
-          properties: { remark: { type: Type.STRING, enum: ['Positive', 'Negative', 'Neutral'] }, details: { type: Type.STRING } },
+          type: 'OBJECT' as Type,
+          properties: { remark: { type: 'STRING' as Type, enum: ['Positive', 'Negative', 'Neutral'] }, details: { type: 'STRING' as Type } },
           required: ['remark', 'details'],
         },
       }
