@@ -1,11 +1,15 @@
 import { matchesTranscript } from '../../../hooks/history/historyUtils';
+import type { HistoryItem } from '../../../types';
+
+// Date key ("M/D/YYYY" or "Unknown") -> the items of that day
+export type HistoryGroups = Record<string, HistoryItem[]>;
 
 // Fast M/D/YYYY key (avoids slow toLocaleDateString in tight loops)
 export const toDateKey = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 
-export const buildDuplicateCounts = (history: any[]) => {
+export const buildDuplicateCounts = (history: HistoryItem[]) => {
   const counts: Record<string, number> = {};
-  (history || []).forEach((h: any) => {
+  (history || []).forEach(h => {
     if (!counts[h.fileName]) counts[h.fileName] = 0;
     counts[h.fileName]++;
   });
@@ -13,9 +17,9 @@ export const buildDuplicateCounts = (history: any[]) => {
 };
 
 // Search file names and transcript content (saved transcripts via `transcriptMatchIds`), then group by date
-export const searchAndGroupHistory = (sourceArray: any[], query: string, transcriptMatchIds?: Set<string> | null) => {
+export const searchAndGroupHistory = (sourceArray: HistoryItem[], query: string, transcriptMatchIds?: Set<string> | null) => {
   const searchRegex = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
-  const filtered = sourceArray.filter((item: any) => {
+  const filtered = sourceArray.filter(item => {
     const rawFileName = item.fileName || '';
     const displayFileName = rawFileName.replace(/_/g, ' ').replace(/#/g, '').replace(/\s+/g, ' ').trim();
     const fileNameMatch = searchRegex.test(rawFileName) || searchRegex.test(displayFileName);
@@ -23,8 +27,8 @@ export const searchAndGroupHistory = (sourceArray: any[], query: string, transcr
     return fileNameMatch || transcriptMatch;
   });
 
-  const groups: any = {};
-  filtered.forEach((item: any) => {
+  const groups: HistoryGroups = {};
+  filtered.forEach(item => {
     let d = 'Unknown Date';
     if (item.date) {
       try {
@@ -42,13 +46,13 @@ export const searchAndGroupHistory = (sourceArray: any[], query: string, transcr
 
 export type FlatHistoryRow =
   | { type: 'header'; group: string; count: number }
-  | { type: 'item'; item: any; isDuplicate: boolean; group: string };
+  | { type: 'item'; item: HistoryItem; isDuplicate: boolean; group: string };
 
-export const flattenGroups = (groups: Record<string, any[]>, duplicateCounts: Record<string, number>) => {
+export const flattenGroups = (groups: HistoryGroups, duplicateCounts: Record<string, number>) => {
   const arr: FlatHistoryRow[] = [];
   Object.entries(groups).forEach(([group, items]) => {
-    arr.push({ type: 'header', group, count: (items as any[]).length });
-    (items as any[]).forEach(item => {
+    arr.push({ type: 'header', group, count: items.length });
+    items.forEach(item => {
       arr.push({ type: 'item', item, isDuplicate: duplicateCounts[item.fileName] > 1, group });
     });
   });
@@ -56,7 +60,7 @@ export const flattenGroups = (groups: Record<string, any[]>, duplicateCounts: Re
 };
 
 // "M/D/YYYY" key for an ISO (fast path) or any Date-parsable value; null when unparseable
-export const historyDateKey = (dateStr: any): string | null => {
+export const historyDateKey = (dateStr: string): string | null => {
   try {
     if (dateStr.length >= 10 && dateStr[4] === '-' && dateStr[7] === '-') {
       const year = dateStr.substring(0, 4);
@@ -72,9 +76,9 @@ export const historyDateKey = (dateStr: any): string | null => {
   return null;
 };
 
-export const collectHistoryDates = (items: any[]) => {
+export const collectHistoryDates = (items: HistoryItem[]) => {
   const dates = new Set<string>();
-  (items || []).forEach((item: any) => {
+  (items || []).forEach(item => {
     if (item?.date) {
       const key = historyDateKey(item.date);
       if (key) dates.add(key);
@@ -84,9 +88,9 @@ export const collectHistoryDates = (items: any[]) => {
 };
 
 // Groups items by date key; items without a usable date go to "Unknown"
-export const groupHistoryByDate = (items: any[] | undefined) => {
-  const groups: any = {};
-  (items || []).forEach((item: any) => {
+export const groupHistoryByDate = (items: HistoryItem[] | undefined) => {
+  const groups: HistoryGroups = {};
+  (items || []).forEach(item => {
     const d = (item?.date && historyDateKey(item.date)) || 'Unknown';
     if (!groups[d]) groups[d] = [];
     groups[d].push(item);

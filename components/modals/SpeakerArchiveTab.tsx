@@ -1,9 +1,11 @@
 import React from 'react';
+import type { SpeakerDatabaseStats } from '../../types/speaker';
+import type { SpeakerBgbMention } from '../../types/speaker';
 
 interface SpeakerArchiveTabProps {
-  dbStats: any;
+  dbStats: SpeakerDatabaseStats | undefined;
   isDark: boolean;
-  mentions: any[];
+  mentions: SpeakerBgbMention[];
   parseTimestampToSeconds: (ts?: string) => number | null;
   onSeek?: (seconds: number) => void;
 }
@@ -51,7 +53,7 @@ export const SpeakerArchiveTab: React.FC<SpeakerArchiveTabProps> = ({
             <p className="text-xs text-slate-500 mt-1">ভবিষ্যতে এই স্পীকারের কোনো ফাইলে বিজিবি কথাটি আসলে তা এখানে যুক্ত হবে।</p>
           </div>
         ) : (
-          mentions.map((m: any, idx: number) => (
+          mentions.map((m, idx) => (
             <div key={idx} className={`p-3.5 rounded-xl border transition-all ${isDark ? 'bg-slate-800/30 border-slate-700/80 hover:border-slate-600' : 'bg-white border-slate-200 hover:border-indigo-200 shadow-sm'}`}>
               <div className="flex items-center justify-between gap-2 mb-2">
                 <span className="text-xs font-bold text-indigo-400 truncate max-w-[200px]" title={m.fileName}>

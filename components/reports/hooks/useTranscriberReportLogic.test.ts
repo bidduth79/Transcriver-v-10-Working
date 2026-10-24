@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
 const m = vi.hoisted(() => ({ history: [] as any[] }));
-vi.mock('../../../services/db', () => ({ STORES: { HISTORY: 'studio_history' }, getAllFromStore: vi.fn(async () => m.history) }));
+// The report reads light history items (no transcripts)
+vi.mock('../../../services/historyRecords', () => ({ loadLightHistory: vi.fn(async () => m.history) }));
 
 import { useTranscriberReportLogic } from './useTranscriberReportLogic';
 import { useAppStore } from '@/hooks/useAppStore';

@@ -7,6 +7,7 @@ import { SpeakerProfileSidebar } from '../../../components/modals/SpeakerProfile
 import { FileMeta, HistoryItem } from '../../../types';
 import { loadHistoryTranscript } from '../../../hooks/history/useHistoryTranscript';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { ToastType } from '../../../hooks/useToast';
 
 export interface TranscriptModalsProps {
   isSummaryOpen: boolean;
@@ -30,9 +31,9 @@ export interface TranscriptModalsProps {
   searchTerm: string;
   matchCount: number;
   fileMeta: Partial<FileMeta>;
-  addToast: (msg: string, type: 'success' | 'error' | 'info') => void;
+  addToast: (msg: string, type: ToastType) => void;
   onSeek: (time: string | number) => void;
-  onModelUpdate: (models: any) => void;
+  onModelUpdate: () => void;
   setIsAiLoading: (isLoading: boolean) => void;
   history: HistoryItem[];
   FormattedTranscript: React.FC<any>;

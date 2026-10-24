@@ -7,6 +7,8 @@ import { SummaryHistoryList } from './summary/SummaryHistoryList';
 import { SummaryModalHeader } from './summary/SummaryModalHeader';
 import { useSummaryHistory } from './summary/useSummaryHistory';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import type { FileMeta } from '../../types';
+import type { ToastType } from '../../hooks/useToast';
 
 interface SummaryModalProps {
   isOpen: boolean;
@@ -16,9 +18,9 @@ interface SummaryModalProps {
   isDark: boolean;
   appLang: 'bn' | 'en';
   searchTerm: string;
-  fileMeta: any;
-  addToast: (msg: string, type: any) => void;
-  onModelUpdate?: (models: any) => void;
+  fileMeta: Partial<FileMeta>;
+  addToast: (msg: string, type: ToastType) => void;
+  onModelUpdate?: () => void;
   setIsAiLoading?: (loading: boolean) => void;
 }
 

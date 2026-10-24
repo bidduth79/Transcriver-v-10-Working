@@ -2,6 +2,7 @@ import React from 'react';
 import { FileMeta, HistoryItem, TranscriptMeta } from '../../types';
 import type { Translations } from '../../translations';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import type { ToastType } from '../../hooks/useToast';
 
 export interface TranscriptOutputProps {
   t: Translations;
@@ -28,7 +29,7 @@ export interface TranscriptOutputProps {
   errorMessage: string;
   transformTranscript: (type: 'translate' | 'encoding', targetLang?: 'en' | 'bn') => void;
   transformingType: string | null;
-  addToast: (msg: string, type: 'success' | 'error' | 'info') => void;
+  addToast: (msg: string, type: ToastType) => void;
   appLang: 'bn' | 'en';
   history: HistoryItem[];
   // A transcript timestamp such as "[01:15]", or seconds

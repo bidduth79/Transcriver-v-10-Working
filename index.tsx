@@ -8,6 +8,8 @@ import './i18n.ts';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Toaster } from 'sonner';
 import { requestPersistentStorage } from './services/storagePersistence';
+import type { FallbackProps } from 'react-error-boundary';
+import { messageOf } from './utils/errorMessage';
 
 window.addEventListener('error', (event) => {
   if (event.message === 'Script error.') {
@@ -30,7 +32,7 @@ window.addEventListener('error', (event) => {
   }
 });
 
-const FallbackComponent = ({ error, resetErrorBoundary }: any) => {
+const FallbackComponent = ({ error, resetErrorBoundary }: FallbackProps) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-6">
       <div className="bg-slate-800 p-8 rounded-2xl max-w-lg w-full shadow-2xl border border-red-500/30">
@@ -39,7 +41,7 @@ const FallbackComponent = ({ error, resetErrorBoundary }: any) => {
           Rendering Error Detected
         </h2>
         <p className="text-sm text-slate-300 mb-6 font-mono bg-black/50 p-4 rounded-lg break-words">
-          {error.message}
+          {messageOf(error)}
         </p>
         <p className="text-sm text-slate-400 mb-6">
           The application encountered an unexpected loop or memory issue. 

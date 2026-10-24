@@ -6,16 +6,30 @@ import { createGeminiClient } from '../../../services/apiKeys/geminiClient';
 import { buildSearchContext, parseJsonAnswer } from '../../../utils/aiAnswer';
 import { buildThinkingConfig } from '../../../hooks/transcription/geminiRequest';
 import { messageOf } from '../../../utils/errorMessage';
+import type { FileMeta } from '../../../types';
+import type { ToastType } from '../../../hooks/useToast';
+
+export interface AiAnalysis { sentiment: 'positive' | 'negative' | 'neutral'; remark: string }
+
+// Where and how often the search term occurs in the open transcript
+export interface SummaryStats {
+  searchTerm: string;
+  fileName: string;
+  duration: string;
+  matchCount: number;
+  matchTimestamps: string[];
+  matchSentences: string[];
+}
 
 export function useSummaryAnalysis(
   searchTerm: string, 
   transcript: string, 
   appLang: 'en' | 'bn', 
-  addToast: (msg: string, type: any) => void,
+  addToast: (msg: string, type: ToastType) => void,
   setIsAiLoading?: (loading: boolean) => void,
-  onModelUpdate?: (models?: any) => void
+  onModelUpdate?: () => void
 ) {
-  const [aiAnalysis, setAiAnalysis] = useState<{ sentiment: 'positive' | 'negative' | 'neutral', remark: string } | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<AiAnalysis | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const performAIAnalysis = async () => {
@@ -103,8 +117,8 @@ export function useSummaryAnalysis(
   return { aiAnalysis, setAiAnalysis, isAnalyzing, performAIAnalysis };
 }
 
-export function useSummaryStats(searchTerm: string, transcript: string, fileMeta: any) {
-  const currentStats = useMemo(() => {
+export function useSummaryStats(searchTerm: string, transcript: string, fileMeta: Partial<FileMeta>) {
+  const currentStats = useMemo((): SummaryStats | null => {
     if (!searchTerm || !transcript) return null;
     const lowerSearch = searchTerm.toLowerCase().trim();
     if (lowerSearch === "") return null;

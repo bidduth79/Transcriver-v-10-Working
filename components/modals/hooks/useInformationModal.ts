@@ -2,8 +2,14 @@ import { useState, useRef } from 'react';
 import { getApiUrl } from '../../../services/api';
 import { isLocalServerEnabled } from '../../../utils/config';
 import { messageOf } from '../../../utils/errorMessage';
+import type { ToastType } from '../../../hooks/useToast';
 
-export const useInformationModal = ({ addToast, appLang }: any) => {
+interface Options {
+    addToast?: (msg: string, type: ToastType) => void;
+    appLang: 'bn' | 'en';
+}
+
+export const useInformationModal = ({ addToast, appLang }: Options) => {
     const [activeTab, setActiveTab] = useState('sidebar');
     const [isMinimized, setIsMinimized] = useState(false);
     const [isMaximized, setIsMaximized] = useState(false);

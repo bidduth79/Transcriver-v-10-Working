@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useInformationModal } from './hooks/useInformationModal';
 import { getGuideData, getTabs } from './utils/informationData';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import type { ToastType } from '../../hooks/useToast';
 
 interface InformationModalProps {
   isOpen: boolean;
@@ -10,7 +11,7 @@ interface InformationModalProps {
   isDark: boolean;
   activeColors: ActiveColors;
   appLang: 'bn' | 'en';
-  addToast?: (msg: string, type: any) => void;
+  addToast?: (msg: string, type: ToastType) => void;
 }
 
 export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onClose, isDark, activeColors, appLang, addToast }) => {
@@ -122,7 +123,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
                 </div>
 
                 <div className="grid grid-cols-1 gap-6">
-                   {currentData.items.map((item: any, idx: number) => (
+                   {currentData.items.map((item, idx) => (
                      <div key={idx} className={`p-6 rounded-[2rem] border flex gap-6 group transition-all hover:scale-[1.01] ${isDark ? 'bg-slate-700 border-slate-600 hover:bg-slate-600' : 'bg-slate-50 border-slate-200 hover:bg-white hover:shadow-lg'}`}>
                         <div className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center ${isDark ? 'bg-slate-600 text-white' : 'bg-white text-indigo-600 shadow-md'}`}>
                            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">{item.icon}</svg>

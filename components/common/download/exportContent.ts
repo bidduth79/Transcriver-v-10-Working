@@ -3,13 +3,13 @@
 const TIMESTAMP_REGEX = /([\[\(](?:[0-9০-৯]{1,2}:)?[0-9০-৯]{1,2}:[0-9০-৯]{2}[\]\)])/g;
 
 // Put every [MM:SS] / (MM:SS) / [H:MM:SS] timestamp on its own line
-export const normalizeTimestamps = (transcript: any): string =>
+export const normalizeTimestamps = (transcript: unknown): string =>
   ((typeof transcript === 'string' ? transcript : '') || '').replace(TIMESTAMP_REGEX, '\n$1').trim();
 
-export const baseFileName = (fileName: any): string =>
+export const baseFileName = (fileName: unknown): string =>
   fileName && typeof fileName === 'string' ? fileName.split('.')[0] : 'transcript';
 
-export const buildKeywordRegex = (matches: any): RegExp | null => {
+export const buildKeywordRegex = (matches: unknown): RegExp | null => {
   if (!matches || !Array.isArray(matches) || matches.length === 0) return null;
   const validMatches = matches
     .filter((m: string) => m && typeof m === 'string' && m.trim() !== '')
@@ -17,12 +17,12 @@ export const buildKeywordRegex = (matches: any): RegExp | null => {
   return validMatches.length > 0 ? new RegExp(`(${validMatches.join('|')})`, 'gi') : null;
 };
 
-export const buildTxtBlob = (transcript: any) => {
+export const buildTxtBlob = (transcript: unknown) => {
   let safeTranscript = transcript || '';
   if (typeof safeTranscript === 'string') {
     safeTranscript = normalizeTimestamps(safeTranscript);
   }
-  return new Blob([safeTranscript], { type: 'text/plain;charset=utf-8' });
+  return new Blob([String(safeTranscript)], { type: 'text/plain;charset=utf-8' });
 };
 
 const toLatinDigits = (s: string) => s.replace(/[০-৯]/g, m => '0123456789'['০১২৩৪৫৬৭৮৯'.indexOf(m)]);
@@ -34,7 +34,7 @@ const SPEAKER_LABEL_REGEX = /\*\*[^*]*?(?::\*\*|\*\*:)\s*/;
 const srtTime = (total: number) => `${pad(Math.floor(total / 3600))}:${pad(Math.floor(total / 60) % 60)}:${pad(total % 60)},000`;
 
 // One cue per line, each lasting 5 seconds from its timestamp (lines without one start at 00:00)
-export const buildSrtBlob = (transcript: any) => {
+export const buildSrtBlob = (transcript: unknown) => {
   let srtContent = "";
   const lines = normalizeTimestamps(transcript).split('\n').filter((l: string) => l && typeof l === 'string' && l.trim() !== "");
   lines.forEach((line: string, index: number) => {

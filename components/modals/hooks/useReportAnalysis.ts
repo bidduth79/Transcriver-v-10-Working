@@ -1,7 +1,10 @@
 import { useMemo } from 'react';
+import type { FileMeta } from '../../../types';
 
-export const useReportAnalysis = (transcript: string, searchTerm: string, fileMeta: any) => {
-  return useMemo<{ ranges: string[], snippets: string[], matchCount: number } | null>(() => {
+export interface ReportAnalysis { ranges: string[]; snippets: string[]; matchCount: number }
+
+export const useReportAnalysis = (transcript: string, searchTerm: string, fileMeta: Partial<FileMeta>) => {
+  return useMemo<ReportAnalysis | null>(() => {
     if (!searchTerm || !transcript) return null;
     const lowerSearch = searchTerm.toLowerCase().trim();
     if (lowerSearch === "") return null;

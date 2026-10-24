@@ -6,6 +6,7 @@ vi.mock('./history/useHistoryTranscript', () => ({ loadHistoryTranscript: async 
 vi.mock('./useHistoryStore', () => ({ useHistoryStore: { getState: () => ({ setHistory: m.setHistory }) } }));
 
 import { getSidebarProps, getAppModalsProps, getExpandedHistoryProps, getTranscriptOutputProps } from './useAppProps';
+import type { HistoryItem } from '../types';
 
 // Fake core: every property is a distinct marker string, functions are spies
 const makeCore = (over: any = {}) => {
@@ -45,10 +46,11 @@ describe('prop builders', () => {
   });
 
   it('groups history by M/D/YYYY with an Unknown bucket', () => {
+    // Damaged records too: numeric ids, a missing date, a null entry
     const groups = getSidebarProps(makeCore()).groupHistory([
       { id: 1, date: '2026-03-05T10:00:00Z' }, { id: 2, date: '2026-03-05T23:00:00Z' }, { id: 3, date: 'October 22, 2026 10:00' },
       { id: 4, date: 'bad' }, { id: 5 }, null,
-    ]);
+    ] as unknown as HistoryItem[]);
     expect(Object.fromEntries(Object.entries(groups).map(([k, v]: any) => [k, v.map((i: any) => i?.id ?? null)]))).toEqual({
       '3/5/2026': [1, 2], '10/22/2026': [3], Unknown: [4, 5, null],
     });

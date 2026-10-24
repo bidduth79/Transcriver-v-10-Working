@@ -7,14 +7,14 @@ export interface LogFilters {
   dateTo: string;
 }
 
-const timeOf = (ts: any) => {
+const timeOf = (ts: string | number | undefined) => {
   const time = ts ? new Date(ts).getTime() : 0;
   return isNaN(time) ? 0 : time;
 };
 
 // Drop empty entries and sort newest first (missing/invalid timestamps go last)
 export const sortLogsNewestFirst = (data: SystemLogItem[]) =>
-  data.filter(item => item != null).sort((a: any, b: any) => timeOf(b.timestamp) - timeOf(a.timestamp));
+  data.filter(item => item != null).sort((a, b) => timeOf(b.timestamp) - timeOf(a.timestamp));
 
 export const filterLogs = (logs: SystemLogItem[], { category, status, dateFrom, dateTo }: LogFilters) => {
   let res = logs;

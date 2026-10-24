@@ -1,9 +1,10 @@
 import React from 'react';
 import { SpeakerProfile } from '../../types/speaker';
+import type { SpeakerDatabaseStats } from '../../types/speaker';
 
 interface SpeakerProfileTabProps {
   profile: SpeakerProfile;
-  dbStats: any;
+  dbStats: SpeakerDatabaseStats | undefined;
   isDark: boolean;
 }
 
@@ -98,7 +99,7 @@ export const SpeakerProfileTab: React.FC<SpeakerProfileTabProps> = ({ profile, d
               যৌথ আলোচনা বা সহ-বক্তা (Co-Speakers)
             </h3>
             <div className="flex flex-wrap gap-2">
-              {dbStats.coSpeakers.map((cs: any) => (
+              {dbStats.coSpeakers.map(cs => (
                 <span key={cs.name} className={`px-2.5 py-1 text-xs rounded-lg border flex items-center gap-1.5 ${isDark ? 'bg-slate-800/60 border-slate-700 text-slate-300' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
                   <span className="font-semibold">{cs.name}</span>
                   <span className="text-[10px] opacity-60 font-mono">({cs.count} বার)</span>

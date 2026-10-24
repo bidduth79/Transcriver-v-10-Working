@@ -5,14 +5,17 @@ export const MemoryWidget: React.FC<{ isDark: boolean }> = ({ isDark }) => {
 
   useEffect(() => {
     // Only available in Chrome-based browsers
-    const perf = performance as any;
+    const perf = performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } };
     if (!perf.memory) return;
 
     const updateMemory = () => {
       if (typeof document !== 'undefined' && document.hidden) return;
-      const used = Math.round(perf.memory.usedJSHeapSize / (1024 * 1024));
-      const total = Math.round(perf.memory.totalJSHeapSize / (1024 * 1024));
-      const limit = Math.round(perf.memory.jsHeapSizeLimit / (1024 * 1024));
+      // Read fresh each time: Chrome returns the current numbers on every access
+      const info = perf.memory;
+      if (!info) return;
+      const used = Math.round(info.usedJSHeapSize / (1024 * 1024));
+      const total = Math.round(info.totalJSHeapSize / (1024 * 1024));
+      const limit = Math.round(info.jsHeapSizeLimit / (1024 * 1024));
       setMemory(prev => {
         if (prev && prev.used === used && prev.total === total && prev.limit === limit) {
           return prev;

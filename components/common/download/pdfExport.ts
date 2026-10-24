@@ -6,9 +6,9 @@ import { messageOf } from '../../../utils/errorMessage';
 const TOAST_ID = 'pdf-export-toast';
 
 interface PdfOptions {
-  transcript: any;
+  transcript: unknown;
   fileName: string;
-  searchTerm: any;
+  searchTerm: string;
   keywordRegex: RegExp | null;
 }
 

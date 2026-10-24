@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
-import { getAllFromStore, STORES } from '../../../services/db';
+import { loadLightHistory } from '../../../services/historyRecords';
 import { toLocalIsoDate } from '../../../utils/timeUtils';
 import {
   formatSecondsToHrsMin, buildReportRows, paginateReportRows, printReportElement, buildReportCsv,
   ROWS_FIRST_PAGE, ROWS_OTHER_PAGES,
 } from './transcriberReportUtils';
+import type { HistoryItem } from '../../../types';
+import type { ReportRow } from './transcriberReportUtils';
 
 export const useTranscriberReportLogic = (isOpen: boolean) => {
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  const [reportData, setReportData] = useState<any[]>([]);
+  const [reportData, setReportData] = useState<ReportRow[]>([]);
   
   useEffect(() => {
     const now = new Date();
@@ -30,8 +32,8 @@ export const useTranscriberReportLogic = (isOpen: boolean) => {
   }, [isOpen, historyUpdates]);
 
   const loadHistory = async () => {
-    const data: any = await getAllFromStore(STORES.HISTORY);
-    setHistory(data);
+    // The report needs dates, types and lengths only, never the transcripts
+    setHistory(await loadLightHistory());
   };
 
   useEffect(() => {

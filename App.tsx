@@ -29,7 +29,7 @@ const App: React.FC = () => {
             {core.batchCountdown}
           </div>
           <div className="text-white text-2xl font-medium mt-8 tracking-wide animate-pulse">
-            {(core.t as any).rateLimitPause || "Waiting for API rate limit..."}
+            {(core.t as Partial<Record<string, string>>).rateLimitPause || "Waiting for API rate limit..."}
           </div>
         </div>
       )}

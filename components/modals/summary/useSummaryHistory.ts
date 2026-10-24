@@ -2,19 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { SearchAnalysisItem, saveSearchAnalysis, getSearchAnalysisHistory, deleteSearchAnalysisAction } from '../../../services/SearchAnalysisHistory';
 import { logSystemActivity } from '../../../services/SystemLogger';
+import type { SummaryStats } from '../hooks/useSummaryLogic';
+import type { AiAnalysis } from '../hooks/useSummaryLogic';
+import type { ToastType } from '../../../hooks/useToast';
 
 interface Options {
   isOpen: boolean;
   searchTerm: string;
   transcript: string;
-  currentStats: any;
-  aiAnalysis: any;
-  setAiAnalysis: (v: any) => void;
+  currentStats: SummaryStats | null;
+  aiAnalysis: AiAnalysis | null;
+  setAiAnalysis: (v: AiAnalysis | null) => void;
   isAnalyzing: boolean;
   setIsMinimized: (v: boolean) => void;
   setViewMode: (v: 'current' | 'history') => void;
   appLang: 'bn' | 'en';
-  addToast: (msg: string, type: any) => void;
+  addToast: (msg: string, type: ToastType) => void;
 }
 
 // Saved search-analysis archive: loads on open/store updates, auto-saves live results, deletes items

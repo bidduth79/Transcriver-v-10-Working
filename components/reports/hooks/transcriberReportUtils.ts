@@ -1,4 +1,5 @@
 import { printHtmlInFrame } from '../../common/print/printHtmlInFrame';
+import type { HistoryItem } from '../../../types';
 
 // Helpers for the transcriber activity report (rows, pages, CSV, printing)
 
@@ -17,7 +18,16 @@ export const formatSecondsToHrsMin = (totalSecs: number) => {
 };
 
 // Group history in [fromDate, toDate] by day + Audio/Video, oldest day first
-export const buildReportRows = (history: any[], fromDate: string, toDate: string) => {
+// One report line: how many files of a type were done on a day, and their total length
+export interface ReportRow {
+  date: string;
+  method: string;
+  fileType: 'Audio' | 'Video';
+  qty: number;
+  durationSecs: number;
+}
+
+export const buildReportRows = (history: HistoryItem[], fromDate: string, toDate: string): ReportRow[] => {
   const start = new Date(fromDate);
   start.setHours(0, 0, 0, 0);
   const end = new Date(toDate);
@@ -28,12 +38,12 @@ export const buildReportRows = (history: any[], fromDate: string, toDate: string
     return itemDate >= start && itemDate <= end;
   });
 
-  const grouped: any = {};
+  const grouped: Record<string, ReportRow> = {};
 
   filtered.forEach(item => {
     const dateKey = new Date(item.date).toLocaleDateString('en-GB'); 
-    const isVideo = ['mp4', 'mkv', 'webm', 'avi', 'mov'].includes((item.extension || '').toLowerCase());
-    const fileType = isVideo ? 'Video' : 'Audio';
+    const isVideo = ['mp4', 'mkv', 'webm', 'avi', 'mov'].includes(String(item.extension || '').toLowerCase());
+    const fileType: ReportRow['fileType'] = isVideo ? 'Video' : 'Audio';
     const method = item.fileName.includes('http') ? 'Youtube Link' : 'File Upload'; 
     
     const key = `${dateKey}-${fileType}`;
@@ -52,7 +62,7 @@ export const buildReportRows = (history: any[], fromDate: string, toDate: string
     grouped[key].durationSecs += parseDurationToSeconds(item.duration);
   });
 
-  const rows = (Object.values(grouped) as any[]).sort((a, b) => {
+  const rows = Object.values(grouped).sort((a, b) => {
       const dateA = a.date.split('/').reverse().join('-');
       const dateB = b.date.split('/').reverse().join('-');
       return dateA.localeCompare(dateB);
@@ -64,8 +74,8 @@ export const ROWS_FIRST_PAGE = 24;
 export const ROWS_OTHER_PAGES = 30;
 
 // The first A4 page has the report header, so it holds fewer rows
-export const paginateReportRows = (reportData: any[]) => {
-  const pages = [];
+export const paginateReportRows = (reportData: ReportRow[]) => {
+  const pages: ReportRow[][] = [];
   let dataCopy = [...reportData];
   
   if (dataCopy.length === 0) {
@@ -115,8 +125,8 @@ export const printReportElement = (element: HTMLElement, fromDate: string, toDat
     `, { fontWaitMs: 1500 });
 };
 
-export const buildReportCsv = (reportData: any[], totalQty: number, totalDurationSecs: number) => {
-  const escapeCSV = (str: any) => {
+export const buildReportCsv = (reportData: ReportRow[], totalQty: number, totalDurationSecs: number) => {
+  const escapeCSV = (str: unknown) => {
     if (str === null || str === undefined) return '""';
     const stringified = String(str);
     if (stringified.includes(',') || stringified.includes('"') || stringified.includes('\n')) {

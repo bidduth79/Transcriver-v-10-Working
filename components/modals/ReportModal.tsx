@@ -8,6 +8,8 @@ import { ReportModalHeader } from './report/ReportModalHeader';
 import { ReportGenerateView } from './report/ReportGenerateView';
 import { ReportHistoryView } from './report/ReportHistoryView';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import type { FileMeta } from '../../types';
+import type { ToastType } from '../../hooks/useToast';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -16,10 +18,10 @@ interface ReportModalProps {
   activeColors: ActiveColors;
   isDark: boolean;
   appLang: 'bn' | 'en';
-  fileMeta: any;
+  fileMeta: Partial<FileMeta>;
   searchTerm: string;
-  addToast: (msg: string, type: any) => void;
-  onModelUpdate?: (models: any) => void;
+  addToast: (msg: string, type: ToastType) => void;
+  onModelUpdate?: () => void;
   setIsAiLoading?: (loading: boolean) => void;
 }
 

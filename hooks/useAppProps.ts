@@ -117,7 +117,7 @@ export function getTranscriptOutputProps(core: AppCore) {
     status: core.status,
     transcriptSearchInputRef: core.transcriptSearchInputRef,
     searchTerm: core.searchTerm,
-    handleSearchChange: (e: any) => core.setSearchTerm(e?.target?.value ?? ''),
+    handleSearchChange: (e: { target?: { value?: string } } | null | undefined) => core.setSearchTerm(e?.target?.value ?? ''),
     activeColors: core.activeColors,
     setStatus: core.setStatus,
     setTranscript: core.setTranscript,

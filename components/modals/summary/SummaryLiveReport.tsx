@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import { getSentimentLabel, highlightText } from './SummaryUtils';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { SummaryStats } from '../hooks/useSummaryLogic';
+import type { AiAnalysis } from '../hooks/useSummaryLogic';
+import type { SearchAnalysisItem } from '../../../services/SearchAnalysisHistory';
 
 interface SummaryLiveReportProps {
-  data: any;
+  // Live stats, or a saved analysis (which also carries its sentiment)
+  data: SummaryStats & { sentiment?: SearchAnalysisItem['sentiment']; remarkExplanation?: string };
   titleSuffix?: string;
   viewMode: 'current' | 'history';
-  aiAnalysis: { sentiment: 'positive' | 'negative' | 'neutral', remark: string } | null;
+  aiAnalysis: AiAnalysis | null;
   isAnalyzing: boolean;
   performAIAnalysis: () => void;
   activeColors: ActiveColors;
   appLang: 'bn' | 'en';
-  selectedHistoryItem: any;
-  setSelectedHistoryItem: (item: any) => void;
+  selectedHistoryItem: SearchAnalysisItem | null;
+  setSelectedHistoryItem: (item: SearchAnalysisItem | null) => void;
 }
 
 export const SummaryLiveReport: React.FC<SummaryLiveReportProps> = ({

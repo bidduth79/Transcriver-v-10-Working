@@ -1,4 +1,8 @@
-export const useTranscriptToolbar = (setTranscript: any, setStatus: any, setActiveHistoryId: any) => {
+export const useTranscriptToolbar = (
+  setTranscript: (text: string) => void,
+  setStatus: (status: 'idle') => void,
+  setActiveHistoryId?: (id: string | null) => void
+) => {
   const handleDelete = () => {
     setTranscript('');
     setStatus('idle');

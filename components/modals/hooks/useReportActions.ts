@@ -7,6 +7,9 @@ import { createGeminiClient } from '../../../services/apiKeys/geminiClient';
 import { parseJsonAnswer } from '../../../utils/aiAnswer';
 import { buildThinkingConfig } from '../../../hooks/transcription/geminiRequest';
 import { messageOf } from '../../../utils/errorMessage';
+import type { FileMeta } from '../../../types';
+import type { ToastType } from '../../../hooks/useToast';
+import type { ReportAnalysis } from './useReportAnalysis';
 
 export interface ReportItem {
   id: string;
@@ -18,10 +21,10 @@ export interface ReportItem {
 
 export const useReportActions = (
   searchTerm: string, 
-  fileMeta: any, 
+  fileMeta: Partial<FileMeta>, 
   appLang: 'bn' | 'en', 
-  addToast: (msg: string, type: any) => void,
-  onModelUpdate?: (models?: any) => void,
+  addToast: (msg: string, type: ToastType) => void,
+  onModelUpdate?: () => void,
   setIsAiLoading?: (loading: boolean) => void
 ) => {
   const [report, setReport] = useState('');
@@ -30,14 +33,14 @@ export const useReportActions = (
 
   const loadReportsFromDB = useCallback(async () => {
     try {
-      const data: any = await getAllFromStore(STORES.REPORTS);
-      setReportHistory(data);
+      const data = await getAllFromStore(STORES.REPORTS);
+      setReportHistory(data as ReportItem[]);
     } catch (err) {
       console.error("Failed to load reports:", err);
     }
   }, []);
 
-  const generateReport = useCallback(async (analysisData: any) => {
+  const generateReport = useCallback(async (analysisData: ReportAnalysis | null) => {
     const data = analysisData;
     if (!data || data.matchCount === 0 || loading) return;
     setLoading(true);
@@ -109,7 +112,7 @@ export const useReportActions = (
         id: Date.now().toString(),
         date: new Date().toISOString(),
         searchTerm,
-        fileName: fileMeta.name,
+        fileName: fileMeta.name || '',
         content: finalReport
       };
       await addToStore(STORES.REPORTS, newItem);
@@ -136,7 +139,7 @@ export const useReportActions = (
     }
   }, [loading, setIsAiLoading, searchTerm, fileMeta, appLang, addToast, onModelUpdate, loadReportsFromDB]);
 
-  const handleDeleteReport = async (id: string, selectedReport: ReportItem | null, setSelectedReport: any) => {
+  const handleDeleteReport = async (id: string, selectedReport: ReportItem | null, setSelectedReport: (report: ReportItem | null) => void) => {
     await deleteFromStore(STORES.REPORTS, id);
     await loadReportsFromDB();
     if (selectedReport?.id === id) setSelectedReport(null);
