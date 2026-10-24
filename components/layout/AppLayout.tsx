@@ -5,9 +5,10 @@ import { InteractiveDotBackground } from './Background';
 import { Sidebar } from '../../features/sidebar/Sidebar';
 import { ExpandedHistory } from '../../features/sidebar/ExpandedHistory';
 import { getSidebarProps, getExpandedHistoryProps } from '../../hooks/useAppProps';
+import type { AppCore } from '../../hooks/useAppCore';
 
 interface AppLayoutProps {
-  core: any;
+  core: AppCore;
   children: React.ReactNode;
   modals: React.ReactNode;
 }
@@ -49,9 +50,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ core, children, modals }) 
             isActivityLogOpen={core.isActivityLogOpen}
             setIsActivityLogOpen={core.setIsActivityLogOpen}
             isDark={core.isDark}
-            setTheme={(v: any) => core.setTheme(typeof v === 'function' ? v(core.theme) : v)}
+            setTheme={(v: string | ((prev: string) => string)) => core.setTheme(typeof v === 'function' ? v(core.theme) : v)}
             appLang={core.appLang}
-            setAppLang={(v: any) => core.setAppLang(typeof v === 'function' ? v(core.appLang) : v)}
+            setAppLang={(v: 'bn' | 'en' | ((prev: 'bn' | 'en') => 'bn' | 'en')) => core.setAppLang(typeof v === 'function' ? v(core.appLang) : v)}
             activeColors={core.activeColors}
             setIsReportOpen={core.setIsReportOpen}
             setIsSettingsOpen={core.setIsSettingsOpen}

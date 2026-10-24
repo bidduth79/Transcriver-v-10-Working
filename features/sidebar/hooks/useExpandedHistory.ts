@@ -2,9 +2,10 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getSensitiveKeywords } from '../../../utils/sensitiveKeywords';
 import { loadHistoryTranscript } from '../../../hooks/history/useHistoryTranscript';
+import type { HistoryItem } from '../../../types';
 
 export const useExpandedHistory = (
-  filteredHistory: any[],
+  filteredHistory: HistoryItem[],
   historyLimit: number,
   setHistoryLimit: React.Dispatch<React.SetStateAction<number>>
 ) => {
@@ -67,7 +68,7 @@ export const useExpandedHistory = (
     return sensitiveMatchesMap.get(id) || [];
   }, [sensitiveMatchesMap]);
 
-  const formatProcessingTime = (timeStr: string) => {
+  const formatProcessingTime = (timeStr?: string) => {
     if (!timeStr) return timeStr;
     
     if (timeStr.endsWith('s') && !timeStr.includes('m') && !timeStr.includes(':')) {

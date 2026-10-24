@@ -1,6 +1,7 @@
 import React from 'react';
 import { AudioWaveform } from './components/AudioWaveform';
 import { useWaveform } from './hooks/useWaveform';
+import type { FileInfoSectionProps } from './sidebarTypes';
 
 const isVideoMeta = (name: string, type: string) =>
   type.startsWith('video/') || name.endsWith('.mp4') || name.endsWith('.mkv') || name.endsWith('.mov') || name.endsWith('.webm');
@@ -26,7 +27,7 @@ export const FileInfoSection = ({
   processTranscription,
   setIsSidebarOpen,
   status
-}: any) => {
+}: FileInfoSectionProps) => {
   const metaName = fileMeta?.name?.toLowerCase() || '';
   const metaType = fileMeta?.type || '';
   const isPlainAudio = !!fileMeta && !isVideoMeta(metaName, metaType) && !isOpusOrOggMeta(metaName, metaType);
@@ -71,7 +72,7 @@ export const FileInfoSection = ({
             if (isVideo) {
                 return (
                     <video 
-                        ref={audioRef as any} 
+                        ref={audioRef as React.RefObject<HTMLVideoElement | null>} 
                         onTimeUpdate={handleTimeUpdate} 
                         src={fileUrl} 
                         controls 
@@ -84,7 +85,7 @@ export const FileInfoSection = ({
             if (isOpusOrOgg) {
                 return (
                     <div className="w-full h-10 flex items-center justify-center text-[10px] text-slate-500 bg-slate-100 rounded-lg p-1 font-bold">
-                        {t.previewNotSupported || 'Preview not supported for Opus files in browser'}
+                        {(t as Partial<Record<string, string>>).previewNotSupported || 'Preview not supported for Opus files in browser'}
                     </div>
                 );
             }

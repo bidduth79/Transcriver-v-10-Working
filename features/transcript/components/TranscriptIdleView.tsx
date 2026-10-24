@@ -1,18 +1,19 @@
 import React from 'react';
 import type { Translations } from '../../../translations';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { FileMeta } from '../../../types';
 
 interface TranscriptIdleViewProps {
   t: Translations;
   fileUrl: string;
   isDark: boolean;
   activeColors: ActiveColors;
-  fileMeta: any;
+  fileMeta: Partial<FileMeta>;
   setIsSidebarOpen: (open: boolean) => void;
   processTranscription: () => void;
   logoOffset: { x: number; y: number };
   logoContainerRef: React.RefObject<HTMLDivElement | null>;
-  handleLogoMouseMove: (e: any) => void;
+  handleLogoMouseMove: (e: React.MouseEvent) => void;
   handleLogoMouseLeave: () => void;
 }
 

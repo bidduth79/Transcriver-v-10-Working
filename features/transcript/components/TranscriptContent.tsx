@@ -14,11 +14,11 @@ export interface TranscriptContentProps {
   searchTerm: string;
   currentMatchIndex: number;
   transcript: string;
-  sensitiveMatches: any[];
+  sensitiveMatches: string[];
   onSeek: (time: string | number) => void;
   openProfile: (speakerId: string) => void;
-  onRenameSpeaker: (speakerId: string, currentName: string) => void;
-  transcriptEndRef: React.RefObject<HTMLDivElement>;
+  onRenameSpeaker: (name: string) => void;
+  transcriptEndRef: React.RefObject<HTMLDivElement | null>;
   scrollElementRef?: React.RefObject<HTMLDivElement | null>;
 }
 

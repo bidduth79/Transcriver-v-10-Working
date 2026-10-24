@@ -1,11 +1,23 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import type { HistoryItem } from '../../../types';
+import type { DeleteHistoryItem } from '../historyCardTypes';
+import type { LoadHistoryItem } from '../historyCardTypes';
 
 // Global timestamp of the last long-press deletion so that if a card unmounts
 // under an active cursor/finger and the next card shifts into its place,
 // releasing the pointer does not accidentally click/load the next card.
 let lastLongPressDeleteTimestamp = 0;
 
-export const useHistoryItemCard = (item: any, onDeleteHistoryItem: any, loadHistoryItem: any) => {
+// Mouse or touch event fields used to tell a tap from a drag or a long press
+type PointerLike = {
+  type?: string;
+  button?: number;
+  clientX?: number;
+  clientY?: number;
+  touches?: ArrayLike<{ clientX: number; clientY: number }>;
+};
+
+export const useHistoryItemCard = (item: HistoryItem, onDeleteHistoryItem: DeleteHistoryItem, loadHistoryItem: LoadHistoryItem) => {
   const [isPressing, setIsPressing] = useState(false);
   const timerRef = useRef<number | null>(null);
   const visualTimerRef = useRef<number | null>(null);
@@ -39,7 +51,7 @@ export const useHistoryItemCard = (item: any, onDeleteHistoryItem: any, loadHist
     };
   }, []);
 
-  const handleStart = useCallback((e?: any) => {
+  const handleStart = useCallback((e?: PointerLike) => {
     // Only trigger on primary mouse button (left-click) or touch
     if (e && e.type === 'mousedown' && e.button !== 0) return;
 
@@ -47,7 +59,7 @@ export const useHistoryItemCard = (item: any, onDeleteHistoryItem: any, loadHist
     if (e?.touches && e.touches.length > 0) {
       startCoordsRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     } else if (e && typeof e.clientX === 'number') {
-      startCoordsRef.current = { x: e.clientX, y: e.clientY };
+      startCoordsRef.current = { x: e.clientX, y: e.clientY ?? 0 };
     }
 
     if (timerRef.current !== null) clearTimeout(timerRef.current);
@@ -77,7 +89,7 @@ export const useHistoryItemCard = (item: any, onDeleteHistoryItem: any, loadHist
     }, 3000);
   }, []);
 
-  const handleMove = useCallback((e: any) => {
+  const handleMove = useCallback((e: PointerLike) => {
     if (!startCoordsRef.current || timerRef.current === null) return;
     let clientX: number | undefined;
     let clientY: number | undefined;
@@ -104,7 +116,7 @@ export const useHistoryItemCard = (item: any, onDeleteHistoryItem: any, loadHist
     clearLongPressTimer();
   }, [clearLongPressTimer]);
 
-  const handleClick = useCallback((e: any) => {
+  const handleClick = useCallback((e?: { preventDefault: () => void; stopPropagation: () => void }) => {
     if (isLongPressTriggered.current || Date.now() - lastLongPressDeleteTimestamp < 600) {
       if (e) {
         e.preventDefault();
@@ -122,7 +134,7 @@ export const useHistoryItemCard = (item: any, onDeleteHistoryItem: any, loadHist
     clearLongPressTimer();
   }, [clearLongPressTimer]);
 
-  const formatProcessingTime = (timeStr: string) => {
+  const formatProcessingTime = (timeStr?: string) => {
     if (!timeStr) return timeStr;
     
     if (timeStr.endsWith('s') && !timeStr.includes('m') && !timeStr.includes(':')) {

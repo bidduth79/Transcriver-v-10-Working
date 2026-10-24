@@ -14,7 +14,8 @@ const setup = (appLang: 'bn' | 'en') => {
     transformTranscript: vi.fn(), transformingType: null, setIsAnalysisOpen: vi.fn(), transcript: 'text', fileMeta: null,
     addToast: vi.fn(), setTranscript: vi.fn(), setStatus: vi.fn(), setActiveHistoryId: vi.fn(), sensitiveMatches: [],
   };
-  return { ...render(<TranscriptToolbar {...props} />), props };
+  // Only the fields the toolbar reads; the rest of the translations and colours are not needed here
+  return { ...render(<TranscriptToolbar {...props as unknown as React.ComponentProps<typeof TranscriptToolbar>} />), props };
 };
 
 describe('TranscriptToolbar', () => {

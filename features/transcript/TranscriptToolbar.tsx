@@ -3,13 +3,30 @@ import { Expand } from 'lucide-react';
 import { DownloadMenu } from '../../components/common/DownloadMenu';
 import { useTranscriptToolbar } from './hooks/useTranscriptToolbar';
 import { unicodeToBijoy, bijoyToUnicode, isUnicode } from '@abdalgolabs/ansi-unicode-converter';
+import type { TranscriptOutputProps } from './transcriptOutputTypes';
+
+type TranscriptToolbarProps = Pick<TranscriptOutputProps, 't' | 'status' | 'appLang' | 'activeColors' | 'searchTerm'
+  | 'handleSearchChange' | 'transcriptSearchInputRef' | 'matchCount' | 'currentMatchIndex' | 'fontSize' | 'setFontSize'
+  | 'transformTranscript' | 'transformingType' | 'transcript' | 'addToast' | 'setTranscript' | 'setStatus' | 'setActiveHistoryId'> & {
+  handleSummaryClick: () => void;
+  setIsReportOpen: (open: boolean) => void;
+  isDisabled: boolean;
+  handleKeyDown: (e: React.KeyboardEvent) => void;
+  clearSearch: () => void;
+  setIsAnalysisOpen: (open: boolean) => void;
+  // The saved transcript's source or the loaded file: only its name is used
+  fileMeta: { name?: string } | null;
+  sensitiveMatches: string[];
+  goToPrevMatch?: () => void;
+  goToNextMatch?: () => void;
+};
 
 export const TranscriptToolbar = ({
   t, status, appLang, handleSummaryClick, setIsReportOpen, isDisabled, activeColors,
   searchTerm, handleSearchChange, handleKeyDown, clearSearch, transcriptSearchInputRef, matchCount, currentMatchIndex,
   fontSize, setFontSize, transformTranscript, transformingType, setIsAnalysisOpen,
   transcript, fileMeta, addToast, setTranscript, setStatus, setActiveHistoryId, sensitiveMatches
-}: any) => {
+}: TranscriptToolbarProps) => {
   const { handleDelete } = useTranscriptToolbar(setTranscript, setStatus, setActiveHistoryId);
 
   const isTranscriptUnicode = React.useMemo(() => {

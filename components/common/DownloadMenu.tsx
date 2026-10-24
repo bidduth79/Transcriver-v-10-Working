@@ -4,8 +4,22 @@ import { buildDocxBlob } from './download/docxExport';
 import { printTranscriptAsPdf } from './download/pdfExport';
 import { DownloadMenuPanel } from './download/DownloadMenuPanel';
 import { messageOf } from '../../utils/errorMessage';
+import type { Translations } from '../../translations';
+import type { ToastType } from '../../hooks/useToast';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
-export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMatches = [], addToast, customTrigger }: any) => {
+interface DownloadMenuProps {
+  transcript: string;
+  fileName: string;
+  t: Translations;
+  searchTerm: string;
+  sensitiveMatches?: string[];
+  addToast: (msg: string, type: ToastType) => void;
+  customTrigger?: React.ReactNode;
+  activeColors?: ActiveColors;
+}
+
+export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMatches = [], addToast, customTrigger }: DownloadMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [includeKeywords, setIncludeKeywords] = useState(true);
   const menuRef = useRef<HTMLDivElement>(null);

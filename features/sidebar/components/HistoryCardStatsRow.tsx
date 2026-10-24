@@ -1,12 +1,13 @@
 import React from 'react';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { HistoryItem } from '../../../types';
 
 interface Props {
-  item: any;
+  item: HistoryItem;
   isActive: boolean;
   isDark: boolean;
   activeColors: ActiveColors;
-  formatProcessingTime: (t: string) => string;
+  formatProcessingTime: (t?: string) => string | undefined;
 }
 
 // Duration, BGB remark and processing time

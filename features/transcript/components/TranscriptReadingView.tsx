@@ -61,7 +61,7 @@ export const TranscriptReadingView = ({ props, state }: Props) => {
                     onSeek={onSeek}
                     openProfile={speaker.openProfile}
                     onRenameSpeaker={handleRenameSpeaker}
-                    transcriptEndRef={transcriptEndRef as any}
+                    transcriptEndRef={transcriptEndRef}
                     scrollElementRef={scrollContainerRef}
                   />
               </div>

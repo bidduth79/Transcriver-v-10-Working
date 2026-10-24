@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { useProcessingView } from './hooks/useProcessingView';
+import type { TranscriptOutputProps } from './transcriptOutputTypes';
 
 export const ProcessingView = ({
   t, isDark, textColor, activeColors, progress, currentStage, elapsedSeconds, estimatedSeconds
-}: any) => {
+}: Pick<TranscriptOutputProps, 't' | 'isDark' | 'textColor' | 'activeColors' | 'progress' | 'currentStage' | 'elapsedSeconds' | 'estimatedSeconds'>) => {
   const { formatTime, remainingSeconds, BACKGROUND_IMAGE_URL } = useProcessingView(estimatedSeconds, elapsedSeconds);
 
   return (

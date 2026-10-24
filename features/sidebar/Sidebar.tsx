@@ -7,6 +7,7 @@ import { SidebarHistory } from './SidebarHistory';
 import { useSidebarHistory } from './hooks/useSidebarHistory';
 import { useSidebar } from './hooks/useSidebar';
 import { BatchProcessingQueue } from './BatchProcessingQueue';
+import type { SidebarProps } from './sidebarTypes';
 
 export const Sidebar = ({
   t, isSidebarOpen, setIsSidebarOpen, sidebarSide, bgColor, activeColors,
@@ -23,7 +24,7 @@ export const Sidebar = ({
   progress = 0, etaSeconds = null,
   startBatch, pauseBatch, resumeBatch, cancelBatch, skipNextBatchFile, removeBatchFile, jumpToBatchFile, handleTimeUpdate,
   totalHistoryCount
-}: any) => {
+}: SidebarProps) => {
   const {
     activeTab,
     setActiveTab,

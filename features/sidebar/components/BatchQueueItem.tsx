@@ -1,15 +1,17 @@
 import React from 'react';
+import type { HistoryItem } from '../../../types';
+import type { FailedFile } from '../../../hooks/useBatchProcessor';
 
 interface Props {
-  file: any;
+  file: File;
   index: number;
   appLang: string;
   isDark: boolean;
-  history: any[];
+  history: HistoryItem[];
   currentBatchIndex: number;
   hasBatchStarted: boolean;
   isBatchPaused: boolean;
-  failedFiles: any[];
+  failedFiles: FailedFile[];
   pauseBatch: () => void;
   resumeBatch: () => void;
   cancelBatch: () => void;
@@ -23,9 +25,9 @@ export const BatchQueueItem = ({
   pauseBatch, resumeBatch, cancelBatch, removeBatchFile, jumpToBatchFile
 }: Props) => {
             const isProcessed = index < currentBatchIndex;
-            const isFailed = failedFiles.some((f: any) => f.file.name === file.name);
+            const isFailed = failedFiles.some(f => f.file.name === file.name);
             const fileSizeMb = (file.size / 1024 / 1024).toFixed(2) + ' MB';
-            const isDuplicate = !isProcessed && history.some((h: any) => {
+            const isDuplicate = !isProcessed && history.some(h => {
               if (h.size) {
                 return h.fileName === file.name && h.size === fileSizeMb;
               }

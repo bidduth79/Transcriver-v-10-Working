@@ -66,6 +66,8 @@ export function getSidebarProps(core: AppCore) {
   };
 }
 
+export type SidebarProps = ReturnType<typeof getSidebarProps>;
+
 export function getAppModalsProps(core: AppCore) {
   return {
     isInformationOpen: core.isInformationOpen,

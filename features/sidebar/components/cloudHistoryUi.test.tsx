@@ -12,9 +12,10 @@ vi.mock('sonner', () => ({ toast: m.toast }));
 import { LoadOlderHistoryButton } from './LoadOlderHistoryButton';
 import { HistoryDatePicker } from './HistoryDatePicker';
 import { translations } from '../../../translations';
+import type { HistoryItem } from '../../../types';
 
 const t = translations.en;
-const history = [{ id: 'a', date: '2026-10-12T00:00:00.000Z' }, { id: 'b', date: '2026-10-10T08:00:00.000Z' }];
+const history = [{ id: 'a', date: '2026-10-12T00:00:00.000Z' }, { id: 'b', date: '2026-10-10T08:00:00.000Z' }] as unknown as HistoryItem[];
 const click = async (el: Element) => { await act(async () => { fireEvent.click(el); }); };
 
 beforeEach(() => { vi.clearAllMocks(); m.configured = true; });

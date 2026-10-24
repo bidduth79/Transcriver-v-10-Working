@@ -13,9 +13,9 @@ interface HeaderProps {
   isActivityLogOpen?: boolean;
   setIsActivityLogOpen?: (v: boolean) => void;
   isDark: boolean;
-  setTheme: (f: (p: any) => any) => void;
+  setTheme: (f: (prev: string) => string) => void;
   appLang: string;
-  setAppLang: (f: (p: any) => any) => void;
+  setAppLang: (f: (prev: 'bn' | 'en') => 'bn' | 'en') => void;
   activeColors: ActiveColors;
   setIsReportOpen?: (v: boolean) => void;
   setIsSettingsOpen?: (v: boolean) => void;

@@ -2,19 +2,23 @@ import React from 'react';
 import { HistoryItemCard } from '../HistoryItemCard';
 import type { HistoryListData } from '../hooks/useHistoryListData';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { LoadHistoryItem } from '../historyCardTypes';
+import type { DeleteHistoryItem } from '../historyCardTypes';
+import type { ToggleFavorite } from '../historyCardTypes';
+import type { GetSensitiveMatches } from '../historyCardTypes';
 
 interface Props {
   list: HistoryListData;
   activeColors: ActiveColors;
   cardProps: {
     activeHistoryId: string | null;
-    loadHistoryItem: any;
-    onDeleteHistoryItem: any;
-    toggleFavorite: any;
+    loadHistoryItem: LoadHistoryItem;
+    onDeleteHistoryItem: DeleteHistoryItem;
+    toggleFavorite?: ToggleFavorite;
     isDark: boolean;
     activeColors: ActiveColors;
     appLang: string;
-    getSensitiveMatches: any;
+    getSensitiveMatches?: GetSensitiveMatches;
   };
 }
 

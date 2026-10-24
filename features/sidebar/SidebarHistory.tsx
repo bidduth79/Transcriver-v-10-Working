@@ -6,6 +6,7 @@ import { HistorySentimentPicker } from './components/HistorySentimentPicker';
 import { HistorySkeletonCard } from './components/HistorySkeletonCard';
 import { VirtualHistoryRows } from './components/VirtualHistoryRows';
 import { LoadOlderHistoryButton } from './components/LoadOlderHistoryButton';
+import type { SidebarHistoryProps } from './sidebarTypes';
 
 export const SidebarHistory = ({
   t,
@@ -34,7 +35,7 @@ export const SidebarHistory = ({
   histSentimentFilter,
   setHistSentimentFilter,
   totalHistoryCount
-}: any) => {
+}: SidebarHistoryProps) => {
   const list = useHistoryListData({ history, fullHistory, initialGroupedHistory, scrollContainerEl, activeHistoryId });
   const { isDatePickerOpen, isSentimentPickerOpen, setIsSentimentPickerOpen, isSearchOpen, searchQuery, setSearchQuery, processedGroupedHistory } = list;
   const cardProps = { activeHistoryId, loadHistoryItem, onDeleteHistoryItem, toggleFavorite, isDark, activeColors, appLang, getSensitiveMatches };

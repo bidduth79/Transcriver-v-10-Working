@@ -8,6 +8,9 @@ import { FileMeta, HistoryItem } from '../../../types';
 import { loadHistoryTranscript } from '../../../hooks/history/useHistoryTranscript';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { ToastType } from '../../../hooks/useToast';
+import type { SpeakerProfile } from '../../../types/speaker';
+import type { SpeakerCustomNote } from '../../../types/speaker';
+import type { FormattedTranscriptProps } from '../TranscriptViewer';
 
 export interface TranscriptModalsProps {
   isSummaryOpen: boolean;
@@ -19,11 +22,11 @@ export interface TranscriptModalsProps {
   isSpeakerProfileOpen: boolean;
   closeProfile: () => void;
   speakerName: string;
-  speakerProfile: any;
+  speakerProfile: SpeakerProfile | null;
   isSpeakerLoading: boolean;
   speakerError: string | null;
   refreshProfile: (speakerId: string) => void;
-  updateCustomNote: (note: any) => void;
+  updateCustomNote: (note: SpeakerCustomNote) => void;
   transcript: string;
   activeColors: ActiveColors;
   isDark: boolean;
@@ -36,9 +39,9 @@ export interface TranscriptModalsProps {
   onModelUpdate: () => void;
   setIsAiLoading: (isLoading: boolean) => void;
   history: HistoryItem[];
-  FormattedTranscript: React.FC<any>;
+  FormattedTranscript: React.ComponentType<FormattedTranscriptProps>;
   currentMatchIndex: number;
-  sensitiveMatches: any[];
+  sensitiveMatches: string[];
   openProfile: (speakerId: string) => void;
   setTranscript: (transcript: string) => void;
   setStatus: (status: 'idle' | 'processing' | 'completed' | 'error') => void;

@@ -9,7 +9,8 @@ export interface TranscriptOutputProps {
   status: string;
   transcriptSearchInputRef: React.RefObject<HTMLInputElement | null>;
   searchTerm: string;
-  handleSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  // Also called with just { target: { value } } when a keyword chip is clicked
+  handleSearchChange: (e: { target: { value: string } }) => void;
   activeColors: ActiveColors;
   setStatus: (status: 'idle' | 'processing' | 'completed' | 'error') => void;
   setTranscript: (transcript: string) => void;
@@ -38,10 +39,10 @@ export interface TranscriptOutputProps {
   setIsAiLoading: (isLoading: boolean) => void;
   // The saved transcript's source, or the loaded file's info
   activeTranscriptSourceMeta: Partial<TranscriptMeta> | null;
-  progress?: number;
-  currentStage?: string;
-  elapsedSeconds?: number;
-  estimatedSeconds?: number;
+  progress: number;
+  currentStage: string;
+  elapsedSeconds: number;
+  estimatedSeconds: number;
   setActiveHistoryId: (id: string | null) => void;
   activeHistoryId: string | null;
   setTranscriptMeta: (meta: TranscriptMeta | null) => void;

@@ -27,6 +27,11 @@ export interface HistoryItem {
   title?: string;
   // Transcript field of records saved by old versions
   text?: string;
+  extension?: string;
+  size?: string;
+  // How long the transcription took, e.g. "42s"
+  timeTaken?: string;
+  hasBeenOpened?: boolean;
   // Other fields some features add (BGB analysis, sync flags, ...)
   [key: string]: unknown;
 }

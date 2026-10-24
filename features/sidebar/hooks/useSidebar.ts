@@ -2,10 +2,15 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getSensitiveKeywords } from '../../../utils/sensitiveKeywords';
 import type { Translations } from '../../../translations';
+import type { FileChangeEvent } from '../../../hooks/useFileHandler';
 
 const EMPTY_MATCHES: string[] = [];
 
-export const useSidebar = (appLang: string, handleFileChange: any, audioRef: any) => {
+export const useSidebar = (
+  appLang: string,
+  handleFileChange: (e: FileChangeEvent, autoStart?: boolean) => void,
+  audioRef: React.RefObject<HTMLAudioElement | null>
+) => {
   const [activeTab, setActiveTab] = useState('upload');
   const [playbackRate, setPlaybackRate] = useState(1);
   const [sensitiveKeywords, setSensitiveKeywordsList] = useState<string[]>(EMPTY_MATCHES);

@@ -3,7 +3,7 @@ import React from 'react';
 interface TranscriptErrorViewProps {
   errorMessage: string;
   isDark: boolean;
-  setStatus: (status: any) => void;
+  setStatus: (status: 'idle' | 'processing' | 'completed' | 'error') => void;
 }
 
 export const TranscriptErrorView: React.FC<TranscriptErrorViewProps> = ({

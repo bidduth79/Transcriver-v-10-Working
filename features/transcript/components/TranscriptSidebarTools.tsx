@@ -1,16 +1,18 @@
 import React from 'react';
+import type { BgbAnalysisResult } from '../../../types/bgb';
 
 interface TranscriptSidebarToolsProps {
-  sensitiveMatches: any[];
-  sensitiveWordCounts: any[];
+  sensitiveMatches: string[];
+  sensitiveWordCounts: { word: string; count: number }[];
   appLang: string;
   isDark: boolean;
   searchTerm: string;
   goToNextMatch: () => void;
-  handleSearchChange: (e: any) => void;
+  // Also called with just { target: { value } } when a keyword chip is clicked
+  handleSearchChange: (e: { target: { value: string } }) => void;
   isBgbAnalysisEnabled: boolean;
   setIsBgbAnalysisEnabled: (enabled: boolean) => void;
-  bgbAnalysisResult: any;
+  bgbAnalysisResult: BgbAnalysisResult | null;
   isAnalyzing: boolean;
   triggerAnalysis: () => void;
 }

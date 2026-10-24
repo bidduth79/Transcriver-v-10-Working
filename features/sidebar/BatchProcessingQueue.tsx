@@ -2,6 +2,7 @@ import React from 'react';
 import { BatchProgressStatus } from './components/BatchProgressStatus';
 import { BatchQueueItem } from './components/BatchQueueItem';
 import { BatchControls } from './components/BatchControls';
+import type { BatchProcessingQueueProps } from './sidebarTypes';
 
 export const BatchProcessingQueue = ({
   appLang,
@@ -27,7 +28,7 @@ export const BatchProcessingQueue = ({
   skipNextBatchFile,
   removeBatchFile,
   jumpToBatchFile
-}: any) => {
+}: BatchProcessingQueueProps) => {
   if (!(isBatchProcessing || failedFiles.length > 0) || batchQueue.length === 0) {
     return null;
   }
@@ -59,7 +60,7 @@ export const BatchProcessingQueue = ({
 
         {/* Queue List */}
         <div className="space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar pr-2 mb-4">
-          {batchQueue.map((file: any, index: number) => (
+          {batchQueue.map((file, index) => (
             <BatchQueueItem
               key={index}
               file={file}

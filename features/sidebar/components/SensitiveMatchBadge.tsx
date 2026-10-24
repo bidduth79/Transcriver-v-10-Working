@@ -1,9 +1,11 @@
 import React from 'react';
+import type { HistoryItem } from '../../../types';
+import type { LoadHistoryItem } from '../historyCardTypes';
 
 interface Props {
-  item: any;
+  item: HistoryItem;
   sensitiveMatches: string[];
-  loadHistoryItem: (item: any, searchKeyword?: string) => void;
+  loadHistoryItem: LoadHistoryItem;
 }
 
 // First matched keyword (+N); hovering expands the full list. Clicking a word opens the item at it.

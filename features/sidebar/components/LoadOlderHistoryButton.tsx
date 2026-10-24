@@ -4,12 +4,13 @@ import { toast } from 'sonner';
 import { isFirebaseConfigured } from '../../../services/firebase';
 import { fetchOlderHistoryFromCloud } from '../../../services/firebaseSync/historyRangePull';
 import type { Translations } from '../../../translations';
+import type { HistoryItem } from '../../../types';
 
 interface Props {
   t: Translations;
   isDark: boolean;
   appLang: string;
-  history: any[];
+  history: HistoryItem[];
 }
 
 // Brings the week before the oldest item from the cloud; older history is read only when asked for

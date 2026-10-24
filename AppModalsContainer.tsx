@@ -1,4 +1,8 @@
 import React, { lazy, Suspense } from 'react';
+import type { ActiveColors } from './hooks/useAppTheme';
+import type { FailedFile } from './hooks/useBatchProcessor';
+import type { ToastType } from './hooks/useToast';
+import type { FileChangeEvent } from './hooks/useFileHandler';
 
 const InformationModal = lazy(() => import('./components/modals/InformationModal').then(m => ({ default: m.InformationModal })));
 const SettingsModal = lazy(() => import('./components/modals/SettingsModal').then(m => ({ default: m.SettingsModal })));
@@ -21,14 +25,14 @@ interface AppModalsContainerProps {
   isBatchSummaryOpen: boolean;
   setIsBatchSummaryOpen: (v: boolean) => void;
   processedCount: number;
-  failedFiles: any[];
+  failedFiles: FailedFile[];
   retryFailedFiles: () => void;
   elapsedSeconds: number;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   appLang: 'bn' | 'en';
-  addToast: (msg: string, type: any) => void;
-  handleFileChange: (e: any, fromModal?: boolean) => void;
+  addToast: (msg: string, type: ToastType) => void;
+  handleFileChange: (e: FileChangeEvent, fromModal?: boolean) => void;
 }
 
 export const AppModalsContainer: React.FC<AppModalsContainerProps> = ({

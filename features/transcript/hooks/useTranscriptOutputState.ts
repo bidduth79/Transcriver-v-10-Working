@@ -4,6 +4,7 @@ import { useBgbAnalysis } from './useBgbAnalysis';
 import { useSpeakerProfile } from '../../../hooks/useSpeakerProfile';
 import { escapeRegExp } from '../TranscriptViewer';
 import type { TranscriptOutputProps } from '../transcriptOutputTypes';
+import type { HistoryItem } from '../../../types';
 
 type Options = Pick<TranscriptOutputProps,
   'appLang' | 'transcript' | 'setTranscript' | 'addToast' | 'activeHistoryId' | 'matchCount' | 'searchTerm' |
@@ -31,7 +32,7 @@ export const useTranscriptOutputState = ({
 
       if (activeHistoryId) {
         const { getFromStore, addToStore, STORES } = await import('../../../services/db');
-        const item: any = await getFromStore(STORES.HISTORY, activeHistoryId);
+        const item = await getFromStore(STORES.HISTORY, activeHistoryId) as HistoryItem | undefined;
         if (item) {
           item.transcript = updatedTranscript;
           await addToStore(STORES.HISTORY, item);

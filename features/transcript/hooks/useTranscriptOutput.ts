@@ -66,13 +66,14 @@ export const useTranscriptScroll = (
   };
 };
 
-const EMPTY_ARRAY: any[] = [];
+// Shared empty result, so memoized lists keep the same identity when nothing matches
+const EMPTY_ARRAY: never[] = [];
 
 export const useLogoAnimation = () => {
   const [logoOffset, setLogoOffset] = useState({ x: 0, y: 0 });
   const logoContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleLogoMouseMove = (e: any) => {
+  const handleLogoMouseMove = (e: { clientX: number; clientY: number }) => {
     if (!logoContainerRef.current) return;
     const rect = logoContainerRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;

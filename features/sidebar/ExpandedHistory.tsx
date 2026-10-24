@@ -4,6 +4,8 @@ import { ExpandedHistoryHeader } from './components/ExpandedHistoryHeader';
 import { ExpandedHistoryCard } from './components/ExpandedHistoryCard';
 import type { Translations } from '../../translations';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import type { HistoryItem } from '../../types';
+import type { LoadHistoryItem } from './historyCardTypes';
 
 interface ExpandedHistoryProps {
   t: Translations;
@@ -15,10 +17,10 @@ interface ExpandedHistoryProps {
   setHistDateFilter: (v: string) => void;
   histSentimentFilter: string;
   setHistSentimentFilter: (v: string) => void;
-  filteredHistory: any[];
+  filteredHistory: HistoryItem[];
   historyLimit: number;
   setHistoryLimit: React.Dispatch<React.SetStateAction<number>>;
-  loadHistoryItem: (item: any, searchKeyword?: string) => void;
+  loadHistoryItem: LoadHistoryItem;
   activeColors: ActiveColors;
 }
 

@@ -2,11 +2,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { buildDuplicateCounts, searchAndGroupHistory, flattenGroups, collectHistoryDates, buildCalendarDays } from '../utils/historyListUtils';
 import { useTranscriptSearchIds } from '../../../hooks/history/useTranscriptSearchIds';
+import type { HistoryItem } from '../../../types';
+import type { HistoryGroups } from '../utils/historyListUtils';
 
 interface Options {
-  history: any[];
-  fullHistory: any[];
-  initialGroupedHistory: any;
+  history: HistoryItem[];
+  fullHistory: HistoryItem[];
+  initialGroupedHistory: HistoryGroups;
   scrollContainerEl: HTMLElement | null;
   activeHistoryId: string | null;
 }
@@ -114,7 +116,7 @@ export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory
     }
     if (activeHistoryId !== prevActiveIdRef.current) {
       prevActiveIdRef.current = activeHistoryId;
-      const index = flatItems.findIndex((i: any) => i.type === 'item' && i.item?.id === activeHistoryId);
+      const index = flatItems.findIndex(i => i.type === 'item' && i.item?.id === activeHistoryId);
       if (index !== -1) {
         const timer = setTimeout(() => {
           try {

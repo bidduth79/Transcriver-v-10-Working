@@ -2,17 +2,19 @@ import React from 'react';
 import { HistoryPreviewOverlay } from './HistoryPreviewOverlay';
 import type { Translations } from '../../../translations';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { HistoryItem } from '../../../types';
+import type { LoadHistoryItem } from '../historyCardTypes';
 
 interface Props {
-  item: any;
+  item: HistoryItem;
   t: Translations;
   isDark: boolean;
   activeColors: ActiveColors;
   sensitiveMatches: string[];
   hoveredCardId: string | null;
   setHoveredCardId: (id: string | null) => void;
-  loadHistoryItem: (item: any, searchKeyword?: string) => void;
-  formatProcessingTime: (t: string) => string;
+  loadHistoryItem: LoadHistoryItem;
+  formatProcessingTime: (t?: string) => string | undefined;
 }
 
 // One history card in the fullscreen grid (red tint + keyword pills when sensitive words were found)

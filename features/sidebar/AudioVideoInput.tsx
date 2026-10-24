@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { YouTubeInput } from '../tools/YouTubeInput.tsx';
 import { isMicrophoneEnabled } from '../../hooks/useAudioRecorder.ts';
 import { useFileDrop } from './hooks/useFileDrop';
+import type { AudioVideoInputProps } from './sidebarTypes';
 
 export const AudioVideoInput = ({
   t,
@@ -21,7 +22,7 @@ export const AudioVideoInput = ({
   recordingTime,
   onStopRecording,
   formatTime
-}: any) => {
+}: AudioVideoInputProps) => {
   const [micActive, setMicActive] = useState(isMicrophoneEnabled());
   const { isDragging, dropHandlers } = useFileDrop(handleFileChange, isRecording);
 

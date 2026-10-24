@@ -18,6 +18,19 @@ const isProperName = (name: string) => {
   return true;
 };
 
+export interface FormattedTranscriptProps {
+  text: string;
+  searchTerm: string;
+  isDark: boolean;
+  currentMatchIndex: number;
+  sensitiveMatches?: string[];
+  // A timestamp such as "[01:15]"
+  onSeek?: (time: string) => void;
+  onSpeakerClick?: (name: string) => void;
+  onRenameSpeaker?: (name: string) => void;
+  scrollElementRef?: React.RefObject<HTMLElement | null>;
+}
+
 export const FormattedTranscript = React.memo(({
   text,
   searchTerm,
@@ -27,7 +40,7 @@ export const FormattedTranscript = React.memo(({
   onSeek,
   onSpeakerClick,
   onRenameSpeaker
-}: any) => {
+}: FormattedTranscriptProps) => {
   const matchIndexRef = useRef(0);
   
   // Use the hook safely inside this component
@@ -75,7 +88,7 @@ export const FormattedTranscript = React.memo(({
 
   return (
     <div className="space-y-2 selection:bg-indigo-500/30">
-      {parsedLines.map(({ timestamp, parsedParts }: any, i: number) => (
+      {parsedLines.map(({ timestamp, parsedParts }, i) => (
         <div 
           key={i}
           style={!searchTerm ? { contentVisibility: 'auto', containIntrinsicSize: '0 36px' } : undefined}
@@ -92,7 +105,7 @@ export const FormattedTranscript = React.memo(({
             </span>
           )}
           <div className="flex-1">
-            {parsedParts.map((item: any, j: number) => {
+            {parsedParts.map((item, j) => {
               if (item.isSpeaker) {
                 if (onSpeakerClick) {
                   return (
@@ -139,7 +152,7 @@ export const TranscriptViewer = React.memo(({
   onSpeakerClick,
   onRenameSpeaker,
   scrollElementRef
-}: any) => {
+}: Omit<FormattedTranscriptProps, 'text'> & { transcript: string }) => {
   return (
     <FormattedTranscript 
       text={transcript} 

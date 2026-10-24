@@ -1,14 +1,16 @@
 import React from 'react';
 import { useHistoryTranscript } from '../../../hooks/history/useHistoryTranscript';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { HistoryItem } from '../../../types';
+import type { LoadHistoryItem } from '../historyCardTypes';
 
 interface Props {
-  item: any;
+  item: HistoryItem;
   isSensitive: boolean;
   sensitiveMatches: string[];
   isDark: boolean;
   activeColors: ActiveColors;
-  loadHistoryItem: (item: any, searchKeyword?: string) => void;
+  loadHistoryItem: LoadHistoryItem;
 }
 
 // Hover popup with a scrollable transcript preview; sensitive words are clickable highlights

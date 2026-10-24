@@ -1,11 +1,12 @@
 import React from 'react';
 import type { HistoryListData } from '../hooks/useHistoryListData';
 import type { Translations } from '../../../translations';
+import type { HistoryItem } from '../../../types';
 
 interface Props {
   t: Translations;
   list: HistoryListData;
-  history: any[];
+  history: HistoryItem[];
   totalHistoryCount?: number;
   histSentimentFilter: string;
   showFavoritesOnly: boolean;
