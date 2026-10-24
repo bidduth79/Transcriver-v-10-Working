@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { syncAllLocalToCloud, checkCloudConnection } from '../../../services/api';
 import { isLocalServerEnabled, setLocalServerEnabled } from '../../../utils/config';
-import { 
-    getFirebaseSyncStats, 
-    subscribeFirebaseSyncStats, 
-    scheduleGentleFirebasePull,
-    FirebaseGentleSyncStats 
-} from '../../../services/firebaseThrottledQueue';
+import { getFirebaseSyncStats, subscribeFirebaseSyncStats, scheduleGentleFirebasePull, FirebaseGentleSyncStats } from '../../../services/firebaseThrottledQueue';
 import { useAppStore } from '../../../hooks/useAppStore';
 import { messageOf } from '../../../utils/errorMessage';
 import type { ActiveColors } from '../../../hooks/useAppTheme';

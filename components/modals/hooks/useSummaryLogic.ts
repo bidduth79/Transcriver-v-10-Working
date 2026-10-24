@@ -10,17 +10,8 @@ import type { FileMeta } from '../../../types';
 import type { ToastType } from '../../../hooks/useToast';
 import { uiText } from '../../../utils/uiText';
 
-export interface AiAnalysis { sentiment: 'positive' | 'negative' | 'neutral'; remark: string }
-
-// Where and how often the search term occurs in the open transcript
-export interface SummaryStats {
-  searchTerm: string;
-  fileName: string;
-  duration: string;
-  matchCount: number;
-  matchTimestamps: string[];
-  matchSentences: string[];
-}
+import type { AiAnalysis, SummaryStats } from '../summary/summaryTypes';
+export type { AiAnalysis, SummaryStats };
 
 export function useSummaryAnalysis(
   searchTerm: string, 
