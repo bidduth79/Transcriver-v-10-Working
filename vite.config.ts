@@ -5,6 +5,10 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// True for a module inside one of these npm packages (or package scopes)
+const inPackages = (...names: string[]) => (id: string) =>
+  names.some(name => id.replace(/\\/g, '/').includes(`/node_modules/${name}/`));
+
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     // Tests must not pick up the developer's real key from .env
@@ -58,22 +62,26 @@ export default defineConfig(({ mode }) => {
         'process.env.GEMINI_API_KEY': JSON.stringify(processKey)
       },
       build: {
-        rollupOptions: {
+        rolldownOptions: {
           output: {
-            manualChunks: {
-              'vendor-react': ['react', 'react-dom', 'react-dom/client'],
-              'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/analytics'],
-              'vendor-genai': ['@google/genai'],
-              'vendor-ui': ['framer-motion', 'lucide-react'],
-              'vendor-supabase': ['@supabase/supabase-js'],
-              'vendor-i18n': ['i18next', 'react-i18next'],
-            }
-          }
-        }
+            // The same vendor chunks as before. Firestore Lite, the Gemini SDK and the Supabase SDK are
+            // imported only when used, so their chunks still download only then.
+            codeSplitting: {
+              groups: [
+                { name: 'vendor-react', test: inPackages('react', 'react-dom', 'scheduler') },
+                { name: 'vendor-firebase', test: (id: string) => inPackages('firebase', '@firebase')(id) && !/[\\/]lite[\\/]/.test(id) },
+                { name: 'vendor-genai', test: inPackages('@google/genai') },
+                { name: 'vendor-ui', test: inPackages('framer-motion', 'motion-dom', 'motion-utils', 'lucide-react') },
+                { name: 'vendor-supabase', test: inPackages('@supabase') },
+                { name: 'vendor-i18n', test: inPackages('i18next', 'react-i18next') },
+              ],
+            },
+          },
+        },
       },
       resolve: {
         alias: {
-          '@': path.resolve(__dirname, '.'),
+          '@': path.resolve(import.meta.dirname, '.'),
         }
       },
       test: {
