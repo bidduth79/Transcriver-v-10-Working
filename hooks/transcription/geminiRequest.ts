@@ -1,6 +1,7 @@
 import { HarmCategory, HarmBlockThreshold, ThinkingLevel, type Part } from "@google/genai";
 import { getModelDefinition, isSpeedOptimizationEnabled } from '../../services/ApiKeyManager';
 import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL, TRANSCRIPTION_PROMPT_TEXT_NORMAL } from '../../constants/instructions';
+import { isTranscribeModel, TRANSCRIBE_HTTP_OPTIONS, formatAudioTranscription } from './transcribeModel';
 
 const SAFETY_SETTINGS = [
   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
@@ -12,19 +13,31 @@ const SAFETY_SETTINGS = [
 const HIGH_SENSITIVITY_PROMPT = "You are an assistive speech-to-text accessibility tool. Listen carefully through any intro music, background noise, or low-volume sections, and transcribe all spoken words and dialogue in this recording into Bengali (Bangla). Format with [MM:SS] **Speaker 1:** when speech occurs.";
 const HIGH_SENSITIVITY_SYSTEM = "You are a high-sensitivity speech-to-text transcriber for user audio accessibility. Faithfully write down everything spoken in the audio in Bengali script without summarizing or stopping early.";
 
-const buildAudioRequest = (model: string, audioPart: Part, text: string, config: any) => ({
-  model,
-  contents: [
-    {
-      role: 'user',
-      parts: [
-        audioPart,
-        { text }
-      ]
-    }
-  ],
-  config: { ...config, safetySettings: SAFETY_SETTINGS }
-});
+// Speech-only transcribe models reject written instructions ("Developer instruction is not enabled for
+// this model") and do not follow them, so they get only the audio plus their diarization settings
+const buildAudioRequest = (model: string, audioPart: Part, text: string, config: any) => {
+  if (isTranscribeModel(model)) {
+    const { systemInstruction: _ignored, ...rest } = config;
+    return {
+      model,
+      contents: [{ role: 'user', parts: [audioPart] }],
+      config: { ...rest, httpOptions: TRANSCRIBE_HTTP_OPTIONS, safetySettings: SAFETY_SETTINGS }
+    };
+  }
+  return {
+    model,
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          audioPart,
+          { text }
+        ]
+      }
+    ],
+    config: { ...config, safetySettings: SAFETY_SETTINGS }
+  };
+};
 
 // Optional thinkingConfig for Fast/Balanced models when Speed Boost is enabled
 // Also used by the short AI analyses (search analysis, report, BGB), which do not need deep thinking
@@ -69,6 +82,8 @@ export const releaseRequestAudio = (request: any) => {
 
 export const extractResponseText = (resp: any): string => {
   if (!resp) return '';
+  const transcription = formatAudioTranscription(resp);
+  if (transcription !== null) return transcription;
   try {
     if (Array.isArray(resp.candidates) && resp.candidates.length > 0) {
       const candidate = resp.candidates[0];
