@@ -5,7 +5,7 @@ import {
 } from './transcriptionUtils';
 
 const bytes = (...b: number[]) => new Uint8Array([...b, ...new Array(16).fill(0)]);
-const blobOf = (data: Uint8Array, type = '') => new Blob([data], { type });
+const blobOf = (data: Uint8Array<ArrayBuffer>, type = '') => new Blob([data], { type });
 
 // Minimal AudioBuffer stand-in for WAV encoding tests
 const fakeBuffer = (channels: Float32Array[], sampleRate: number, duration = 1) => ({
@@ -86,7 +86,7 @@ describe('detectAudioMimeType', () => {
     ['ptt no ext', bytes(1, 2, 3), 'PTT-20240101', { mimeType: 'audio/ogg', isOggOpus: true, isWhatsApp: true }],
     ['default', bytes(1, 2, 3), 'unknown', { mimeType: 'audio/mp3', isOggOpus: false, isWhatsApp: false }],
   ])('%s', async (_n, data, name, expected) => {
-    expect(await detectAudioMimeType(blobOf(data as Uint8Array), name as string)).toEqual(expected);
+    expect(await detectAudioMimeType(blobOf(data as Uint8Array<ArrayBuffer>), name as string)).toEqual(expected);
   });
 
   it('uses blob type when nothing else matches', async () => {
