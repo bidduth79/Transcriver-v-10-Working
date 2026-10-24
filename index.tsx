@@ -10,6 +10,7 @@ import { Toaster } from 'sonner';
 import { requestPersistentStorage } from './services/storagePersistence';
 import type { FallbackProps } from 'react-error-boundary';
 import { messageOf } from './utils/errorMessage';
+import { reportAppError } from './services/errorReporting';
 
 window.addEventListener('error', (event) => {
   if (event.message === 'Script error.') {
@@ -30,6 +31,7 @@ window.addEventListener('error', (event) => {
   if (event.error) {
     console.log('GLOBAL_ERROR_STACK:', event.error.stack);
   }
+  reportAppError('window', event.error ?? event.message);
 });
 
 const FallbackComponent = ({ error, resetErrorBoundary }: FallbackProps) => {
@@ -60,10 +62,13 @@ const FallbackComponent = ({ error, resetErrorBoundary }: FallbackProps) => {
 
 const rootElement = document.getElementById('root');
 
+// A failed promise nobody waited for (e.g. a background save)
+window.addEventListener('unhandledrejection', (event) => reportAppError('promise', event.reason));
+
 if (rootElement) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
-    <ErrorBoundary FallbackComponent={FallbackComponent} onReset={() => window.location.reload()}>
+    <ErrorBoundary FallbackComponent={FallbackComponent} onError={(error) => reportAppError('screen', error)} onReset={() => window.location.reload()}>
       <App />
       <Toaster position="top-center" richColors theme="system" />
     </ErrorBoundary>
