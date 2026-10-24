@@ -1,10 +1,12 @@
 import React from 'react';
+import type { Translations } from '../../../translations';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface TranscriptIdleViewProps {
-  t: any;
+  t: Translations;
   fileUrl: string;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   fileMeta: any;
   setIsSidebarOpen: (open: boolean) => void;
   processTranscription: () => void;

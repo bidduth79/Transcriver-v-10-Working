@@ -2,9 +2,10 @@ import React from 'react';
 import type { HistoryListData } from '../hooks/useHistoryListData';
 import { toDateKey } from '../utils/historyListUtils';
 import { fetchHistoryDaysFromCloud } from '../../../services/firebaseSync/historyRangePull';
+import type { Translations } from '../../../translations';
 
 interface Props {
-  t: any;
+  t: Translations;
   list: HistoryListData;
   isDark: boolean;
   appLang: string;

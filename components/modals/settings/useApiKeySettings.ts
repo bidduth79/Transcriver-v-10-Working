@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { UserApiKey, addUserApiKey, deleteApiKey, setActiveApiKey, getAllApiKeys, getActiveKeyId, getActiveModel, setActiveModel } from '../../../services/ApiKeyManager';
 import { STORES } from '../../../services/db';
+import type { ToastType } from '../../../hooks/useToast';
 
 // Saved keys, active key/model and add/select/delete/model-change actions for the API Keys tab
-export const useApiKeySettings = (appLang: 'bn' | 'en', addToast: (m: string, t: any) => void) => {
+export const useApiKeySettings = (appLang: 'bn' | 'en', addToast: (m: string, t: ToastType) => void) => {
 const [keyList, setKeyList] = useState<UserApiKey[]>([]);
 const [activeKeyId, setActiveKeyId] = useState<string | null>(null);
 const [selectedModel, setSelectedModel] = useState<string>(getActiveModel());

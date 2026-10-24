@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranscriberReportLogic } from './hooks/useTranscriberReportLogic';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 export const TranscriberReportModal = ({ 
   isOpen, onClose, isDark, activeColors, appLang 
@@ -7,7 +8,7 @@ export const TranscriberReportModal = ({
   isOpen: boolean;
   onClose: () => void;
   isDark?: boolean;
-  activeColors?: any;
+  activeColors?: ActiveColors;
   appLang?: string;
 }) => {
   const {

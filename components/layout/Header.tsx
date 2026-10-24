@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useFullScreen } from '../../hooks/useFullScreen';
+import type { Translations } from '../../translations';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface HeaderProps {
-  t: any;
+  t: Translations;
   status: string;
   isSidebarOpen: boolean;
   setIsSidebarOpen: (v: boolean) => void;
@@ -14,7 +16,7 @@ interface HeaderProps {
   setTheme: (f: (p: any) => any) => void;
   appLang: string;
   setAppLang: (f: (p: any) => any) => void;
-  activeColors: any;
+  activeColors: ActiveColors;
   setIsReportOpen?: (v: boolean) => void;
   setIsSettingsOpen?: (v: boolean) => void;
   transcriptionMode: 'normal' | 'pro';

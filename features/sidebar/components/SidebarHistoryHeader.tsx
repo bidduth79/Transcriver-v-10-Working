@@ -1,8 +1,9 @@
 import React from 'react';
 import type { HistoryListData } from '../hooks/useHistoryListData';
+import type { Translations } from '../../../translations';
 
 interface Props {
-  t: any;
+  t: Translations;
   list: HistoryListData;
   history: any[];
   totalHistoryCount?: number;

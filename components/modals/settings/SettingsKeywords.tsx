@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { getSensitiveKeywords, setSensitiveKeywords } from '../../../utils/sensitiveKeywords';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { ToastType } from '../../../hooks/useToast';
 
 interface SettingsKeywordsProps {
     isDark: boolean;
-    activeColors: any;
+    activeColors: ActiveColors;
     appLang: 'bn' | 'en';
-    addToast: (m: string, t: any) => void;
+    addToast: (m: string, t: ToastType) => void;
 }
 
 export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, activeColors, appLang, addToast }) => {

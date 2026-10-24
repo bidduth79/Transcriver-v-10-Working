@@ -2,11 +2,12 @@ import React from 'react';
 import { TranscriptViewer } from '../TranscriptViewer';
 
 import { TranscriptMeta } from '../../../types';
+import type { Translations } from '../../../translations';
 
 export interface TranscriptContentProps {
   fontSize: number;
   isDark: boolean;
-  t: any; // translation object
+  t: Translations;
   // The saved transcript's source, or the loaded file's info
   activeTranscriptSourceMeta: Partial<TranscriptMeta> | null;
   appLang: 'bn' | 'en';

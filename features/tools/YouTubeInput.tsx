@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { getApiUrl, isLocalServerEnabled } from '../../utils/config';
 import { messageOf } from '../../utils/errorMessage';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface YouTubeInputProps {
   onSuccess: (blob: Blob, fileName: string, mode: string) => void;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   appLang: 'bn' | 'en';
 }
 

@@ -1,11 +1,12 @@
 import React from 'react';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface Props {
   report: string;
   loading: boolean;
   searchTerm: string;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   onGenerate: () => void;
   onCopy: () => void;
   onDownload: () => void;

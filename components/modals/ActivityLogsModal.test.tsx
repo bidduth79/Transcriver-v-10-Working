@@ -11,6 +11,7 @@ vi.mock('../../services/db', () => ({
 
 import { ActivityLogsModal } from './ActivityLogsModal';
 import { useAppStore } from '@/hooks/useAppStore';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 const log = (id: string, ts: any, category: string, status: string, message: string, details?: any) => ({ id, timestamp: ts, category, status, message, details });
 const sample = [
@@ -39,7 +40,7 @@ beforeEach(() => {
 
 describe('ActivityLogsModal markup', () => {
   it('renders nothing when closed', () => {
-    expect(render(<ActivityLogsModal isOpen={false} onClose={vi.fn()} isDark activeColors={{}} appLang="bn" />).container.innerHTML).toBe('');
+    expect(render(<ActivityLogsModal isOpen={false} onClose={vi.fn()} isDark activeColors={{} as ActiveColors} appLang="bn" />).container.innerHTML).toBe('');
   });
 
   it('renders sorted logs (dark, bn)', async () => {

@@ -1,10 +1,11 @@
 import React from 'react';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface TranscriptScrollControlsProps {
   localScrollPercent: number;
   scrollToTop: () => void;
   scrollToBottom: () => void;
-  activeColors: any;
+  activeColors: ActiveColors;
 }
 
 export const TranscriptScrollControls: React.FC<TranscriptScrollControlsProps> = ({

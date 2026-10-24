@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface FullscreenAnalysisProps {
   isOpen: boolean;
@@ -8,7 +9,7 @@ interface FullscreenAnalysisProps {
   history: any[];
   transcript: string;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   appLang: 'bn' | 'en';
   renderFormattedTranscript: (text: string) => any;
   loadHistoryItem: (item: any) => void;

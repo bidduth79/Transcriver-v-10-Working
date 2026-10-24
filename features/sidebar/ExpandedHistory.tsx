@@ -2,9 +2,11 @@ import React from 'react';
 import { useExpandedHistory } from './hooks/useExpandedHistory';
 import { ExpandedHistoryHeader } from './components/ExpandedHistoryHeader';
 import { ExpandedHistoryCard } from './components/ExpandedHistoryCard';
+import type { Translations } from '../../translations';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface ExpandedHistoryProps {
-  t: any;
+  t: Translations;
   isDark: boolean;
   setIsHistoryFullscreen: (v: boolean) => void;
   histSearch: string;
@@ -17,7 +19,7 @@ interface ExpandedHistoryProps {
   historyLimit: number;
   setHistoryLimit: React.Dispatch<React.SetStateAction<number>>;
   loadHistoryItem: (item: any, searchKeyword?: string) => void;
-  activeColors: any;
+  activeColors: ActiveColors;
 }
 
 export const ExpandedHistory: React.FC<ExpandedHistoryProps> = ({

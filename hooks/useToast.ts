@@ -1,8 +1,10 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
 export const useToast = (appLang: string) => {
-  const addToast = useCallback((msg: string, type: 'success' | 'error' | 'info' | 'warning', options?: { duration?: number; id?: string | number }) => {
+  const addToast = useCallback((msg: string, type: ToastType, options?: { duration?: number; id?: string | number }) => {
     // Schedule via macrotask so sonner's internal flushSync never runs during React lifecycle rendering
     setTimeout(() => {
       switch (type) {

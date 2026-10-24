@@ -5,11 +5,12 @@ import { QuotaLimitsEditor } from './quota/QuotaLimitsEditor';
 import { QuotaMiniProgress } from './quota/QuotaMiniProgress';
 import { PeakUsageChart } from './quota/PeakUsageChart';
 import { DEFAULT_MODEL } from '../../constants/aiModels';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface QuotaMonitorProps {
   isDark: boolean;
   appLang: 'en' | 'bn';
-  activeColors: any;
+  activeColors: ActiveColors;
 }
 
 export const QuotaMonitor: React.FC<QuotaMonitorProps> = ({ isDark, appLang }) => {

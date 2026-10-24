@@ -1,5 +1,6 @@
 import React from 'react';
 import { FailedFile } from '../../hooks/useBatchProcessor';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface BatchSummaryModalProps {
   isOpen: boolean;
@@ -9,7 +10,7 @@ interface BatchSummaryModalProps {
   onRetryFailed: () => void;
   appLang: 'bn' | 'en';
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
 }
 
 export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({

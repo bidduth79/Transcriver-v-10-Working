@@ -3,12 +3,13 @@ import { useModalResize } from './hooks/useModalResize';
 import { useActivityLogs } from './activityLogs/useActivityLogs';
 import { ActivityLogFilters } from './activityLogs/ActivityLogFilters';
 import { ActivityLogList } from './activityLogs/ActivityLogList';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface ActivityLogsModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   appLang: 'bn' | 'en';
 }
 

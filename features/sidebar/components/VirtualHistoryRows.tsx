@@ -1,17 +1,18 @@
 import React from 'react';
 import { HistoryItemCard } from '../HistoryItemCard';
 import type { HistoryListData } from '../hooks/useHistoryListData';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface Props {
   list: HistoryListData;
-  activeColors: any;
+  activeColors: ActiveColors;
   cardProps: {
     activeHistoryId: string | null;
     loadHistoryItem: any;
     onDeleteHistoryItem: any;
     toggleFavorite: any;
     isDark: boolean;
-    activeColors: any;
+    activeColors: ActiveColors;
     appLang: string;
     getSensitiveMatches: any;
   };

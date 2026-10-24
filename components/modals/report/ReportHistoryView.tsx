@@ -1,12 +1,13 @@
 import React from 'react';
 import type { ReportItem } from '../hooks/useReportActions';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface Props {
   reportHistory: ReportItem[];
   selectedReport: ReportItem | null;
   setSelectedReport: (r: ReportItem) => void;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   onDelete: (e: React.MouseEvent, id: string) => void;
   onCopy: () => void;
   onDownload: () => void;

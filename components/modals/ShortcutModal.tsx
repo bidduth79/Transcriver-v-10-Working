@@ -2,12 +2,13 @@ import React from 'react';
 import { useShortcutEditor } from './shortcuts/useShortcutEditor';
 import { ShortcutCaptureOverlay } from './shortcuts/ShortcutCaptureOverlay';
 import { ShortcutCategoryList } from './shortcuts/ShortcutCategoryList';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface ShortcutModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   appLang: 'bn' | 'en';
 }
 

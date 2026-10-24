@@ -2,10 +2,11 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, fireEvent, act } from '@testing-library/react';
 import { YouTubeInput } from './YouTubeInput';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 const setup = (appLang: 'bn' | 'en' = 'en') => {
   const onSuccess = vi.fn();
-  const utils = render(<YouTubeInput onSuccess={onSuccess} isDark appLang={appLang} activeColors={{}} />);
+  const utils = render(<YouTubeInput onSuccess={onSuccess} isDark appLang={appLang} activeColors={{} as ActiveColors} />);
   const submit = async (url: string) => {
     fireEvent.change(utils.getByPlaceholderText(/YouTube/), { target: { value: url } });
     await act(async () => { fireEvent.submit(utils.container.querySelector('form')!); });

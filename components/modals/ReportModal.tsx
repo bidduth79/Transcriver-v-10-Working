@@ -7,12 +7,13 @@ import { copyToClipboard } from '../../utils/clipboard';
 import { ReportModalHeader } from './report/ReportModalHeader';
 import { ReportGenerateView } from './report/ReportGenerateView';
 import { ReportHistoryView } from './report/ReportHistoryView';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
   transcript: string;
-  activeColors: any;
+  activeColors: ActiveColors;
   isDark: boolean;
   appLang: 'bn' | 'en';
   fileMeta: any;

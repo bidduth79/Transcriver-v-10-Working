@@ -6,12 +6,13 @@ import { SummaryLiveReport } from './summary/SummaryLiveReport';
 import { SummaryHistoryList } from './summary/SummaryHistoryList';
 import { SummaryModalHeader } from './summary/SummaryModalHeader';
 import { useSummaryHistory } from './summary/useSummaryHistory';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface SummaryModalProps {
   isOpen: boolean;
   onClose: () => void;
   transcript: string;
-  activeColors: any;
+  activeColors: ActiveColors;
   isDark: boolean;
   appLang: 'bn' | 'en';
   searchTerm: string;

@@ -3,9 +3,10 @@ import { History, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { isFirebaseConfigured } from '../../../services/firebase';
 import { fetchOlderHistoryFromCloud } from '../../../services/firebaseSync/historyRangePull';
+import type { Translations } from '../../../translations';
 
 interface Props {
-  t: any;
+  t: Translations;
   isDark: boolean;
   appLang: string;
   history: any[];

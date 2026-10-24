@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { isMicrophoneEnabled, setMicrophoneEnabled } from '../../../hooks/useAudioRecorder';
 import { isLocalServerEnabled, setLocalServerEnabled } from '../../../utils/config';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { ToastType } from '../../../hooks/useToast';
 
 interface SettingsSystemProps {
     isDark: boolean;
-    activeColors: any;
+    activeColors: ActiveColors;
     appLang: 'bn' | 'en';
-    addToast: (m: string, t: any) => void;
+    addToast: (m: string, t: ToastType) => void;
 }
 
 export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeColors, appLang, addToast }) => {

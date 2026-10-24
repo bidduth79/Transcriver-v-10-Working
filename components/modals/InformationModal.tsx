@@ -2,12 +2,13 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInformationModal } from './hooks/useInformationModal';
 import { getGuideData, getTabs } from './utils/informationData';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface InformationModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   appLang: 'bn' | 'en';
   addToast?: (msg: string, type: any) => void;
 }

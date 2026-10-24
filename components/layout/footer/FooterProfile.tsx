@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface Props {
-  activeColors: any;
+  activeColors: ActiveColors;
 }
 
 // Developer credit link with hover contact card

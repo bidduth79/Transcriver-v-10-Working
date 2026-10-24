@@ -1,12 +1,13 @@
 import React from 'react';
 import { useHistoryTranscript } from '../../../hooks/history/useHistoryTranscript';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface Props {
   item: any;
   isSensitive: boolean;
   sensitiveMatches: string[];
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   loadHistoryItem: (item: any, searchKeyword?: string) => void;
 }
 

@@ -9,12 +9,14 @@ import {
 } from '../../../services/firebaseThrottledQueue';
 import { useAppStore } from '../../../hooks/useAppStore';
 import { messageOf } from '../../../utils/errorMessage';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { ToastType } from '../../../hooks/useToast';
 
 interface SettingsSyncProps {
     isDark: boolean;
-    activeColors: any;
+    activeColors: ActiveColors;
     appLang: 'bn' | 'en';
-    addToast: (m: string, t: any) => void;
+    addToast: (m: string, t: ToastType) => void;
 }
 
 export const SettingsSync: React.FC<SettingsSyncProps> = ({ isDark, activeColors, appLang, addToast }) => {

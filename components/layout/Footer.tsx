@@ -6,10 +6,12 @@ import { SystemStatusBar } from './footer/SystemStatusBar';
 import { ModelSelector } from './footer/ModelSelector';
 import { FooterProfile } from './footer/FooterProfile';
 import { DEFAULT_MODEL } from '../../constants/aiModels';
+import type { Translations } from '../../translations';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface FooterProps {
-  t: any;
-  activeColors: any;
+  t: Translations;
+  activeColors: ActiveColors;
   activeModelName?: string;
   isAiLoading?: boolean;
   onKeyUpdate?: () => void;

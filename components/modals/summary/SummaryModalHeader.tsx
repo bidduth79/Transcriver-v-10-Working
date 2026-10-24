@@ -1,7 +1,8 @@
 import React from 'react';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface Props {
-  activeColors: any;
+  activeColors: ActiveColors;
   viewMode: 'current' | 'history';
   onSelectView: (mode: 'current' | 'history') => void;
   onMinimize: () => void;

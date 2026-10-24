@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, Check, X } from 'lucide-react';
+import type { ActiveColors } from '../../hooks/useAppTheme';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface ConfirmModalProps {
   cancelText: string;
   secondaryText?: string;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -87,7 +88,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 onConfirm();
                 onClose();
               }}
-              className={`px-4 py-2 rounded-lg font-medium text-white transition-colors ${activeColors.primary} ${activeColors.hover}`}
+              className={`px-4 py-2 rounded-lg font-medium text-white transition-colors ${activeColors.primary}`}
             >
               {confirmText}
             </button>

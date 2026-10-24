@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { SearchAnalysisItem } from '../../../services/SearchAnalysisHistory';
 import { getSentimentLabel, highlightText } from './SummaryUtils';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface HistoryItem extends SearchAnalysisItem {
   isDuplicate?: boolean;
@@ -8,7 +9,7 @@ interface HistoryItem extends SearchAnalysisItem {
 
 interface SummaryHistoryListProps {
   historyWithDuplicateFlags: HistoryItem[];
-  activeColors: any;
+  activeColors: ActiveColors;
   isDark: boolean;
   appLang: 'bn' | 'en';
   onDelete: (e: React.MouseEvent, id: string) => Promise<void>;

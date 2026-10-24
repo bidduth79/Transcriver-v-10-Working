@@ -6,6 +6,7 @@ import { SpeakerProfileSidebar } from '../../../components/modals/SpeakerProfile
 
 import { FileMeta, HistoryItem } from '../../../types';
 import { loadHistoryTranscript } from '../../../hooks/history/useHistoryTranscript';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 export interface TranscriptModalsProps {
   isSummaryOpen: boolean;
@@ -23,7 +24,7 @@ export interface TranscriptModalsProps {
   refreshProfile: (speakerId: string) => void;
   updateCustomNote: (note: any) => void;
   transcript: string;
-  activeColors: any;
+  activeColors: ActiveColors;
   isDark: boolean;
   appLang: 'bn' | 'en';
   searchTerm: string;

@@ -1,8 +1,10 @@
 import React from 'react';
+import type { Translations } from '../../../translations';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface Props {
-  t: any;
-  activeColors: any;
+  t: Translations;
+  activeColors: ActiveColors;
   itemCount: number;
   histSearch: string;
   setHistSearch: (v: string) => void;

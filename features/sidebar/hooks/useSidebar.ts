@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getSensitiveKeywords } from '../../../utils/sensitiveKeywords';
+import type { Translations } from '../../../translations';
 
 const EMPTY_MATCHES: string[] = [];
 
@@ -73,7 +74,7 @@ export const useSidebar = (appLang: string, handleFileChange: any, audioRef: any
     }
   };
 
-  const getHeaderTitle = (isRecording: boolean, t: any) => {
+  const getHeaderTitle = (isRecording: boolean, t: Translations) => {
       if (isRecording) return appLang === 'bn' ? "রেকর্ডিং চলছে..." : "Recording...";
       if (activeTab === 'youtube') return 'YOUTUBE LINK';
       if (activeTab === 'facebook') return 'FACEBOOK LINK';

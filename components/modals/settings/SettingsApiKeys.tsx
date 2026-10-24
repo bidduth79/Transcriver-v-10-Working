@@ -3,12 +3,14 @@ import { ConfirmModal } from '../ConfirmModal';
 import { useApiKeySettings } from './useApiKeySettings';
 import { ApiKeyModelSelect } from './ApiKeyModelSelect';
 import { ApiKeyList } from './ApiKeyList';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
+import type { ToastType } from '../../../hooks/useToast';
 
 interface SettingsApiKeysProps {
     isDark: boolean;
-    activeColors: any;
+    activeColors: ActiveColors;
     appLang: 'bn' | 'en';
-    addToast: (m: string, t: any) => void;
+    addToast: (m: string, t: ToastType) => void;
 }
 
 export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, activeColors, appLang, addToast }) => {

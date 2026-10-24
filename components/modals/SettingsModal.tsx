@@ -6,14 +6,16 @@ import { SettingsApiKeys } from './settings/SettingsApiKeys';
 import { SettingsKeywords } from './settings/SettingsKeywords';
 import { SettingsSync } from './settings/SettingsSync';
 import { SettingsSystem } from './settings/SettingsSystem';
+import type { ActiveColors } from '../../hooks/useAppTheme';
+import type { ToastType } from '../../hooks/useToast';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   isDark: boolean;
-  activeColors: any;
+  activeColors: ActiveColors;
   appLang: 'bn' | 'en';
-  addToast: (m: string, t: any) => void;
+  addToast: (m: string, t: ToastType) => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, isDark, activeColors, appLang, addToast }) => {

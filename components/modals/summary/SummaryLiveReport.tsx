@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { getSentimentLabel, highlightText } from './SummaryUtils';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface SummaryLiveReportProps {
   data: any;
@@ -8,7 +9,7 @@ interface SummaryLiveReportProps {
   aiAnalysis: { sentiment: 'positive' | 'negative' | 'neutral', remark: string } | null;
   isAnalyzing: boolean;
   performAIAnalysis: () => void;
-  activeColors: any;
+  activeColors: ActiveColors;
   appLang: 'bn' | 'en';
   selectedHistoryItem: any;
   setSelectedHistoryItem: (item: any) => void;

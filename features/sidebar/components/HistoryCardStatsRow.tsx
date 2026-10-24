@@ -1,11 +1,12 @@
 import React from 'react';
+import type { ActiveColors } from '../../../hooks/useAppTheme';
 
 interface Props {
   item: any;
   isActive: boolean;
   isDark: boolean;
-  activeColors: any;
-  formatProcessingTime: (t: any) => string;
+  activeColors: ActiveColors;
+  formatProcessingTime: (t: string) => string;
 }
 
 // Duration, BGB remark and processing time
