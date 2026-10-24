@@ -11,6 +11,8 @@ import type { ActiveColors } from '../../hooks/useAppTheme';
 import type { FileMeta } from '../../types';
 import type { ToastType } from '../../hooks/useToast';
 import { uiText } from '../../utils/uiText';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -101,12 +103,13 @@ export const ReportModal: React.FC<ReportModalProps> = ({
     deleteReportAction(id, selectedReport, setSelectedReport);
   };
 
+  const { dialogProps, backdropProps } = useModalBehavior(isOpen && !isMinimized, onClose);
   if (!isOpen) return null;
 
   return (
     <>
       {/* Minimized Floating Widget */}
-      <div className={`fixed bottom-24 right-20 z-[120] animate-in slide-in-from-bottom-10 fade-in duration-300 ${isMinimized ? 'block' : 'hidden'}`}>
+      <div className={`fixed bottom-24 right-20 ${MODAL_LAYER.minimized} animate-in slide-in-from-bottom-10 fade-in duration-300 ${isMinimized ? 'block' : 'hidden'}`}>
          <div 
            onClick={() => setIsMinimized(false)}
            className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border cursor-pointer hover:scale-105 transition-transform ${isDark ? 'bg-slate-900 border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
@@ -118,10 +121,11 @@ export const ReportModal: React.FC<ReportModalProps> = ({
       </div>
 
       {/* Full Modal - Hidden via CSS when minimized */}
-      <div className={`fixed inset-0 z-[120] flex items-center justify-center p-0 bg-slate-900/30 backdrop-blur-md animate-in fade-in duration-300 ${isMinimized ? 'hidden' : 'flex'}`}>
+      <div className={`fixed inset-0 ${MODAL_LAYER.panel} flex items-center justify-center p-0 ${MODAL_BACKDROP} animate-in fade-in duration-300 ${isMinimized ? 'hidden' : 'flex'}`} {...backdropProps}>
       <div 
         id="report-modal-container"
-        className={`rounded-[4rem] border shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] flex flex-col relative animate-in zoom-in-95 duration-500 overflow-hidden ${isDark ? 'bg-slate-900 border-white/10' : 'bg-white border-slate-200'}`}
+        {...dialogProps}
+        className={`rounded-[4rem] border shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] flex flex-col relative animate-in zoom-in-95 duration-500 overflow-hidden outline-none ${isDark ? 'bg-slate-900 border-white/10' : 'bg-white border-slate-200'}`}
         style={{ 
             width: isMaximized ? '100vw' : `${size.width}px`, 
             height: isMaximized ? '100vh' : `${size.height}px`,
@@ -141,6 +145,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           isMaximized={isMaximized}
           setIsMaximized={setIsMaximized}
           onClose={onClose}
+          closeLabel={uiText(appLang, 'close')}
         />
 
         <div className="flex-1 flex overflow-hidden">

@@ -5,6 +5,8 @@ import { getGuideData, getTabs } from './utils/informationData';
 import type { ActiveColors } from '../../hooks/useAppTheme';
 import type { ToastType } from '../../hooks/useToast';
 import { uiText } from '../../utils/uiText';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
 
 interface InformationModalProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
     startResizing,
     runDbSetup
   } = useInformationModal({ addToast, appLang });
+  const { dialogProps, backdropProps } = useModalBehavior(isOpen && !isMinimized, onClose);
 
   const guideData = getGuideData(appLang);
   const tabs = getTabs(appLang);
@@ -40,7 +43,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 50, opacity: 0 }}
-              className="fixed bottom-24 right-20 z-[120]"
+              className={`fixed bottom-24 right-20 ${MODAL_LAYER.minimized}`}
             >
                <div 
                  onClick={() => setIsMinimized(false)}
@@ -59,7 +62,8 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[120] flex items-center justify-center p-0 bg-slate-950/80 backdrop-blur-xl"
+              className={`fixed inset-0 ${MODAL_LAYER.panel} flex items-center justify-center p-0 ${MODAL_BACKDROP}`}
+              {...backdropProps}
             >
               <motion.div 
                 initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -67,7 +71,8 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 id="info-modal-container"
-        className={`rounded-[3rem] border shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col relative ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                {...dialogProps}
+        className={`rounded-[3rem] border shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] overflow-hidden flex flex-col relative outline-none ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
         style={{ 
             width: isMaximized ? '100vw' : `${size.width}px`, 
             height: isMaximized ? '100vh' : `${size.height}px`,
@@ -92,7 +97,7 @@ export const InformationModal: React.FC<InformationModalProps> = ({ isOpen, onCl
           <div className="flex items-center gap-2">
             <button onClick={() => setIsMinimized(true)} className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/5 group"><svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4"/></svg></button>
             <button onClick={() => setIsMaximized(!isMaximized)} className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/5 group"><svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M20 8V4m0 0h-4M4 16v4m0 0h4M20 16v4m0 0h-4M4 20v4m0 0h4M20 20v4m0 0h-4"/></svg></button>
-            <button onClick={onClose} className="w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-full transition-all border border-white/10 group"><svg className="w-6 h-6 transition-transform group-hover:scale-110 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            <button onClick={onClose} aria-label={uiText(appLang, 'close')} className="w-12 h-12 flex items-center justify-center bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-full transition-all border border-white/10 group"><svg className="w-6 h-6 transition-transform group-hover:scale-110 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg></button>
           </div>
         </header>
 

@@ -63,6 +63,7 @@ export const SpeakerSidebarHeader = ({ profile, speakerName, isLoading, isDark, 
             )}
             <button 
               onClick={onClose}
+              aria-label={uiText(appLang, 'close')}
               className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>

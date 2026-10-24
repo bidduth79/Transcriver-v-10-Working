@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { uiText } from '../../utils/uiText';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -26,6 +28,7 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({ isOpen, onClose, ela
       onClose();
     }, 300); // Wait for exit animation
   };
+  const { dialogProps, backdropProps } = useModalBehavior(isOpen && isVisible, handleClose);
 
   const formatTime = (totalSeconds: number) => {
     const mins = Math.floor(totalSeconds / 60);
@@ -40,14 +43,16 @@ export const SuccessModal: React.FC<SuccessModalProps> = ({ isOpen, onClose, ela
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          className={`fixed inset-0 ${MODAL_LAYER.success} flex items-center justify-center ${MODAL_BACKDROP} p-4`}
+          {...backdropProps}
         >
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-[2.5rem] p-8 flex flex-col items-center text-center shadow-2xl relative overflow-hidden"
+            {...dialogProps}
+            className="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-[2.5rem] p-8 flex flex-col items-center text-center shadow-2xl relative overflow-hidden outline-none"
           >
             
             {/* Background Glow */}

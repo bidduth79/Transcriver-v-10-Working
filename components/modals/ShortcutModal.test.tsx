@@ -92,6 +92,7 @@ describe('ShortcutModal behavior', () => {
     fireEvent.click(getByText('Cancel'));
     expect(capture(container)).toBeNull();
     fireEvent.click(editRow(container, 'File Upload'));
+    fireEvent.mouseDown(container.querySelector('.fixed.inset-0.z-\\[210\\]')!);
     fireEvent.click(container.querySelector('.fixed.inset-0.z-\\[210\\]')!);
     expect(capture(container)).toBeNull();
     fireEvent.click(container.querySelector('.px-8.py-6 button')!);

@@ -3,6 +3,9 @@ import { useShortcutEditor } from './shortcuts/useShortcutEditor';
 import { ShortcutCaptureOverlay } from './shortcuts/ShortcutCaptureOverlay';
 import { ShortcutCategoryList } from './shortcuts/ShortcutCategoryList';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
+import { uiText } from '../../utils/uiText';
 
 interface ShortcutModalProps {
   isOpen: boolean;
@@ -12,16 +15,18 @@ interface ShortcutModalProps {
   appLang: 'bn' | 'en';
 }
 
-export const ShortcutModal: React.FC<ShortcutModalProps> = ({ isOpen, onClose, isDark, activeColors }) => {
+export const ShortcutModal: React.FC<ShortcutModalProps> = ({ isOpen, onClose, isDark, activeColors, appLang }) => {
   const editor = useShortcutEditor(isOpen);
   const { activeTab, setActiveTab, searchTerm, setSearchTerm, editingId, setEditingId, handleResetAll, handleKeyDown } = editor;
 
+  const { dialogProps, backdropProps } = useModalBehavior(isOpen, onClose);
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-200">
+    <div className={`fixed inset-0 ${MODAL_LAYER.dialog} flex items-center justify-center p-4 ${MODAL_BACKDROP} animate-in fade-in duration-200`} {...backdropProps}>
       <div 
-        className={`w-full max-w-4xl h-[85vh] rounded-[2.5rem] border shadow-2xl flex flex-col overflow-hidden ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+        {...dialogProps}
+        className={`w-full max-w-4xl h-[85vh] rounded-[2.5rem] border shadow-2xl flex flex-col overflow-hidden outline-none ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -35,7 +40,7 @@ export const ShortcutModal: React.FC<ShortcutModalProps> = ({ isOpen, onClose, i
               <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mt-1">POWER USER CONTROLS</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/10 group">
+          <button onClick={onClose} aria-label={uiText(appLang, 'close')} className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/10 group">
              <svg className="w-6 h-6 transition-transform group-hover:scale-110 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>

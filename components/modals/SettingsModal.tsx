@@ -9,6 +9,8 @@ import { SettingsSystem } from './settings/SettingsSystem';
 import type { ActiveColors } from '../../hooks/useAppTheme';
 import type { ToastType } from '../../hooks/useToast';
 import { uiText } from '../../utils/uiText';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -30,6 +32,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
         setIsMinimized(false); 
     }
   }, [isOpen, setIsMinimized]);
+  const { dialogProps, backdropProps } = useModalBehavior(isOpen && !isMinimized, onClose);
 
   if (!isOpen) return null;
 
@@ -43,7 +46,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
               initial={{ y: 50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 50, opacity: 0 }}
-              className="fixed bottom-24 right-20 z-[120]"
+              className={`fixed bottom-24 right-20 ${MODAL_LAYER.minimized}`}
             >
                <div 
                  onClick={() => setIsMinimized(false)}
@@ -62,7 +65,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[110] flex items-center justify-center p-0 bg-slate-950/60 backdrop-blur-xl"
+              className={`fixed inset-0 ${MODAL_LAYER.panel} flex items-center justify-center p-0 ${MODAL_BACKDROP}`}
+              {...backdropProps}
             >
               <motion.div 
                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -70,7 +74,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 id="settings-modal-container"
-                className={`rounded-[3rem] border shadow-2xl overflow-hidden flex flex-col relative ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                {...dialogProps}
+                className={`rounded-[3rem] border shadow-2xl overflow-hidden flex flex-col relative outline-none ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
         style={{ 
             width: isMaximized ? '100vw' : `${size.width}px`, 
             height: isMaximized ? '100vh' : `${size.height}px`,
@@ -92,7 +97,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, i
             <button onClick={() => setIsMaximized(!isMaximized)} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-all text-white/60 hover:text-white group">
                 <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M20 8V4m0 0h-4M4 16v4m0 0h4M20 16v4m0 0h-4M4 20v4m0 0h4M20 20v4m0 0h-4"/></svg>
             </button>
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white rounded-full transition-all text-white/60 group">
+            <button onClick={onClose} aria-label={uiText(appLang, 'close')} className="w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white rounded-full transition-all text-white/60 group">
                 <svg className="w-5 h-5 transition-transform group-hover:scale-110 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>

@@ -81,6 +81,7 @@ describe('SpeakerProfileSidebar behavior', () => {
     fireEvent.click(buttons[1]);
     expect(props.onRefresh).toHaveBeenCalled();
     fireEvent.click(buttons[2]);
+    fireEvent.mouseDown(container.querySelector('.fixed.inset-0')!);
     fireEvent.click(container.querySelector('.fixed.inset-0')!);
     expect(props.onClose).toHaveBeenCalledTimes(2);
   });

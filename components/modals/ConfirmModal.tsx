@@ -1,7 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, Check, X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -30,6 +32,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isDark,
   activeColors
 }) => {
+  const { dialogProps, backdropProps } = useModalBehavior(isOpen, onClose);
   if (!isOpen) return null;
 
   return (
@@ -38,13 +41,15 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm"
+        className={`fixed inset-0 ${MODAL_LAYER.dialog} flex items-center justify-center p-4 ${MODAL_BACKDROP}`}
+        {...backdropProps}
       >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className={`w-full max-w-md p-6 rounded-2xl shadow-2xl border ${
+          {...dialogProps}
+          className={`w-full max-w-md p-6 rounded-2xl shadow-2xl border outline-none ${
             isDark ? 'bg-slate-900 border-white/10' : 'bg-white border-slate-200'
           }`}
         >

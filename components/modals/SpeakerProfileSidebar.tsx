@@ -9,6 +9,8 @@ import { SpeakerResearchTab } from './SpeakerResearchTab';
 import { SpeakerSidebarHeader } from './speaker/SpeakerSidebarHeader';
 import { SpeakerSidebarTabs } from './speaker/SpeakerSidebarTabs';
 import { SpeakerSidebarStatus } from './speaker/SpeakerSidebarStatus';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
 
 interface SpeakerProfileSidebarProps {
   isOpen: boolean;
@@ -52,6 +54,7 @@ export const SpeakerProfileSidebar: React.FC<SpeakerProfileSidebarProps> = ({
     searchFacebookUrl
   } = useSpeakerProfileSidebarLogic(speakerName, profile, onUpdateCustomNote);
 
+  const { dialogProps, backdropProps } = useModalBehavior(isOpen, onClose);
   const dbStats = profile?.databaseStats;
   const mentions = dbStats?.mentions || [];
 
@@ -59,12 +62,12 @@ export const SpeakerProfileSidebar: React.FC<SpeakerProfileSidebarProps> = ({
     <>
       {/* Backdrop */}
       <div 
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[99998] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-        onClick={onClose}
+        className={`fixed inset-0 ${MODAL_BACKDROP} ${MODAL_LAYER.drawerBackdrop} transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        {...backdropProps}
       />
       
       {/* Sidebar */}
-      <div className={`fixed top-0 right-0 h-full w-full sm:max-w-lg shadow-2xl z-[99999] transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden ${isDark ? 'bg-slate-900 text-slate-100 border-l border-slate-700' : 'bg-white text-slate-800 border-l border-slate-200'} ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div {...dialogProps} inert={!isOpen} className={`fixed top-0 right-0 h-full w-full sm:max-w-lg shadow-2xl ${MODAL_LAYER.drawer} outline-none transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden ${isDark ? 'bg-slate-900 text-slate-100 border-l border-slate-700' : 'bg-white text-slate-800 border-l border-slate-200'} ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         
         {/* Header */}
         <SpeakerSidebarHeader

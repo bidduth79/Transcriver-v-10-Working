@@ -10,6 +10,8 @@ import type { ActiveColors } from '../../hooks/useAppTheme';
 import type { FileMeta } from '../../types';
 import type { ToastType } from '../../hooks/useToast';
 import { uiText } from '../../utils/uiText';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
 
 interface SummaryModalProps {
   isOpen: boolean;
@@ -47,6 +49,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
     onClose();
   };
 
+  const { dialogProps, backdropProps } = useModalBehavior(isOpen && !isMinimized, onClose);
   if (!isOpen) return null;
 
   const reportProps = { viewMode, aiAnalysis, isAnalyzing, performAIAnalysis, activeColors, appLang, selectedHistoryItem, setSelectedHistoryItem };
@@ -54,7 +57,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   return (
     <>
       {/* Minimized Floating Widget - Visible when minimized */}
-      <div className={`fixed bottom-24 right-20 z-[120] animate-in slide-in-from-bottom-10 fade-in duration-300 ${isMinimized ? 'block' : 'hidden'}`}>
+      <div className={`fixed bottom-24 right-20 ${MODAL_LAYER.minimized} animate-in slide-in-from-bottom-10 fade-in duration-300 ${isMinimized ? 'block' : 'hidden'}`}>
          <div
            onClick={() => setIsMinimized(false)}
            className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border cursor-pointer hover:scale-105 transition-transform ${isDark ? 'bg-slate-900 border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
@@ -67,11 +70,13 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
 
       {/* Full Modal View - Hidden via CSS when minimized to keep state alive */}
       <div
-        className={`fixed inset-0 z-[100] flex items-center justify-center p-0 bg-slate-900/30 backdrop-blur-md animate-in fade-in duration-300 ${isMinimized ? 'hidden' : 'flex'}`}
+        className={`fixed inset-0 ${MODAL_LAYER.panel} flex items-center justify-center p-0 ${MODAL_BACKDROP} animate-in fade-in duration-300 ${isMinimized ? 'hidden' : 'flex'}`}
+        {...backdropProps}
       >
       <div
         id="summary-modal-container"
-        className={`rounded-[4.5rem] border shadow-[0_60px_150px_-20px_rgba(0,0,0,0.6)] flex flex-col relative animate-in zoom-in-95 duration-500 overflow-hidden ${isDark ? 'bg-slate-900 border-white/20' : 'bg-white border-slate-200'}`}
+        {...dialogProps}
+        className={`rounded-[4.5rem] border shadow-[0_60px_150px_-20px_rgba(0,0,0,0.6)] flex flex-col relative animate-in zoom-in-95 duration-500 overflow-hidden outline-none ${isDark ? 'bg-slate-900 border-white/20' : 'bg-white border-slate-200'}`}
         style={{
             width: isMaximized ? '100vw' : `${size.width}px`,
             height: isMaximized ? '100vh' : `${size.height}px`,
@@ -88,6 +93,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
           onMinimize={() => setIsMinimized(true)}
           onToggleMaximize={() => setIsMaximized(!isMaximized)}
           onClose={handleClose}
+          closeLabel={uiText(appLang, 'close')}
         />
 
         <div className={`flex-1 overflow-y-auto overflow-x-visible custom-scrollbar p-14 lg:p-20 relative ${!isMaximized && 'rounded-b-[4.5rem]'}`}>

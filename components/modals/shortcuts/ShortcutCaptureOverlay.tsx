@@ -1,4 +1,6 @@
 import React from 'react';
+import { useModalBehavior } from '../../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../../constants/modalLayers';
 
 interface Props {
   onKeyDown: (e: React.KeyboardEvent) => void;
@@ -6,9 +8,11 @@ interface Props {
 }
 
 // Full-screen "press new keys" prompt; a hidden focused input receives the key combo
-export const ShortcutCaptureOverlay = ({ onKeyDown, onCancel }: Props) => (
-             <div className="fixed inset-0 z-[210] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center cursor-default" onClick={onCancel}>
-                <div className="bg-slate-950 p-10 rounded-[2rem] border border-white/20 shadow-2xl text-center" onClick={e => e.stopPropagation()}>
+export const ShortcutCaptureOverlay = ({ onKeyDown, onCancel }: Props) => {
+  const { dialogProps, backdropProps } = useModalBehavior(true, onCancel);
+  return (
+             <div className={`fixed inset-0 ${MODAL_LAYER.dialogOverlay} ${MODAL_BACKDROP} flex items-center justify-center cursor-default`} {...backdropProps}>
+                <div {...dialogProps} className="bg-slate-950 p-10 rounded-[2rem] border border-white/20 shadow-2xl text-center outline-none">
                    <div className="w-20 h-20 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
                       <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                    </div>
@@ -23,4 +27,5 @@ export const ShortcutCaptureOverlay = ({ onKeyDown, onCancel }: Props) => (
                    <button onClick={onCancel} className="text-white/40 hover:text-white text-xs font-bold uppercase tracking-widest hover:underline">Cancel</button>
                 </div>
              </div>
-);
+  );
+};

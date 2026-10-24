@@ -3,6 +3,8 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import type { ActiveColors } from '../../hooks/useAppTheme';
 import type { HistoryItem } from '../../types';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER } from '../../constants/modalLayers';
 
 interface FullscreenAnalysisProps {
   isOpen: boolean;
@@ -19,11 +21,12 @@ interface FullscreenAnalysisProps {
 export const FullscreenAnalysis: React.FC<FullscreenAnalysisProps> = ({ 
   isOpen, onClose, history = [], transcript, isDark, activeColors, appLang, renderFormattedTranscript, loadHistoryItem 
 }) => {
+  const { dialogProps } = useModalBehavior(isOpen, onClose);
   if (!isOpen) return null;
 
   // Rendered on <body>: inside the main content (z-10) the app sidebar would cover its history panel
   return createPortal(
-    <div className="fixed inset-0 z-[90] flex bg-slate-950 animate-in fade-in duration-500 overflow-hidden">
+    <div {...dialogProps} className={`fixed inset-0 ${MODAL_LAYER.view} flex bg-slate-950 animate-in fade-in duration-500 overflow-hidden outline-none`}>
       {/* Sidebar - Full History */}
       <aside className={`w-[400px] lg:w-[480px] flex flex-col border-r border-white/10 ${isDark ? 'bg-slate-900' : 'bg-slate-900'}`}>
         <header className="p-10 border-b border-white/10 shrink-0">

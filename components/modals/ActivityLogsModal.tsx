@@ -5,6 +5,8 @@ import { ActivityLogFilters } from './activityLogs/ActivityLogFilters';
 import { ActivityLogList } from './activityLogs/ActivityLogList';
 import type { ActiveColors } from '../../hooks/useAppTheme';
 import { uiText } from '../../utils/uiText';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
 
 interface ActivityLogsModalProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
   const { size, isMinimized, setIsMinimized, isMaximized, setIsMaximized, startResizing } =
     useModalResize(1000, 750, 'logs-modal-container', 600, 500);
   const logsState = useActivityLogs(isOpen);
+  const { dialogProps, backdropProps } = useModalBehavior(isOpen && !isMinimized, onClose);
 
   useEffect(() => {
     if (isOpen) setIsMinimized(false);
@@ -28,7 +31,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
   return (
     <>
       {/* Minimized Floating Widget */}
-      <div className={`fixed bottom-24 right-20 z-[120] animate-in slide-in-from-bottom-10 fade-in duration-300 ${isMinimized ? 'block' : 'hidden'}`}>
+      <div className={`fixed bottom-24 right-20 ${MODAL_LAYER.minimized} animate-in slide-in-from-bottom-10 fade-in duration-300 ${isMinimized ? 'block' : 'hidden'}`}>
          <div
            onClick={() => setIsMinimized(false)}
            className={`flex items-center gap-3 px-5 py-3 rounded-xl shadow-2xl border cursor-pointer hover:scale-105 transition-transform ${isDark ? 'bg-slate-900 border-white/20 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
@@ -40,10 +43,11 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
       </div>
 
       {/* Full Modal - Hidden via CSS when minimized */}
-      <div className={`fixed inset-0 z-[115] flex items-center justify-center p-0 bg-slate-950/60 backdrop-blur-xl animate-in fade-in duration-300 ${isMinimized ? 'hidden' : 'flex'}`}>
+      <div className={`fixed inset-0 ${MODAL_LAYER.panel} flex items-center justify-center p-0 ${MODAL_BACKDROP} animate-in fade-in duration-300 ${isMinimized ? 'hidden' : 'flex'}`} {...backdropProps}>
       <div
         id="logs-modal-container"
-        className={`rounded-[3rem] border shadow-2xl overflow-hidden flex flex-col relative ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+        {...dialogProps}
+        className={`rounded-[3rem] border shadow-2xl overflow-hidden flex flex-col relative outline-none ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
         style={{
             width: isMaximized ? '100vw' : `${size.width}px`,
             height: isMaximized ? '100vh' : `${size.height}px`,
@@ -72,7 +76,7 @@ export const ActivityLogsModal: React.FC<ActivityLogsModalProps> = ({ isOpen, on
             <button onClick={() => setIsMaximized(!isMaximized)} className="w-8 h-8 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/5 group">
                 <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M20 8V4m0 0h-4M4 16v4m0 0h4M20 16v4m0 0h-4"/></svg>
             </button>
-            <button onClick={onClose} className="w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/10 group">
+            <button onClick={onClose} aria-label={uiText(appLang, 'close')} className="w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/10 group">
                 <svg className="w-6 h-6 transition-transform group-hover:scale-110 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>

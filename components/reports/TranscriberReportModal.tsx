@@ -1,6 +1,8 @@
 import React from 'react';
 import { useTranscriberReportLogic } from './hooks/useTranscriberReportLogic';
 import type { ActiveColors } from '../../hooks/useAppTheme';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER } from '../../constants/modalLayers';
 
 export const TranscriberReportModal = ({ 
   isOpen, onClose, isDark, activeColors, appLang 
@@ -24,11 +26,12 @@ export const TranscriberReportModal = ({
     ROWS_FIRST_PAGE,
     ROWS_OTHER_PAGES
   } = useTranscriberReportLogic(isOpen);
+  const { dialogProps } = useModalBehavior(isOpen, onClose);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] bg-slate-900 flex flex-col animate-in fade-in duration-200">
+    <div {...dialogProps} className={`fixed inset-0 ${MODAL_LAYER.dialog} bg-slate-900 flex flex-col animate-in fade-in duration-200 outline-none`}>
         
         {/* Header Controls - Dark Theme for Contrast */}
         <div className="px-6 py-4 bg-slate-800 border-b border-slate-700 flex flex-wrap gap-4 items-center justify-between shadow-lg shrink-0 z-20">

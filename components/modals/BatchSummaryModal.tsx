@@ -2,6 +2,8 @@ import React from 'react';
 import { FailedFile } from '../../hooks/useBatchProcessor';
 import type { ActiveColors } from '../../hooks/useAppTheme';
 import { uiText } from '../../utils/uiText';
+import { useModalBehavior } from '../../hooks/useModalBehavior';
+import { MODAL_LAYER, MODAL_BACKDROP } from '../../constants/modalLayers';
 
 interface BatchSummaryModalProps {
   isOpen: boolean;
@@ -24,15 +26,17 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
   isDark,
   activeColors
 }) => {
+  const { dialogProps, backdropProps } = useModalBehavior(isOpen, onClose);
   if (!isOpen) return null;
 
   const totalFiles = processedCount + failedFiles.length;
   const hasFailed = failedFiles.length > 0;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className={`fixed inset-0 ${MODAL_LAYER.dialog} flex items-center justify-center p-4 sm:p-6 ${MODAL_BACKDROP} animate-in fade-in duration-200`} {...backdropProps}>
       <div 
-        className={`w-full max-w-lg rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 ${isDark ? 'bg-slate-900 border border-white/10' : 'bg-white border border-slate-200'}`}
+        {...dialogProps}
+        className={`w-full max-w-lg rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 outline-none ${isDark ? 'bg-slate-900 border border-white/10' : 'bg-white border border-slate-200'}`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className={`p-6 sm:p-8 border-b ${isDark ? 'border-white/10' : 'border-slate-100'} flex items-center justify-between`}>
@@ -53,7 +57,7 @@ export const BatchSummaryModal: React.FC<BatchSummaryModalProps> = ({
               </p>
             </div>
           </div>
-          <button onClick={onClose} className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isDark ? 'hover:bg-white/10 text-white/50 hover:text-white' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'}`}>
+          <button onClick={onClose} aria-label={uiText(appLang, 'close')} className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isDark ? 'hover:bg-white/10 text-white/50 hover:text-white' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>

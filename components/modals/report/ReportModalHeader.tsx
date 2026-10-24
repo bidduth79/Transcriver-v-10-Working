@@ -10,10 +10,11 @@ interface Props {
   isMaximized: boolean;
   setIsMaximized: (v: boolean) => void;
   onClose: () => void;
+  closeLabel: string;
 }
 
 // Title, generate/history tabs and window buttons
-export const ReportModalHeader = ({ activeColors, viewMode, historyCount, onSelectView, setIsMinimized, isMaximized, setIsMaximized, onClose }: Props) => (
+export const ReportModalHeader = ({ activeColors, viewMode, historyCount, onSelectView, setIsMinimized, isMaximized, setIsMaximized, onClose, closeLabel }: Props) => (
         <header className="px-12 py-10 bg-slate-950 text-white flex items-center justify-between shrink-0 cursor-move">
           <div className="flex items-center gap-6 group">
             <div className={`w-14 h-14 ${activeColors.primary} rounded-2xl flex items-center justify-center shadow-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6`}>
@@ -35,7 +36,7 @@ export const ReportModalHeader = ({ activeColors, viewMode, historyCount, onSele
             <button onClick={() => setIsMaximized(!isMaximized)} className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/5 group">
                 <svg className="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 8V4m0 0h4M20 8V4m0 0h-4M4 16v4m0 0h4M20 16v4m0 0h-4"/></svg>
             </button>
-            <button onClick={onClose} className="w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/5 group">
+            <button onClick={onClose} aria-label={closeLabel} className="w-12 h-12 flex items-center justify-center hover:bg-white/10 rounded-full transition-all border border-white/5 group">
                 <svg className="w-6 h-6 transition-transform group-hover:scale-110 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>

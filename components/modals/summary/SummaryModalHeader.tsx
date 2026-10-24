@@ -8,10 +8,11 @@ interface Props {
   onMinimize: () => void;
   onToggleMaximize: () => void;
   onClose: (e?: React.MouseEvent) => void;
+  closeLabel: string;
 }
 
 // Title, live/history tabs and window buttons
-export const SummaryModalHeader = ({ activeColors, viewMode, onSelectView, onMinimize, onToggleMaximize, onClose }: Props) => (
+export const SummaryModalHeader = ({ activeColors, viewMode, onSelectView, onMinimize, onToggleMaximize, onClose, closeLabel }: Props) => (
         <header className="px-12 py-10 border-b border-white/10 flex items-center justify-between bg-slate-900 text-white shrink-0 relative z-[110] shadow-xl cursor-move">
           <div className="flex items-center gap-10">
             <div className={`w-20 h-20 ${activeColors?.primary || 'bg-indigo-600'} rounded-[2.5rem] flex items-center justify-center shadow-2xl ring-4 ring-white/10 transition-transform hover:rotate-3`}>
@@ -35,6 +36,7 @@ export const SummaryModalHeader = ({ activeColors, viewMode, onSelectView, onMin
             </button>
             <button
                 onClick={onClose}
+                aria-label={closeLabel}
                 className="w-16 h-16 flex items-center justify-center bg-white/10 hover:bg-red-600 hover:text-white rounded-full transition-all text-white border border-white/20 active:scale-90 shadow-lg group"
             >
                 <svg className="w-8 h-8 transition-transform group-hover:scale-110 group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" /></svg>
