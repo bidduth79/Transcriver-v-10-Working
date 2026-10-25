@@ -6,7 +6,9 @@ export const useProcessingView = (estimatedSeconds: number, elapsedSeconds: numb
   };
 
   const remainingSeconds = Math.max(0, estimatedSeconds - elapsedSeconds);
+  // Past the estimate the countdown would sit at 00:00, so a message is shown instead
+  const isOvertime = elapsedSeconds > estimatedSeconds;
   const BACKGROUND_IMAGE_URL = "/background.jpg";
 
-  return { formatTime, remainingSeconds, BACKGROUND_IMAGE_URL };
+  return { formatTime, remainingSeconds, isOvertime, BACKGROUND_IMAGE_URL };
 };

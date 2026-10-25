@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const m = vi.hoisted(() => ({ parts: null as { blob: Blob; startSeconds: number }[] | null, running: 0, maxRunning: 0, cleanups: 0 }));
+const m = vi.hoisted(() => ({ parts: null as { blob: Blob; startSeconds: number }[] | null, running: 0, maxRunning: 0, cleanups: 0, asked: {} as Record<string, number> }));
 
 vi.mock('./audioChunks', () => ({ planAudioChunks: vi.fn(async () => m.parts) }));
 vi.mock('./geminiAudioSource', () => ({
@@ -18,10 +18,12 @@ vi.mock('./geminiTranscriptionRunner', () => ({
     m.maxRunning = Math.max(m.maxRunning, m.running);
     await new Promise(resolve => setTimeout(resolve, 5));
     m.running--;
-    const text = part.name === 'silent' ? '' : `[00:10] **Speaker 1:** ${part.name}`;
+    m.asked[part.name] = (m.asked[part.name] ?? 0) + 1;
+    // 'empty' never answers with text; 'flaky' answers only the second time
+    if (part.name === 'empty' || (part.name === 'flaky' && m.asked.flaky === 1)) return { response: { text: '', candidates: [] }, ai: {}, apiKey: 'KEY', source: 'Main', keyLabel: 'Main …KEY' };
+    const text = `[00:10] **Speaker 1:** ${part.name}`;
     return { response: { text, candidates: [{ finishReason: 'STOP' }] }, ai: {}, apiKey: 'KEY', source: 'Main', keyLabel: 'Main …KEY' };
   },
-  retryHighSensitivity: async () => null,
 }));
 
 import { transcribeAudio } from './runTranscription';
@@ -29,7 +31,7 @@ import { transcribeAudio } from './runTranscription';
 const named = (name: string) => new File(['x'], name, { type: 'audio/wav' });
 const options = () => ({ provider: { key: 'KEY', source: 'Main' }, modelName: 'gemini-3.8-flash', mode: 'pro' as const, lang: 'en' as const, setStage: vi.fn(), addToast: vi.fn() });
 
-beforeEach(() => { m.parts = null; m.running = 0; m.maxRunning = 0; m.cleanups = 0; });
+beforeEach(() => { m.parts = null; m.running = 0; m.maxRunning = 0; m.cleanups = 0; m.asked = {}; });
 
 describe('transcribeAudio', () => {
   it('sends a short recording as one request', async () => {
@@ -50,8 +52,16 @@ describe('transcribeAudio', () => {
     expect(opts.setStage).toHaveBeenLastCalledWith('Transcribing a long recording in 3 parts (3/3 done)...');
   });
 
-  it('keeps the other parts when one part has no speech', async () => {
-    m.parts = [named('p1'), named('silent')].map((blob, i) => ({ blob, startSeconds: i * 840 }));
-    expect((await transcribeAudio(named('long'), 'audio/wav', 1680, options())).text).toBe('[00:10] **Speaker 1:** p1');
+  it('asks once more, the same way, when an answer comes back empty', async () => {
+    const result = await transcribeAudio(named('flaky'), 'audio/wav', 600, options());
+    expect(result).toMatchObject({ text: '[00:10] **Speaker 1:** flaky', requests: 2, parts: 1 });
+    expect(m.asked.flaky).toBe(2);
+  });
+
+  it('reports an empty answer as an error instead of "no speech", and never leaves a silent gap', async () => {
+    const single = await transcribeAudio(named('empty'), 'audio/wav', 600, options());
+    expect(single).toMatchObject({ text: '', emptyReason: 'NO_ANSWER', requests: 2 });
+    m.parts = [named('p1'), named('empty')].map((blob, i) => ({ blob, startSeconds: i * 840 }));
+    await expect(transcribeAudio(named('long'), 'audio/wav', 1680, options())).rejects.toThrow('Gemini returned no text (part 2 of 2). Reason: NO_ANSWER');
   });
 });

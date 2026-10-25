@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   blobToBase64, removeRepetitiveBlocks, isFormatNativelySupportedByGemini,
-  calculateEstimatedSeconds, parseDurationToSeconds, detectAudioMimeType, convertAudioToWav,
+  calculateEstimatedSeconds, parseDurationToSeconds, detectAudioMimeType, convertAudioToWav, learnedSecondsPerAudioSecond,
 } from './transcriptionUtils';
 
 const bytes = (...b: number[]) => new Uint8Array([...b, ...new Array(16).fill(0)]);
@@ -31,11 +31,19 @@ describe('small helpers', () => {
     expect(isFormatNativelySupportedByGemini('video/mp4')).toBe(false);
   });
 
+  it('learns the speed from earlier transcriptions, ignoring short or unknown ones', () => {
+    expect(learnedSecondsPerAudioSecond([])).toBe(0.12);
+    const runs = [{ duration: '10:00', timeTaken: '75s' }, { duration: '20:00', timeTaken: '135s' }, { duration: '30:00', timeTaken: '555s' }];
+    expect(learnedSecondsPerAudioSecond(runs)).toBe(0.1);
+    expect(learnedSecondsPerAudioSecond([...runs.slice(0, 2), { duration: '00:30', timeTaken: '9s' }, { duration: '05:00' }])).toBe(0.12);
+  });
+
   it('calculateEstimatedSeconds and parseDurationToSeconds', () => {
-    expect(calculateEstimatedSeconds(0, 0)).toBe(10);
-    expect(calculateEstimatedSeconds(0, 20 * 1024 * 1024)).toBe(60);
-    expect(calculateEstimatedSeconds(10, 0)).toBe(8);
-    expect(calculateEstimatedSeconds(600, 0)).toBe(42);
+    expect(calculateEstimatedSeconds(0, 0)).toBe(15);
+    expect(calculateEstimatedSeconds(0, 5 * 1024 * 1024)).toBe(87);
+    expect(calculateEstimatedSeconds(10, 0)).toBe(16);
+    expect(calculateEstimatedSeconds(1676, 0)).toBe(216);
+    expect(calculateEstimatedSeconds(1676, 0, 0.2)).toBe(350);
     expect(parseDurationToSeconds(undefined)).toBe(0);
     expect(parseDurationToSeconds('02:30')).toBe(150);
     expect(parseDurationToSeconds('1:02:03')).toBe(3723);

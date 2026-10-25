@@ -1,10 +1,9 @@
 import type { GoogleGenAI, GenerateContentParameters, GenerateContentResponse } from "@google/genai";
-import type { AudioSource } from './geminiAudioSource';
 import { parseRateLimit, rateLimitWaitMs, sleepMs } from './rateLimit';
 import { getFallbackProviders, setActiveApiKey } from '../../services/ApiKeyManager';
-import { detectAudioMimeType, convertAudioToWav, blobToBase64 } from './transcriptionUtils';
+import { detectAudioMimeType, convertAudioToWav } from './transcriptionUtils';
 import { isKeyOrProjectBlockedError } from './transcriptionErrors';
-import { buildHighSensitivityRequest, releaseRequestAudio } from './geminiRequest';
+import { releaseRequestAudio } from './geminiRequest';
 import { createGeminiClient } from '../../services/apiKeys/geminiClient';
 import { messageOf } from '../../utils/errorMessage';
 
@@ -134,36 +133,4 @@ export const generateWithRecovery = async ({ provider, buildRequest, lang, setSt
   }
 
   return { response, ai, apiKey, source, keyLabel };
-};
-
-interface RetryOptions {
-  ai: GoogleGenAI;
-  apiKey: string;
-  audio: AudioSource;
-  modelName: string;
-  inputFile: Blob;
-  effectiveMimeType: string;
-}
-
-// Second attempt with a high-sensitivity prompt when the first answer had no text
-export const retryHighSensitivity = async ({ ai, apiKey, audio, modelName, inputFile, effectiveMimeType }: RetryOptions) => {
-  try {
-    // If small file wasn't converted to WAV yet, convert and normalize gain now; otherwise reuse the same audio
-    let audioPart = null;
-    if (inputFile.size <= SMALL_FILE_LIMIT && effectiveMimeType !== 'audio/wav') {
-      const wavRetry = await convertAudioToWav(inputFile, 16000);
-      if (wavRetry?.wavBlob) {
-        audioPart = { inlineData: { mimeType: 'audio/wav', data: await blobToBase64(wavRetry.wavBlob) } };
-      }
-    }
-    const request = buildHighSensitivityRequest(modelName, audioPart || await audio.partFor(ai, apiKey));
-    try {
-      return await ai.models.generateContent(request);
-    } finally {
-      releaseRequestAudio(request);
-    }
-  } catch (retryErr) {
-    console.warn("Adaptive retry failed:", retryErr);
-    return null;
-  }
 };

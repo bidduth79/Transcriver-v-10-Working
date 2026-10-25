@@ -46,8 +46,11 @@ export const createGeminiClient = async (apiKey: string): Promise<GoogleGenAI> =
     const timeoutMs = hasMedia(params.contents) ? MEDIA_TIMEOUT_MS : TEXT_TIMEOUT_MS;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const timedOut = () => Object.assign(new Error(`503 UNAVAILABLE: no answer from ${params.model} within ${timeoutMs / 1000}s`), { status: 503 });
     try {
       const response = await generate({ ...params, config: { ...params.config, abortSignal: controller.signal } });
+      // A cancelled request can come back as an empty answer instead of an error; it is a timeout, not "no text"
+      if (controller.signal.aborted) throw timedOut();
       const usage = response?.usageMetadata;
       logApiCall({
         status: 'success', model: params.model, keyTail, latency: Date.now() - started,
@@ -56,9 +59,7 @@ export const createGeminiClient = async (apiKey: string): Promise<GoogleGenAI> =
       return response;
     } catch (err) {
       logApiCall({ status: 'error', model: params.model, keyTail, latency: Date.now() - started, rateLimited: isRateLimited(err) });
-      if (controller.signal.aborted) {
-        throw Object.assign(new Error(`503 UNAVAILABLE: no answer from ${params.model} within ${timeoutMs / 1000}s`), { status: 503 });
-      }
+      if (controller.signal.aborted) throw timedOut();
       throw err;
     } finally {
       clearTimeout(timer);

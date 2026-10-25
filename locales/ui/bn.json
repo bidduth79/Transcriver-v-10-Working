@@ -367,5 +367,6 @@
   "idleReady": "প্রস্তুত (Idle)",
   "firebaseNotConfigured": "ফায়ারবেইজ কনফিগার করা নেই",
   "pleaseConfirm": "নিশ্চিত করুন",
-  "renameSpeakerTitle": "স্পীকারের নাম বদলান"
+  "renameSpeakerTitle": "স্পীকারের নাম বদলান",
+  "takingABitLonger": "আরও কিছুক্ষণ লাগছে..."
 }

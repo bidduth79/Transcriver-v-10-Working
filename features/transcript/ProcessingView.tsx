@@ -9,7 +9,7 @@ export const ProcessingView = ({
   t, isDark, textColor, activeColors, progress, currentStage, elapsedSeconds, estimatedSeconds
 }: Pick<TranscriptOutputProps, 't' | 'isDark' | 'textColor' | 'activeColors' | 'progress' | 'currentStage' | 'elapsedSeconds' | 'estimatedSeconds'>) => {
   const appLang = useThemeStore(state => state.appLang);
-  const { formatTime, remainingSeconds, BACKGROUND_IMAGE_URL } = useProcessingView(estimatedSeconds, elapsedSeconds);
+  const { formatTime, remainingSeconds, isOvertime, BACKGROUND_IMAGE_URL } = useProcessingView(estimatedSeconds, elapsedSeconds);
 
   return (
     // Changed to absolute to fit inside the parent container instead of covering the whole screen
@@ -90,7 +90,11 @@ export const ProcessingView = ({
            
            <div className="flex flex-col items-center flex-1">
               <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">REMAINING</span>
-              <span className="text-2xl font-black text-white tabular-nums">~{formatTime(remainingSeconds)}</span>
+              {isOvertime ? (
+                <span className="text-sm font-black text-white text-center font-stylish-bn">{uiText(appLang, 'takingABitLonger')}</span>
+              ) : (
+                <span className="text-2xl font-black text-white tabular-nums">~{formatTime(remainingSeconds)}</span>
+              )}
            </div>
            
            {/* Ambient glow inside container */}

@@ -3,8 +3,9 @@ import { getActiveProvider, incrementTotalCalls } from '../services/ApiKeyManage
 import { setHeavyProcessingActive } from '../services/firebaseThrottledQueue';
 import { logSystemActivity } from '../services/SystemLogger';
 import { useTranscriptionState } from './transcription/useTranscriptionState';
-import { removeRepetitiveBlocks, calculateEstimatedSeconds, parseDurationToSeconds } from './transcription/transcriptionUtils';
-import { formatErrorMessage, resolveEmptyTranscript } from './transcription/transcriptionErrors';
+import { removeRepetitiveBlocks, calculateEstimatedSeconds, parseDurationToSeconds, learnedSecondsPerAudioSecond } from './transcription/transcriptionUtils';
+import { formatErrorMessage, emptyTranscriptError } from './transcription/transcriptionErrors';
+import { useHistoryStore } from './useHistoryStore';
 import { getDecodingStage, getProgressStage } from './transcription/transcriptionStages';
 import { prepareAudio, keyLabelOf } from './transcription/geminiTranscriptionRunner';
 import { transcribeAudio } from './transcription/runTranscription';
@@ -49,14 +50,14 @@ export const useTranscription = (
     };
   }, []);
 
-  const startProgressTimer = (estimated: number) => {
+  // Elapsed time comes from the clock: a background tab slows the timer down but not the clock
+  const startProgressTimer = (estimated: number, startedAt: number) => {
     timerRef.current = window.setInterval(() => {
-      setElapsedSeconds(s => s + 1);
-      setProgress(p => {
-        const newP = Math.min(p + (100 / estimated), 98);
-        setCurrentStage(getProgressStage(newP, appLang));
-        return newP;
-      });
+      const elapsed = Math.round((Date.now() - startedAt) / 1000);
+      const newP = Math.min((elapsed / estimated) * 100, 98);
+      setElapsedSeconds(elapsed);
+      setProgress(newP);
+      setCurrentStage(getProgressStage(newP, appLang));
     }, 1000);
   };
 
@@ -82,16 +83,18 @@ export const useTranscription = (
     setElapsedSeconds(0);
 
     const audioDurationSeconds = parseDurationToSeconds(inputMetadata?.duration);
-    const estimated = calculateEstimatedSeconds(audioDurationSeconds, inputFile.size);
+    // Learned from how long earlier transcriptions took on this device
+    const estimated = calculateEstimatedSeconds(audioDurationSeconds, inputFile.size, learnedSecondsPerAudioSecond(useHistoryStore.getState().history));
 
     console.debug(`Estimating transcription time: ${estimated}s for ${audioDurationSeconds}s audio`);
     setEstimatedSeconds(estimated);
     setCurrentStage(getDecodingStage(appLang));
 
     const startTime = Date.now();
-    startProgressTimer(estimated);
+    startProgressTimer(estimated, startTime);
 
     let lastUsedKeyLabel = '';
+    let modelUsed = '';
     try {
       const provider = await getActiveProvider();
       if (!provider) {
@@ -104,6 +107,7 @@ export const useTranscription = (
 
       setCurrentStage(uiText(appLang, 'preparingAudioForAi'));
       const modelName = provider.model || DEFAULT_MODEL;
+      modelUsed = modelName;
       const result = await transcribeAudio(effectiveFile, effectiveMimeType, audioDurationSeconds, {
         provider, modelName, mode: transcriptionMode, lang: appLang, setStage: setCurrentStage, addToast,
       });
@@ -112,20 +116,14 @@ export const useTranscription = (
 
       clearTranscriptionTimer();
 
-      let fullText = removeRepetitiveBlocks(result.text);
-
-      let isNoSpeechDetected = false;
-      if (!fullText.trim()) {
-        fullText = resolveEmptyTranscript(finishReason, appLang);
-        isNoSpeechDetected = true;
-      }
+      const fullText = removeRepetitiveBlocks(result.text);
+      // The audio has speech: an answer without text is a failed request, shown as an error to retry
+      if (!fullText.trim()) throw emptyTranscriptError(result.emptyReason ?? finishReason, appLang);
 
       const actualElapsedSeconds = Math.round((Date.now() - startTime) / 1000);
       const historyItem = buildHistoryItem(inputFile, inputMetadata, fullText, actualElapsedSeconds);
 
-      if (!isNoSpeechDetected) {
-        await addToInMemoryHistory(historyItem);
-      }
+      await addToInMemoryHistory(historyItem);
 
       await incrementTotalCalls('Transcription', modelName, activeSource);
       updateApiStats();
@@ -148,13 +146,11 @@ export const useTranscription = (
       }, 50);
 
       // 2. Persist locally, 3. then optional background analysis
-      if (!isNoSpeechDetected) {
-        await persistHistoryItem(historyItem);
-      }
-      logSystemActivity('TRANSCRIPTION', 'SUCCESS', 'File Transcribed', `File: ${historyItem.fileName}`);
-      if (!isNoSpeechDetected) {
-        scheduleBgbAnalysis(historyItem, fullText);
-      }
+      await persistHistoryItem(historyItem);
+      logSystemActivity('TRANSCRIPTION', 'SUCCESS', 'File Transcribed',
+        `File: ${historyItem.fileName} | model: ${modelUsed} | audio: ${audioDurationSeconds}s | took: ${actualElapsedSeconds}s` +
+        ` (estimated ${estimated}s) | parts: ${result.parts} | requests: ${result.requests}`);
+      scheduleBgbAnalysis(historyItem, fullText);
 
       return { success: true, text: fullText };
     } catch (error) {
@@ -162,7 +158,8 @@ export const useTranscription = (
       setStatus('error');
       const safeMsg = formatErrorMessage(error, appLang, lastUsedKeyLabel);
       setErrorMessage(safeMsg);
-      logSystemActivity('TRANSCRIPTION', 'ERROR', 'Failed', safeMsg);
+      logSystemActivity('TRANSCRIPTION', 'ERROR', 'Failed',
+        `${safeMsg} | model: ${modelUsed} | audio: ${audioDurationSeconds}s | after: ${Math.round((Date.now() - startTime) / 1000)}s`);
       return { success: false, error: safeMsg, rateLimit: parseRateLimit(error) };
     } finally {
       clearTranscriptionTimer();

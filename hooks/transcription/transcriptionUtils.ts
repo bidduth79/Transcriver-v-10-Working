@@ -34,15 +34,28 @@ export const blobToBase64 = (blob: Blob): Promise<string> => {
   });
 };
 
-export const calculateEstimatedSeconds = (audioDurationSeconds: number, inputFileSize: number) => {
-    let estimated = 12;
-    if (audioDurationSeconds > 0) {
-        estimated = Math.max(8, Math.floor(6 + audioDurationSeconds * 0.06));
-    } else {
-        const sizeMB = inputFileSize / (1024 * 1024);
-        estimated = Math.max(10, Math.floor(sizeMB * 3));
-    }
-    return estimated;
+// Seconds of work per second of audio when there is nothing to learn from yet: measured on 16 to 47 minute
+// talk shows, Gemini took 8 to 15% of their length
+export const DEFAULT_SECONDS_PER_AUDIO_SECOND = 0.12;
+// Upload, preparation and the answer's first words take time even for a short clip
+const FIXED_SECONDS = 15;
+
+// The speed of earlier transcriptions (median of the last 20 with a known length and time), or the default
+export const learnedSecondsPerAudioSecond = (history: { duration?: string; timeTaken?: string | number }[]) => {
+    const rates = history
+        .map(item => ({ audio: parseDurationToSeconds(item.duration), took: parseFloat(String(item.timeTaken ?? '')) }))
+        .filter(({ audio, took }) => audio >= 60 && took > 0)
+        .slice(0, 20)
+        .map(({ audio, took }) => Math.max(0, took - FIXED_SECONDS) / audio)
+        .sort((x, y) => x - y);
+    return rates.length < 3 ? DEFAULT_SECONDS_PER_AUDIO_SECOND : rates[Math.floor(rates.length / 2)];
+};
+
+export const calculateEstimatedSeconds = (audioDurationSeconds: number, inputFileSize: number, secondsPerAudioSecond = DEFAULT_SECONDS_PER_AUDIO_SECOND) => {
+    if (audioDurationSeconds > 0) return Math.round(FIXED_SECONDS + audioDurationSeconds * secondsPerAudioSecond);
+    // Length unknown: about a minute of speech per 0.5 MB of compressed audio
+    const sizeMB = inputFileSize / (1024 * 1024);
+    return Math.round(FIXED_SECONDS + sizeMB * 120 * secondsPerAudioSecond);
 };
 
 export const parseDurationToSeconds = (durationStr: string | undefined): number => {

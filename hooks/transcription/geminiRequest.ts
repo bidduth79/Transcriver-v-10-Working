@@ -10,8 +10,9 @@ const SAFETY_SETTINGS = [
   { category: 'HARM_CATEGORY_DANGEROUS_CONTENT' as HarmCategory, threshold: 'BLOCK_NONE' as HarmBlockThreshold },
 ];
 
-const HIGH_SENSITIVITY_PROMPT = "You are an assistive speech-to-text accessibility tool. Listen carefully through any intro music, background noise, or low-volume sections, and transcribe all spoken words and dialogue in this recording into Bengali (Bangla). Format with [MM:SS] **Speaker 1:** when speech occurs.";
-const HIGH_SENSITIVITY_SYSTEM = "You are a high-sensitivity speech-to-text transcriber for user audio accessibility. Faithfully write down everything spoken in the audio in Bengali script without summarizing or stopping early.";
+// Low, so the model writes what it hears instead of filling unclear parts with likely-sounding words.
+// (Google suggests 1.0 for Gemini 3, mainly against looping; repeated blocks are removed afterwards.)
+const TRANSCRIPTION_TEMPERATURE = 0.35;
 
 // Speech-only transcribe models reject written instructions ("Developer instruction is not enabled for
 // this model") and do not follow them, so they get only the audio plus their diarization settings
@@ -55,17 +56,12 @@ export const buildTranscriptionRequest = (
   const systemInstruction = mode === 'normal' ? TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL : TRANSCRIPTION_SYSTEM_INSTRUCTION;
   const promptText = mode === 'normal' ? TRANSCRIPTION_PROMPT_TEXT_NORMAL : TRANSCRIPTION_PROMPT_TEXT;
   const thinkingConfig = buildThinkingConfig(modelName);
-  // No temperature: Google asks to keep Gemini 3 models at the default (1.0); lower values can cause looping
   return buildAudioRequest(modelName, audioPart, promptText, {
     systemInstruction,
+    temperature: TRANSCRIPTION_TEMPERATURE,
     ...(thinkingConfig ? { thinkingConfig } : {}),
   });
 };
-
-export const buildHighSensitivityRequest = (modelName: string, audioPart: Part): GenerateContentParameters =>
-  buildAudioRequest(modelName, audioPart, HIGH_SENSITIVITY_PROMPT, {
-    systemInstruction: HIGH_SENSITIVITY_SYSTEM,
-  });
 
 // Drop the large base64 audio payload from memory as soon as the request is done
 // Only the parts of a request this touches; `contents` is always a list in this app's requests

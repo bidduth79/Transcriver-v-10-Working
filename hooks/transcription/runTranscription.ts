@@ -1,8 +1,10 @@
+import type { GenerateContentResponse } from '@google/genai';
 import { buildTranscriptionRequest, extractResponseText } from './geminiRequest';
-import { generateWithRecovery, retryHighSensitivity, type BuildRequest } from './geminiTranscriptionRunner';
+import { generateWithRecovery, type BuildRequest } from './geminiTranscriptionRunner';
 import { createAudioSource } from './geminiAudioSource';
 import { planAudioChunks, type AudioChunk } from './audioChunks';
 import { shiftTimestamps } from './timestampShift';
+import { emptyTranscriptError } from './transcriptionErrors';
 
 type Lang = 'en' | 'bn';
 type Toast = (msg: string, type: 'success' | 'error' | 'info' | 'warning') => void;
@@ -18,41 +20,48 @@ interface TranscribeOptions {
 
 // Parts of a long recording sent to Gemini at the same time
 const PARALLEL_PARTS = 2;
+// Answers that asking again would not change
+const FINAL_REASONS = ['SAFETY', 'RECITATION', 'MAX_TOKENS'];
 
-// One request for one piece of audio, with the key fallbacks and the high-sensitivity retry for empty answers
+// Why an answer has no text: a block of the request, the model's finish reason, or no answer at all
+const emptyReasonOf = (response: GenerateContentResponse | null) =>
+  response?.promptFeedback?.blockReason || response?.candidates?.[0]?.finishReason || 'NO_ANSWER';
+
+// One piece of audio. An empty answer is a failed request, not silence: it is asked once more in exactly
+// the same way (never with a looser prompt, which could make the model write words that were not said).
 const transcribeOnce = async (blob: Blob, mimeType: string, options: TranscribeOptions) => {
   const { provider, modelName, mode, lang, setStage, addToast } = options;
   const source = createAudioSource(blob, mimeType);
   try {
     const buildRequest: BuildRequest = async (ai, key) => buildTranscriptionRequest(modelName, mode, await source.partFor(ai, key));
-    const result = await generateWithRecovery({ provider, buildRequest, lang, setStage, addToast });
-    let response = result.response;
-    let text = extractResponseText(response);
-    const firstFinishReason = response?.candidates?.[0]?.finishReason;
-
-    // Auto-recovery if no text was produced on first attempt (due to RECITATION, intro music, low volume, or decoder quirk)
-    if (!text.trim() && firstFinishReason !== 'SAFETY' && firstFinishReason !== 'MAX_TOKENS') {
-      console.warn(`Empty transcript on first attempt (finishReason: ${firstFinishReason}). Retrying with enhanced sensitivity...`);
-      setStage(lang === 'bn'
-        ? 'কণ্ঠস্বর গভীরভাবে শনাক্ত করতে বিকল্প মোডে পুনরায় চেষ্টা করা হচ্ছে...'
-        : 'Retrying with high-sensitivity speech detection...');
-      const retryResp = await retryHighSensitivity({ ai: result.ai, apiKey: result.apiKey, audio: source, modelName, inputFile: blob, effectiveMimeType: mimeType });
-      const retryText = extractResponseText(retryResp);
-      if (retryText.trim()) {
-        text = retryText;
-        response = retryResp;
-      }
+    let result = await generateWithRecovery({ provider, buildRequest, lang, setStage, addToast });
+    let text = extractResponseText(result.response);
+    let requests = 1;
+    if (!text.trim() && !FINAL_REASONS.includes(emptyReasonOf(result.response))) {
+      console.warn(`Empty answer (${emptyReasonOf(result.response)}); asking once more with the same request`);
+      setStage(lang === 'bn' ? 'উত্তর খালি এসেছে, একই ভাবে আবার চেষ্টা করা হচ্ছে...' : 'The answer was empty; asking once more...');
+      result = await generateWithRecovery({ provider: { key: result.apiKey, source: result.source }, buildRequest, lang, setStage, addToast });
+      text = extractResponseText(result.response);
+      requests = 2;
     }
-    const finishReason: string | undefined = response?.candidates?.[0]?.finishReason;
-    return { text, finishReason, source: result.source, keyLabel: result.keyLabel };
+    return {
+      text,
+      finishReason: result.response?.candidates?.[0]?.finishReason as string | undefined,
+      emptyReason: text.trim() ? undefined : emptyReasonOf(result.response),
+      requests,
+      source: result.source,
+      keyLabel: result.keyLabel,
+    };
   } finally {
     source.cleanup();
   }
 };
 
+type PieceResult = Awaited<ReturnType<typeof transcribeOnce>>;
+
 const transcribeParts = async (parts: AudioChunk[], options: TranscribeOptions) => {
   const { lang, setStage } = options;
-  const results: Awaited<ReturnType<typeof transcribeOnce>>[] = new Array(parts.length);
+  const results: PieceResult[] = new Array(parts.length);
   let next = 0;
   let done = 0;
   const showProgress = () => setStage(lang === 'bn'
@@ -72,23 +81,27 @@ const transcribeParts = async (parts: AudioChunk[], options: TranscribeOptions) 
   };
   await Promise.all(Array.from({ length: Math.min(PARALLEL_PARTS, parts.length) }, worker));
 
-  const text = results
-    .map((result, i) => shiftTimestamps(result.text.trim(), parts[i].startSeconds))
-    .filter(Boolean)
-    .join('\n');
-  const empty = results.find(result => !result.text.trim());
+  // A part without text would leave a silent gap in the middle of the transcript
+  const emptyIndex = results.findIndex(result => !result.text.trim());
+  if (emptyIndex !== -1) {
+    throw emptyTranscriptError(results[emptyIndex].emptyReason, lang, { part: emptyIndex + 1, parts: parts.length });
+  }
+  const text = results.map((result, i) => shiftTimestamps(result.text.trim(), parts[i].startSeconds)).join('\n');
   const last = results[results.length - 1];
-  return { text, finishReason: text ? last.finishReason : empty?.finishReason, source: last.source, keyLabel: last.keyLabel };
+  return {
+    text, finishReason: last.finishReason, emptyReason: undefined, parts: parts.length,
+    requests: results.reduce((sum, r) => sum + r.requests, 0), source: last.source, keyLabel: last.keyLabel,
+  };
 };
 
 /**
- * Transcribes prepared audio. Recordings over 30 minutes (WAV or MP3) are cut into parts that are
- * transcribed two at a time and joined with their timestamps moved to the right place; a part that
+ * Transcribes prepared audio. Recordings over 30 minutes (WAV, MP3 or Ogg Opus) are cut into parts that
+ * are transcribed two at a time and joined with their timestamps moved to the right place; a part that
  * fails is retried on its own by the usual key fallbacks.
  */
 export const transcribeAudio = async (blob: Blob, mimeType: string, durationSeconds: number, options: TranscribeOptions) => {
   const parts = await planAudioChunks(blob, mimeType, durationSeconds).catch(() => null);
   if (parts && parts.length > 1) return transcribeParts(parts, options);
   options.setStage(options.lang === 'bn' ? 'এআই সার্ভারে সম্পূর্ণ অডিও বিশ্লেষণ ও ট্রান্সক্রাইব করা হচ্ছে...' : 'Transcribing media on AI server...');
-  return transcribeOnce(blob, mimeType, options);
+  return { ...(await transcribeOnce(blob, mimeType, options)), parts: 1 };
 };

@@ -88,7 +88,7 @@ describe('useTranscription.processTranscription', () => {
     const [key, req] = m.generate.mock.calls[0];
     expect(key).toBe('KEY-AAAA');
     expect(req.model).toBe('gemini-3.8-flash');
-    expect(req.config).not.toHaveProperty('temperature');
+    expect(req.config.temperature).toBe(0.35);
     expect(req.config.safetySettings).toHaveLength(4);
     expect(req.config.thinkingConfig).toBeUndefined();
     expect(req.contents[0].parts[0].inlineData).toEqual({ mimeType: 'audio/mpeg', data: 'BASE64' });
@@ -155,22 +155,22 @@ describe('useTranscription.processTranscription', () => {
     expect(out.error).toContain('Primary (****AAAA)');
   });
 
-  it('retries with high-sensitivity prompt when the first answer is empty', async () => {
+  it('asks once more with the same request (not a looser one) when the first answer is empty', async () => {
     m.generate.mockResolvedValueOnce(resp('')).mockResolvedValueOnce(resp('retry text'));
     const { run } = setup();
     const out = await run();
     expect(out.text).toBe('retry text');
     expect(m.generate).toHaveBeenCalledTimes(2);
-    expect(m.generate.mock.calls[1][1].config.systemInstruction).toContain('high-sensitivity');
+    expect(m.generate.mock.calls[1][1].config.systemInstruction).toBe(m.generate.mock.calls[0][1].config.systemInstruction);
   });
 
-  it('returns a no-speech marker and skips saving when nothing is heard', async () => {
+  it('shows an error to retry, never a "no speech" text, when Gemini returns nothing', async () => {
     m.generate.mockResolvedValue(resp(''));
-    const { run } = setup();
+    const { run, result } = setup();
     const out = await run();
-    expect(out.text).toContain('No audible speech detected');
+    expect(out).toMatchObject({ success: false, error: expect.stringContaining('Gemini') });
+    expect(result.current.status).toBe('error');
     expect(m.addToStore).not.toHaveBeenCalled();
-    expect(m.setHistory).not.toHaveBeenCalled();
   });
 
   it('fails with safety message on SAFETY finish reason', async () => {

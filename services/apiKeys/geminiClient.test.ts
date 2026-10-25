@@ -7,6 +7,8 @@ vi.mock('@google/genai', () => ({
     const next = m.queue.length ? m.queue.shift() : m.next;
     // 'hang': never answers, like an overloaded model, until the request is cancelled
     if (next === 'hang') return new Promise((_, reject) => p.config.abortSignal.addEventListener('abort', () => reject(new Error('aborted'))));
+    // 'hangEmpty': the same, but the cancelled request comes back as an empty answer instead of an error
+    if (next === 'hangEmpty') return new Promise(resolve => p.config.abortSignal.addEventListener('abort', () => resolve({ candidates: [] })));
     if (next instanceof Error) throw next;
     return next;
   } }; },
@@ -81,6 +83,16 @@ describe('request time limit', () => {
     await vi.advanceTimersByTimeAsync(2000 + 90000 + 6000 + 90000);
     expect(await p).toEqual({ text: 'fallback' });
     expect(m.models).toEqual(['gemini-3.8-flash', 'gemini-3.8-flash', 'gemini-3.8-flash', 'gemini-3.5-flash']);
+    vi.useRealTimers();
+  });
+
+  it('treats a cancelled request that comes back empty as a timeout, not as an answer', async () => {
+    vi.useFakeTimers();
+    m.queue = ['hangEmpty', { text: 'second try' }];
+    const p = (await createGeminiClient('K')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' });
+    await vi.advanceTimersByTimeAsync(90000 + 2000);
+    expect(await p).toEqual({ text: 'second try' });
+    expect(m.logged[0]).toMatchObject({ status: 'error' });
     vi.useRealTimers();
   });
 

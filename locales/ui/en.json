@@ -367,5 +367,6 @@
   "idleReady": "Ready (Idle)",
   "firebaseNotConfigured": "Firebase is not configured",
   "pleaseConfirm": "Please confirm",
-  "renameSpeakerTitle": "Rename speaker"
+  "renameSpeakerTitle": "Rename speaker",
+  "takingABitLonger": "A little longer..."
 }

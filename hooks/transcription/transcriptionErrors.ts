@@ -84,22 +84,27 @@ export const formatErrorMessage = (rawError: unknown, lang: 'bn' | 'en', keyInfo
   return rawMsg.length > 300 ? rawMsg.substring(0, 300) + '...' : rawMsg;
 };
 
-// Throws for blocked/limited responses; otherwise returns the "no speech" placeholder text.
-export const resolveEmptyTranscript = (finishReason: string | undefined, lang: 'bn' | 'en'): string => {
-  if (finishReason === 'SAFETY') {
-    throw new Error(lang === 'bn'
+/**
+ * The error for an answer without text. It is never shown as "no speech": the audio has speech, so an
+ * empty answer means the request failed (busy server, time limit, or a block). `piece` names the part of a
+ * long recording that came back empty.
+ */
+export const emptyTranscriptError = (reason: string | undefined, lang: 'bn' | 'en', piece?: { part: number; parts: number }): Error => {
+  if (reason === 'SAFETY') {
+    return new Error(lang === 'bn'
       ? 'এআই নিরাপত্তা নীতিমালার কারণে এই অডিওটির ট্রান্সক্রিপশন সম্পন্ন করা সম্ভব হয়নি।'
       : 'Transcription was blocked by AI safety policy.');
-  } else if (finishReason === 'RECITATION') {
-    throw new Error(lang === 'bn'
+  } else if (reason === 'RECITATION') {
+    return new Error(lang === 'bn'
       ? 'অডিওটিতে থাকা বক্তব্য/উদ্ধৃতি কপিরাইট বা রিসিটেশন ফিল্টারে পড়েছে। অনুগ্রহ করে Settings থেকে অন্য কোনো মডেল (যেমন: Gemini 3.5 Flash বা 3.5 Flash Lite) অথবা Normal মোড দিয়ে পুনরায় চেষ্টা করুন।'
       : 'Transcription was blocked due to copyright or recitation policies. Please select another model in Settings or try Normal mode.');
-  } else if (finishReason === 'MAX_TOKENS') {
-    throw new Error(lang === 'bn'
+  } else if (reason === 'MAX_TOKENS') {
+    return new Error(lang === 'bn'
       ? 'টোকেন লিমিট পূর্ণ হয়ে গেছে। অনুগ্রহ করে অডিও ফাইলটি ছোট করে পুনরায় চেষ্টা করুন।'
       : 'Token limit reached. Please use a shorter audio clip.');
   }
-  return lang === 'bn'
-    ? '[কোনো কথা বা কণ্ঠস্বর সনাক্ত করা যায়নি / No audible speech detected]'
-    : '[No audible speech detected in audio file]';
+  const where = piece ? (lang === 'bn' ? ` (${piece.parts}টি অংশের ${piece.part} নম্বর অংশে)` : ` (part ${piece.part} of ${piece.parts})`) : '';
+  return new Error(lang === 'bn'
+    ? `Gemini কোনো লেখা ফেরত দেয়নি${where}। কারণ: ${reason || 'NO_ANSWER'}। সার্ভার ব্যস্ত থাকতে পারে, কিছুক্ষণ পর আবার চেষ্টা করুন।`
+    : `Gemini returned no text${where}. Reason: ${reason || 'NO_ANSWER'}. The server may be busy; please try again shortly.`);
 };

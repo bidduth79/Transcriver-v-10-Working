@@ -5,14 +5,14 @@ vi.mock('../../services/ApiKeyManager', () => ({
   isSpeedOptimizationEnabled: () => false,
 }));
 
-import { buildTranscriptionRequest, buildHighSensitivityRequest, extractResponseText } from './geminiRequest';
+import { buildTranscriptionRequest, extractResponseText } from './geminiRequest';
 import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT } from '../../constants/instructions';
 
 const audio = { inlineData: { mimeType: 'audio/wav', data: 'AAA' } };
 
 // The fields these tests look at, read without the SDK's wide union types
 interface RequestView {
-  config: { systemInstruction?: unknown; safetySettings: unknown[]; httpOptions: { extraBody: { generationConfig: { audioTranscriptionConfig: unknown } } } };
+  config: { systemInstruction?: unknown; safetySettings: unknown[]; temperature?: number; httpOptions: { extraBody: { generationConfig: { audioTranscriptionConfig: unknown } } } };
   contents: { parts: unknown[] }[];
 }
 const view = (request: unknown) => request as RequestView;
@@ -23,10 +23,12 @@ describe('Gemini transcription requests', () => {
     expect(req.config.systemInstruction).toBe(TRANSCRIPTION_SYSTEM_INSTRUCTION);
     expect(req.contents[0].parts).toEqual([audio, { text: TRANSCRIPTION_PROMPT_TEXT }]);
     expect(req.config.safetySettings).toHaveLength(4);
+    // Low, so unclear parts are not filled with invented words
+    expect(req.config.temperature).toBe(0.35);
   });
 
   it('sends speech-only transcribe models just the audio with diarization turned on', () => {
-    for (const req of [buildTranscriptionRequest('gemini-3.5-transcribe', 'pro', audio), buildHighSensitivityRequest('gemini-3.5-transcribe', audio)].map(view)) {
+    for (const req of [buildTranscriptionRequest('gemini-3.5-transcribe', 'pro', audio), buildTranscriptionRequest('gemini-3.5-transcribe', 'normal', audio)].map(view)) {
       expect(req.config).not.toHaveProperty('systemInstruction');
       expect(req.contents[0].parts).toEqual([audio]);
       expect(req.config.httpOptions.extraBody.generationConfig.audioTranscriptionConfig).toEqual({ diarization: true, wordTimestamp: true });
