@@ -1,6 +1,5 @@
-// Splits a long WAV, MP3 or Ogg Opus recording into parts without decoding it: the parts are slices of
-// the original file (plus a small header for WAV, rewritten pages for Ogg), so memory stays low.
-import { splitOggOpus } from './oggChunks';
+// Splits a long WAV or MP3 recording into parts without decoding it: the parts are slices of the
+// original file (plus a small header for WAV), so memory stays low even for hours of audio.
 
 export const SPLIT_FROM_SECONDS = 30 * 60;
 // Under 15 minutes, the limit of speech-only models when they separate speakers
@@ -121,13 +120,12 @@ const splitMp3 = async (blob: Blob, head: Uint8Array, duration: number): Promise
 
 /**
  * The parts to transcribe one by one, or null when the recording is short enough for one request or is
- * not a WAV, MP3 or Ogg Opus file (other formats cannot be cut without decoding them).
+ * not a WAV/MP3 file (other formats cannot be cut without decoding them).
  */
 export const planAudioChunks = async (blob: Blob, mimeType: string, durationSeconds: number): Promise<AudioChunk[] | null> => {
   const head = await readBytes(blob, 0, 65536);
   const wav = readWavFormat(head, blob.size);
   if (wav) return splitWav(blob, wav);
-  if (ascii(head, 0) === 'OggS') return splitOggOpus(blob, SPLIT_FROM_SECONDS, CHUNK_SECONDS);
   const looksMp3 = /mpeg|mp3/.test(mimeType) || ascii(head, 0).startsWith('ID3') || isMp3FrameStart(head, 0);
   return looksMp3 && durationSeconds > 0 ? splitMp3(blob, head, durationSeconds) : null;
 };

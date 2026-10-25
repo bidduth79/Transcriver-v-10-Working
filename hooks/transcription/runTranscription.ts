@@ -95,7 +95,7 @@ const transcribeParts = async (parts: AudioChunk[], options: TranscribeOptions) 
 };
 
 /**
- * Transcribes prepared audio. Recordings over 30 minutes (WAV, MP3 or Ogg Opus) are cut into parts that
+ * Transcribes prepared audio. Recordings over 30 minutes (WAV or MP3) are cut into parts that
  * are transcribed two at a time and joined with their timestamps moved to the right place; a part that
  * fails is retried on its own by the usual key fallbacks.
  */
