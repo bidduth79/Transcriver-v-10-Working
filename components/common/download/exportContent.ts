@@ -36,7 +36,14 @@ const srtTime = (total: number) => `${pad(Math.floor(total / 3600))}:${pad(Math.
 // One cue per line, each lasting 5 seconds from its timestamp (lines without one start at 00:00)
 export const buildSrtBlob = (transcript: unknown) => {
   let srtContent = "";
-  const lines = normalizeTimestamps(transcript).split('\n').filter((l: string) => l && typeof l === 'string' && l.trim() !== "");
+  // A paragraph without its own time continues the timed subtitle before it (a transcript without any times is unchanged)
+  const lines = normalizeTimestamps(transcript).split('\n').filter((l: string) => l && typeof l === 'string' && l.trim() !== "")
+    .reduce<string[]>((cues, line) => {
+      const previous = cues[cues.length - 1];
+      if (previous !== undefined && CUE_TIME_REGEX.test(previous) && !CUE_TIME_REGEX.test(line)) cues[cues.length - 1] += ` ${line.trim()}`;
+      else cues.push(line);
+      return cues;
+    }, []);
   lines.forEach((line: string, index: number) => {
     const timeMatch = line.match(CUE_TIME_REGEX);
     const [hours, mins, secs] = timeMatch

@@ -71,6 +71,6 @@ export const parseDurationToSeconds = (durationStr: string | undefined): number 
     return audioDurationSeconds;
 };
 
-export { removeRepetitiveBlocks } from './textCleanup';
+export { removeRepetitiveBlocks, splitLongParagraphs } from './textCleanup';
 export { isFormatNativelySupportedByGemini, detectAudioMimeType } from './audioMimeDetection';
 export { convertAudioToWav } from './wavConversion';

@@ -1,5 +1,6 @@
 import React, { useRef, useMemo } from 'react';
 import { useTranscriptFormatter } from './hooks/useTranscriptFormatter.tsx';
+import { splitLongParagraphs } from '../../hooks/transcription/textCleanup';
 
 // Robust Regex Escaping
 export const escapeRegExp = (string: string) => {
@@ -54,7 +55,8 @@ export const FormattedTranscript = React.memo(({
     if (!text) return [];
     
     // Force a newline before any timestamp like [07:41] or (1:23:45) so that inline speakers get separated properly
-    const textWithNewlines = text.replace(/([\[\(](?:[0-9০-৯]{1,2}:)?[0-9০-৯]{1,2}:[0-9০-৯]{2}[\]\)])/g, '\n$1');
+    // Older transcripts may hold one huge paragraph; it is shown in readable pieces (the saved text is unchanged)
+    const textWithNewlines = splitLongParagraphs(text).replace(/([\[\(](?:[0-9০-৯]{1,2}:)?[0-9০-৯]{1,2}:[0-9০-৯]{2}[\]\)])/g, '\n$1');
     
     return textWithNewlines
       .split('\n')

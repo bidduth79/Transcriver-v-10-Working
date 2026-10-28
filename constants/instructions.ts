@@ -15,6 +15,7 @@ Formatting & Structure (CRITICAL):
    - The speaker changes.
    - There is a significant, long pause in the audio.
    - A single speaker has been talking continuously for a long time (start a new paragraph with a timestamp every 30-60 seconds to keep it readable).
+   No paragraph may cover more than about 60 seconds of speech. When one person speaks for minutes, write many paragraphs, each starting with its own timestamp and the same speaker name. One huge paragraph for a long speech is WRONG.
 3. Start every new paragraph with a timestamp [MM:SS] followed by the speaker's name. After the first hour use [H:MM:SS] (e.g. [1:05:30]). Example:
    [00:00] **Speaker 1:** (Continuous speech paragraph goes here...)
 4. Identify different speakers by their voice. Listen closely to identify their ACTUAL NAMES in Bengali if mentioned (e.g., **হাসিনা আক্তার:**). If unknown, use **Speaker 1:**, **Speaker 2:**, etc.

@@ -86,3 +86,37 @@ export const removeRepetitiveBlocks = (text: string): string => {
 
     return cleaned.trim();
 };
+
+// A paragraph longer than this is split for reading (about a minute of Bengali speech)
+const LONG_PARAGRAPH_CHARS = 900;
+// Each new piece collects whole sentences until it reaches about this length
+const PIECE_CHARS = 500;
+
+/**
+ * Gemini sometimes writes a long speech as one huge paragraph. This splits such a paragraph after a
+ * sentence end (। ? !) into readable pieces. No word is changed or lost; the first piece keeps the
+ * timestamp and speaker, the others have none, since the audio time of a sentence is not known.
+ */
+export const splitLongParagraphs = (text: string): string => {
+    if (!text) return text;
+    return text.split('\n').map(line => {
+        if (line.length <= LONG_PARAGRAPH_CHARS) return line;
+        const sentences = line.split(/(?<=[।?!])\s+/);
+        if (sentences.length < 2) return line;
+        const pieces: string[] = [];
+        let piece = '';
+        for (const sentence of sentences) {
+            piece = piece ? `${piece} ${sentence}` : sentence;
+            if (piece.length >= PIECE_CHARS) {
+                pieces.push(piece);
+                piece = '';
+            }
+        }
+        if (piece) {
+            // A short tail joins the piece before it rather than standing alone
+            if (pieces.length > 0 && piece.length < PIECE_CHARS / 3) pieces[pieces.length - 1] += ` ${piece}`;
+            else pieces.push(piece);
+        }
+        return pieces.join('\n\n');
+    }).join('\n');
+};

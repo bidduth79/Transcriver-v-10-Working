@@ -3,7 +3,7 @@ import { getActiveProvider, incrementTotalCalls } from '../services/ApiKeyManage
 import { setHeavyProcessingActive } from '../services/firebaseThrottledQueue';
 import { logSystemActivity } from '../services/SystemLogger';
 import { useTranscriptionState } from './transcription/useTranscriptionState';
-import { removeRepetitiveBlocks, calculateEstimatedSeconds, parseDurationToSeconds, learnedSecondsPerAudioSecond } from './transcription/transcriptionUtils';
+import { removeRepetitiveBlocks, splitLongParagraphs, calculateEstimatedSeconds, parseDurationToSeconds, learnedSecondsPerAudioSecond } from './transcription/transcriptionUtils';
 import { formatErrorMessage, emptyTranscriptError } from './transcription/transcriptionErrors';
 import { useHistoryStore } from './useHistoryStore';
 import { getDecodingStage, getProgressStage } from './transcription/transcriptionStages';
@@ -116,7 +116,7 @@ export const useTranscription = (
 
       clearTranscriptionTimer();
 
-      const fullText = removeRepetitiveBlocks(result.text);
+      const fullText = splitLongParagraphs(removeRepetitiveBlocks(result.text));
       // The audio has speech: an answer without text is a failed request, shown as an error to retry
       if (!fullText.trim()) throw emptyTranscriptError(result.emptyReason ?? finishReason, appLang);
 
