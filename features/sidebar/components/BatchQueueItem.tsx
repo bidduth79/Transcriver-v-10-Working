@@ -2,6 +2,7 @@ import React from 'react';
 import type { HistoryItem } from '../../../types';
 import type { FailedFile } from '../../../hooks/useBatchProcessor';
 import { uiText } from '../../../utils/uiText';
+import { isSameRecording } from '../../../utils/sameRecording';
 
 interface Props {
   file: File;
@@ -28,11 +29,10 @@ export const BatchQueueItem = ({
             const isProcessed = index < currentBatchIndex;
             const isFailed = failedFiles.some(f => f.file.name === file.name);
             const fileSizeMb = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+            // Same name (and size, when history knows it), or the same recording saved under another date
             const isDuplicate = !isProcessed && history.some(h => {
-              if (h.size) {
-                return h.fileName === file.name && h.size === fileSizeMb;
-              }
-              return h.fileName === file.name;
+              if (h.fileName !== file.name) return isSameRecording(file, { name: h.fileName, size: h.size });
+              return h.size ? h.size === fileSizeMb : true;
             });
             
             const itemBg = index === currentBatchIndex 

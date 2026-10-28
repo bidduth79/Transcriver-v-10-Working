@@ -5,7 +5,7 @@ import {
   type WatchFolderHandle, isFolderWatchSupported, pickWatchFolder, canReadFolder, listFolderFiles,
   saveWatchFolder, loadWatchFolder, forgetWatchFolder,
 } from '../services/watchFolder';
-import { pickNewFiles, fileKey } from './batch/folderWatchUtils';
+import { pickNewFiles } from './batch/folderWatchUtils';
 import { useHistoryStore } from './useHistoryStore';
 import { useBackgroundJobStore } from './transcription/useBackgroundJobStore';
 import { uiText } from '../utils/uiText';
@@ -62,7 +62,8 @@ export const stopWatchFolder = async () => {
 export const useFolderWatch = (appLang: string, isBatchProcessing: boolean, runFiles: (files: File[]) => void) => {
   const handle = useFolderWatchStore(state => state.handle);
   const status = useFolderWatchStore(state => state.status);
-  const takenRef = useRef(new Set<string>());
+  // Files handed to a batch in this session: not taken again, even when they failed
+  const takenRef = useRef<File[]>([]);
   const lastSizesRef = useRef(new Map<string, number>());
   // Read after the folder is listed, so a batch started meanwhile is seen
   const isBusyRef = useRef(isBatchProcessing);
@@ -95,11 +96,11 @@ export const useFolderWatch = (appLang: string, isBatchProcessing: boolean, runF
       useFolderWatchStore.getState().setWatch(handle, 'needsPermission');
       return;
     }
-    const doneNames = new Set(useHistoryStore.getState().history.map(item => item.fileName));
-    const { ready, sizes } = pickNewFiles(files, { doneNames, taken: takenRef.current, lastSizes: lastSizesRef.current });
+    const history = useHistoryStore.getState().history.map(item => ({ name: item.fileName, size: item.size }));
+    const { ready, sizes } = pickNewFiles(files, { done: [...history, ...takenRef.current], lastSizes: lastSizesRef.current });
     lastSizesRef.current = sizes;
     if (ready.length === 0 || isBusy()) return;
-    ready.forEach(file => takenRef.current.add(fileKey(file)));
+    takenRef.current.push(...ready);
     toast.info(uiText(appLang, 'watchFolderNewFiles', { count: ready.length }));
     runFiles(ready);
   });

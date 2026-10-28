@@ -10,6 +10,7 @@ import { useBackgroundJobStore, isJobInBackground } from './transcription/useBac
 import { getDecodingStage, getProgressStage } from './transcription/transcriptionStages';
 import { prepareAudio, keyLabelOf } from './transcription/geminiTranscriptionRunner';
 import { transcribeAudio } from './transcription/runTranscription';
+import { modelForAudioLength } from './transcription/transcribeModel';
 import { parseRateLimit, type RateLimitInfo } from './transcription/rateLimit';
 import type { FileMeta } from '../types';
 import { buildHistoryItem, addToInMemoryHistory, persistHistoryItem, scheduleBgbAnalysis } from './transcription/transcriptionHistory';
@@ -113,7 +114,9 @@ export const useTranscription = (
       const { effectiveFile, effectiveMimeType } = await prepareAudio(inputFile, currentFileName);
 
       setCurrentStage(uiText(appLang, 'preparingAudioForAi'));
-      const modelName = provider.model || DEFAULT_MODEL;
+      const chosenModel = provider.model || DEFAULT_MODEL;
+      const modelName = modelForAudioLength(chosenModel, audioDurationSeconds);
+      if (modelName !== chosenModel) addToast(uiText(appLang, 'longAudioOtherModel', { model: modelName }), 'info');
       modelUsed = modelName;
       const result = await transcribeAudio(effectiveFile, effectiveMimeType, audioDurationSeconds, {
         provider, modelName, mode: transcriptionMode, lang: appLang, setStage: setCurrentStage, addToast,

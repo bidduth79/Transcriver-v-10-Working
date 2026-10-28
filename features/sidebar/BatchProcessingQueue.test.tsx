@@ -52,6 +52,16 @@ describe('BatchProcessingQueue behavior', () => {
     expect(label(6)).toHaveLength(0);
   });
 
+  it('marks the same recording saved under another date as a duplicate', () => {
+    const { container } = setup({
+      batchQueue: [f('Talk_2026-10-28.opus', 2), f('Other_2026-10-28.opus', 2)], currentBatchIndex: 0, hasBatchStarted: false, failedFiles: [],
+      history: [{ fileName: 'Talk_2026-10-27.opus', size: '2.00 MB' }],
+    });
+    const label = (i: number) => row(container, i).querySelectorAll('span.text-\\[10px\\]');
+    expect(label(0)).toHaveLength(1);
+    expect(label(1)).toHaveLength(0);
+  });
+
   it('wires per-item buttons', () => {
     const { container, props } = setup();
     const btn = (i: number, title: string) => byTitle(row(container, i), title);
