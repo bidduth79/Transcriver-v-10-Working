@@ -377,5 +377,13 @@
   "backgroundOpen": "Open",
   "unclearListenHint": "Could not be made out: click to listen to this part",
   "speakersLabel": "Speakers:",
-  "renameSpeakerHint": "Click to rename this speaker everywhere"
+  "renameSpeakerHint": "Click to rename this speaker everywhere",
+  "watchFolderButton": "Watch a folder: new audio put in it is transcribed by itself",
+  "watchFolderStarted": "Watching \"{name}\": new audio in it will be transcribed while the app is open",
+  "watchFolderBlocked": "This browser does not allow folder access here. Open the app in Chrome or Edge on a computer.",
+  "watchFolderNewFiles": "{count} new audio file(s) found in the watched folder, transcribing",
+  "watchFolderWatching": "Watching: {name}",
+  "watchFolderNeedsPermission": "Allow access to \"{name}\" again",
+  "watchFolderAllow": "Allow",
+  "watchFolderStop": "Stop watching this folder"
 }

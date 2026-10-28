@@ -377,5 +377,13 @@
   "backgroundOpen": "খুলুন",
   "unclearListenHint": "বোঝা যায়নি: এই অংশ শুনতে ক্লিক করুন",
   "speakersLabel": "বক্তা:",
-  "renameSpeakerHint": "পুরো ট্রান্সক্রিপ্টে এই বক্তার নাম বদলাতে ক্লিক করুন"
+  "renameSpeakerHint": "পুরো ট্রান্সক্রিপ্টে এই বক্তার নাম বদলাতে ক্লিক করুন",
+  "watchFolderButton": "ফোল্ডার নজরে রাখুন: এতে নতুন অডিও রাখলে নিজে থেকেই ট্রান্সক্রাইব হবে",
+  "watchFolderStarted": "\"{name}\" নজরে রাখা হচ্ছে: অ্যাপ খোলা থাকলে এতে রাখা নতুন অডিও ট্রান্সক্রাইব হবে",
+  "watchFolderBlocked": "এখানে ব্রাউজার ফোল্ডার পড়ার অনুমতি দিচ্ছে না। কম্পিউটারে Chrome বা Edge-এ অ্যাপ খুলুন।",
+  "watchFolderNewFiles": "নজরে রাখা ফোল্ডারে {count}টি নতুন অডিও পাওয়া গেছে, ট্রান্সক্রাইব শুরু হচ্ছে",
+  "watchFolderWatching": "নজরে রাখা হচ্ছে: {name}",
+  "watchFolderNeedsPermission": "\"{name}\" পড়ার অনুমতি আবার দিন",
+  "watchFolderAllow": "অনুমতি দিন",
+  "watchFolderStop": "এই ফোল্ডার আর নজরে রাখবেন না"
 }

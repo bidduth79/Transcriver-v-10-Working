@@ -147,10 +147,9 @@ export const useBatchProcessor = (
     }
   };
 
-  const retryFailedFiles = () => {
-    if (failedFiles.length === 0) return;
-    const filesToRetry = failedFiles.map(f => f.file);
-    setBatchQueue(filesToRetry);
+  // Starts a new batch with these files right away (failed files again, or new files from a watched folder)
+  const runFiles = (files: File[]) => {
+    setBatchQueue(files);
     setCurrentBatchIndex(0);
     setFailedFiles([]);
     setProcessedCount(0);
@@ -159,7 +158,12 @@ export const useBatchProcessor = (
     setHasBatchStarted(true);
     setIsBatchPaused(false);
     setIsBatchProcessing(true);
-    processNextBatchFile(filesToRetry, 0);
+    processNextBatchFile(files, 0);
+  };
+
+  const retryFailedFiles = () => {
+    if (failedFiles.length === 0) return;
+    runFiles(failedFiles.map(f => f.file));
   };
 
   return {
@@ -173,6 +177,6 @@ export const useBatchProcessor = (
     failedFiles, processedCount,
     progress, etaSeconds,
     isBatchSummaryOpen, setIsBatchSummaryOpen,
-    startBatch, pauseBatch, resumeBatch, cancelBatch, skipNextBatchFile, jumpToBatchFile, removeBatchFile, retryFailedFiles
+    startBatch, pauseBatch, resumeBatch, cancelBatch, skipNextBatchFile, jumpToBatchFile, removeBatchFile, retryFailedFiles, runFiles
   };
 };

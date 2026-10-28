@@ -4,6 +4,7 @@ import { isMicrophoneEnabled } from '../../hooks/useAudioRecorder.ts';
 import { useFileDrop } from './hooks/useFileDrop';
 import type { AudioVideoInputProps } from './sidebarTypes';
 import { uiText } from '../../utils/uiText';
+import { WatchFolderButton, WatchFolderStatus } from './components/WatchFolderControl';
 
 export const AudioVideoInput = ({
   t,
@@ -68,6 +69,8 @@ export const AudioVideoInput = ({
                 >
                     <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
                 </button>
+
+                <WatchFolderButton isDark={isDark} appLang={appLang} />
                 
                 {micActive && (
                   <button 
@@ -98,6 +101,8 @@ export const AudioVideoInput = ({
               multiple
               accept="audio/*,video/*,.opus"
             />
+
+            <WatchFolderStatus isDark={isDark} appLang={appLang} />
 
             {/* Contextual Area based on Selection */}
             {activeTab === 'upload' && (

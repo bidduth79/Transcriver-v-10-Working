@@ -8,6 +8,7 @@ import { useTranscription } from './useTranscription';
 import { useTranscriptSearch } from './useTranscriptSearch';
 import { useBatchProcessor } from './useBatchProcessor';
 import { useFileHandler } from './useFileHandler';
+import { useFolderWatch } from './useFolderWatch';
 import { useAudioRecorder } from './useAudioRecorder';
 import { useAudioPlayback } from './useAudioPlayback';
 import { useAppEventListeners } from './useAppEventListeners';
@@ -109,10 +110,12 @@ export function useAppCore() {
     failedFiles, processedCount, retryFailedFiles,
     progress: batchProgress, etaSeconds,
     isBatchSummaryOpen, setIsBatchSummaryOpen,
-    startBatch, pauseBatch, resumeBatch, cancelBatch, skipNextBatchFile, jumpToBatchFile, removeBatchFile
+    startBatch, pauseBatch, resumeBatch, cancelBatch, skipNextBatchFile, jumpToBatchFile, removeBatchFile, runFiles
   } = useBatchProcessor(
     appLang, addToast, setFile, setFileUrl, setActiveHistoryId, setTranscriptMeta, setFileMeta, processTranscription
   );
+
+  useFolderWatch(appLang, isBatchProcessing, runFiles);
 
   const { handleFileChange } = useFileHandler({
     appLang, addToast, setFile, setFileUrl, fileUrl, setActiveHistoryId, setTranscriptMeta, setTranscript, setStatus,
