@@ -61,7 +61,7 @@ export const performMasterSync = async (onProgress: (msg: string, p: number) => 
 
             onProgress(uiText(currentAppLang(), 'syncingStore', { store: displayStoreName }), Math.round((i / totalStores) * 100));
 
-            // Fetch from all sources (Local, IDB, Firebase, Supabase) and deduplicate
+            // Fetch from all sources (Local, IDB, Firebase) and deduplicate
             const allData = await fetchDataDual(store, true);
 
             if (allData.length === 0) {

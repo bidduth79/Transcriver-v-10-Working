@@ -1,7 +1,7 @@
 
 import { fetchDataDual, saveDataDual, deleteDataDual } from './api.ts';
 import { useAppStore } from '../hooks/useAppStore';
-import { AUTO_SYNC_XAMPP_ENABLED, AUTO_SYNC_SUPABASE_ENABLED, AUTO_SYNC_FIREBASE_ENABLED } from './syncEngine';
+import { AUTO_SYNC_XAMPP_ENABLED, AUTO_SYNC_FIREBASE_ENABLED } from './syncEngine';
 
 export const DB_NAME = 'LiCellStudioDB_v5_Final'; 
 export const DB_VERSION = 3;
@@ -92,7 +92,7 @@ export const addToStore = async (storeName: string, data: object) => {
     pruneYoutubeAudioStore(15);
   }
 
-  const isAutoSyncActive = AUTO_SYNC_XAMPP_ENABLED || AUTO_SYNC_SUPABASE_ENABLED || AUTO_SYNC_FIREBASE_ENABLED;
+  const isAutoSyncActive = AUTO_SYNC_XAMPP_ENABLED || AUTO_SYNC_FIREBASE_ENABLED;
   if (storeName !== STORES.YOUTUBE_AUDIO && isAutoSyncActive) {
     saveDataDual(storeName, data as StoredRecord).catch(err => {
       console.warn(`Background save failed for ${storeName}:`, err);
@@ -124,7 +124,7 @@ export const getAllFromStore = async (storeName: string, forceSync = false) => {
     request.onerror = () => reject(request.error);
   });
 
-  const isAutoSyncActive = AUTO_SYNC_XAMPP_ENABLED || AUTO_SYNC_SUPABASE_ENABLED || AUTO_SYNC_FIREBASE_ENABLED;
+  const isAutoSyncActive = AUTO_SYNC_XAMPP_ENABLED || AUTO_SYNC_FIREBASE_ENABLED;
 
   // Only run background cloud sync if explicitly forced (manual sync) and auto-sync is active
   if (forceSync && storeName !== STORES.YOUTUBE_AUDIO && isAutoSyncActive) {
@@ -162,7 +162,7 @@ export const deleteFromStore = async (storeName: string, id: string) => {
     request.onerror = () => reject(request.error);
   });
 
-  const isAutoSyncActive = AUTO_SYNC_XAMPP_ENABLED || AUTO_SYNC_SUPABASE_ENABLED || AUTO_SYNC_FIREBASE_ENABLED;
+  const isAutoSyncActive = AUTO_SYNC_XAMPP_ENABLED || AUTO_SYNC_FIREBASE_ENABLED;
   if (storeName !== STORES.YOUTUBE_AUDIO && isAutoSyncActive) {
     deleteDataDual(storeName, id).catch(err => {
       console.warn(`Background delete failed for ${storeName}:`, err);

@@ -2,14 +2,13 @@ import { get, set } from 'idb-keyval';
 import { db, authPromise } from './firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { tombstoneFor } from './firebaseSync/tombstone';
-import { getSupabase } from './supabase';
 import { getApiUrl, isLocalServerEnabled } from '../utils/config';
-import { AUTO_SYNC_SUPABASE_ENABLED, AUTO_SYNC_FIREBASE_ENABLED } from './syncEngine';
+import { AUTO_SYNC_FIREBASE_ENABLED } from './syncEngine';
 
 import type { StoredRecord } from '../types';
 
 interface SyncTask {
-    target: string; // 'supabase' | 'firebase' | 'local'
+    target: string; // 'firebase' | 'local' (older queues may still hold 'supabase' tasks; they are dropped)
     action: string; // 'save' | 'delete'
     storeName: string;
     id: string;
@@ -21,7 +20,6 @@ const QUEUE_KEY = 'sync_queue';
 
 export const addToQueue = async (target: string, action: string, storeName: string, id: string, payload?: StoredRecord) => {
     if (target === 'local' && !isLocalServerEnabled()) return;
-    if (target === 'supabase' && !AUTO_SYNC_SUPABASE_ENABLED) return;
     if (target === 'firebase' && !AUTO_SYNC_FIREBASE_ENABLED) return;
 
     try {
@@ -37,7 +35,7 @@ export const addToQueue = async (target: string, action: string, storeName: stri
 
 export const processQueue = async () => {
     if (!navigator.onLine) return;
-    const isAnyActive = isLocalServerEnabled() || AUTO_SYNC_SUPABASE_ENABLED || AUTO_SYNC_FIREBASE_ENABLED;
+    const isAnyActive = isLocalServerEnabled() || AUTO_SYNC_FIREBASE_ENABLED;
     if (!isAnyActive) {
         // Clear stale queue if all sync targets are disabled
         try { await set(QUEUE_KEY, []); } catch (e) { console.warn('Could not clear the sync queue:', e); }
@@ -53,7 +51,7 @@ export const processQueue = async () => {
         for (const task of queue) {
             // Discard tasks for disabled sync targets immediately
             if (task.target === 'local' && !isLocalServerEnabled()) continue;
-            if (task.target === 'supabase' && !AUTO_SYNC_SUPABASE_ENABLED) continue;
+            if (task.target !== 'local' && task.target !== 'firebase') continue;
             if (task.target === 'firebase' && !AUTO_SYNC_FIREBASE_ENABLED) continue;
 
             // Discard tasks older than 1 hour or failed more than 2 times
@@ -71,14 +69,6 @@ export const processQueue = async () => {
                         await setDoc(doc(db, task.storeName, task.id), tombstoneFor(task.id));
                     }
                     success = true;
-                } else if (task.target === 'supabase' && AUTO_SYNC_SUPABASE_ENABLED) {
-                    if (task.action === 'save') {
-                        const { error } = await (await getSupabase()).from(task.storeName).upsert({ id: task.id, data: task.payload });
-                        if (!error) success = true;
-                    } else if (task.action === 'delete') {
-                        const { error } = await (await getSupabase()).from(task.storeName).delete().eq('id', task.id);
-                        if (!error) success = true;
-                    }
                 } else if (task.target === 'local' && isLocalServerEnabled()) {
                     const url = task.action === 'save' 
                         ? getApiUrl(`api.php?action=save&store=${task.storeName}`)

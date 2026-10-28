@@ -8,7 +8,7 @@ export const STORES = {
   YOUTUBE_AUDIO: 'youtube_audio'
 };
 
-// API keys are secrets: they stay on this device and are never copied to Firebase or Supabase.
+// API keys are secrets: they stay on this device and are never copied to Firebase.
 // Older versions also synced the (now unused) master and YouTube key stores, so their cloud copies are removed too.
 export const SECRET_STORES = [STORES.API_KEYS, 'system_master_keys', 'youtube_api_keys'];
 

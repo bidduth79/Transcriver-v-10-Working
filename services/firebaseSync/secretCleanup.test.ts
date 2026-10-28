@@ -22,7 +22,7 @@ const fakeIdb: any = {
 beforeEach(() => { m.deleted = []; localStorage.clear(); });
 
 describe('API keys stay off the cloud', () => {
-  it('no secret store is synced to Firebase or Supabase', () => {
+  it('no secret store is synced to Firebase', () => {
     expect(SECRET_STORES).toEqual(['user_api_keys', 'system_master_keys', 'youtube_api_keys']);
     expect(FIREBASE_SYNCED_STORES.some(s => SECRET_STORES.includes(s))).toBe(false);
     // Only stores the app uses are synced (each synced store costs Firebase reads at every app start)

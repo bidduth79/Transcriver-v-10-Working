@@ -16,7 +16,6 @@
   "dependencies": {
     "@abdalgolabs/ansi-unicode-converter": "^1.0.5",
     "@google/genai": "^2.31.0",
-    "@supabase/supabase-js": "^2.113.0",
     "@tanstack/react-virtual": "^3.14.3",
     "@types/express": "^5.0.6",
     "@types/ws": "^8.18.2",

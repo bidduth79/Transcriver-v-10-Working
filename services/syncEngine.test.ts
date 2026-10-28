@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const m = vi.hoisted(() => ({
-  local: { value: false }, fbConfigured: { value: true }, sbConfigured: { value: true },
-  idb: [] as any[], fb: [] as any[], sbPages: [] as any[][], sbError: null as any,
+  local: { value: false }, fbConfigured: { value: true },
+  idb: [] as any[], fb: [] as any[],
   setDoc: vi.fn(async () => {}), addToQueue: vi.fn(),
-  enqueueWrite: vi.fn(), enqueueDelete: vi.fn(), upsert: vi.fn(), sbDelete: vi.fn(),
+  enqueueWrite: vi.fn(), enqueueDelete: vi.fn(),
 }));
 
 vi.mock('./firebase', () => ({ get db() { return m.fbConfigured.value ? {} : null; }, get isFirebaseConfigured() { return m.fbConfigured.value; }, auth: {}, authPromise: Promise.resolve() }));
@@ -14,16 +14,6 @@ vi.mock('firebase/firestore', () => ({
   setDoc: m.setDoc, serverTimestamp: () => 'SERVER_TIME',
 }));
 vi.mock('../utils/config', () => ({ getApiUrl: (p: string) => `http://local/${p}`, isLocalServerEnabled: () => m.local.value }));
-vi.mock('./supabase', () => ({
-  get isSupabaseConfigured() { return m.sbConfigured.value; },
-  getSupabase: async () => ({
-    from: () => ({
-      select: () => ({ range: async (from: number) => ({ data: m.sbPages[from / 50] || [], error: m.sbError }) }),
-      upsert: (row: any) => { m.upsert(row); return Promise.resolve({ error: m.sbError }); },
-      delete: () => ({ eq: (_k: string, id: string) => { m.sbDelete(id); return Promise.resolve({ error: m.sbError }); } }),
-    }),
-  }),
-}));
 vi.mock('./syncQueue', () => ({ addToQueue: m.addToQueue }));
 vi.mock('./firebaseThrottledQueue', () => ({ enqueueFirebaseWrite: m.enqueueWrite, enqueueFirebaseDelete: m.enqueueDelete }));
 vi.mock('./db', () => ({
@@ -37,8 +27,8 @@ const ok = (body: any) => ({ ok: true, text: async () => JSON.stringify(body) })
 
 beforeEach(() => {
   vi.clearAllMocks();
-  m.local.value = false; m.fbConfigured.value = true; m.sbConfigured.value = true;
-  m.idb = []; m.fb = []; m.sbPages = []; m.sbError = null;
+  m.local.value = false; m.fbConfigured.value = true;
+  m.idb = []; m.fb = [];
   vi.stubGlobal('fetch', fetchMock);
   fetchMock.mockReset();
 });
@@ -46,7 +36,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('flags', () => {
   it('keeps auto-sync defaults', () => {
-    expect([SE.AUTO_SYNC_XAMPP_ENABLED, SE.AUTO_SYNC_SUPABASE_ENABLED, SE.AUTO_SYNC_FIREBASE_ENABLED]).toEqual([false, false, true]);
+    expect([SE.AUTO_SYNC_XAMPP_ENABLED, SE.AUTO_SYNC_FIREBASE_ENABLED]).toEqual([false, true]);
   });
 });
 
@@ -64,30 +54,27 @@ describe('fetchDataDual', () => {
     expect(await SE.fetchDataDual('activity_logs')).toEqual([{ id: 'a' }]);
   });
 
-  it('with forceAll pages through the local API and Supabase', async () => {
+  it('with forceAll pages through the local API', async () => {
     m.local.value = true;
     fetchMock
       .mockResolvedValueOnce(ok(Array.from({ length: 200 }, (_, i) => ({ data: { id: `L${i}` } }))))
       .mockResolvedValueOnce(ok([{ id: 'L200' }]));
-    m.sbPages = [Array.from({ length: 50 }, (_, i) => ({ data: { id: `S${i}` } })), [{ id: 'S50' }]];
     const all = await SE.fetchDataDual('studio_history', true);
-    expect(all).toHaveLength(201 + 51);
+    expect(all).toHaveLength(201);
     expect(fetchMock.mock.calls.map(c => c[0])).toEqual([
       'http://local/api.php?action=get&store=studio_history&page=1&limit=200',
       'http://local/api.php?action=get&store=studio_history&page=2&limit=200',
     ]);
   });
 
-  it('tolerates bad JSON, HTTP errors, disabled local server and Supabase errors', async () => {
+  it('tolerates bad JSON, HTTP errors and a disabled local server', async () => {
     m.local.value = true;
     fetchMock.mockResolvedValueOnce({ ok: true, text: async () => '{bad' });
-    m.sbError = { message: 'nope' };
     m.fbConfigured.value = false;
     expect(await SE.fetchDataDual('studio_history', true)).toEqual([]);
     fetchMock.mockResolvedValueOnce({ ok: false });
     expect(await SE.fetchDataDual('activity_logs', true)).toEqual([]);
     m.local.value = false;
-    m.sbConfigured.value = false;
     expect(await SE.fetchDataDual('studio_history', true)).toEqual([]);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
@@ -98,7 +85,6 @@ describe('saveDataDual / deleteDataDual', () => {
     expect(await SE.saveDataDual('studio_history', { id: 7, t: 'x' })).toBe(true);
     expect(m.enqueueWrite).toHaveBeenCalledWith('studio_history', '7', { id: '7', t: 'x' });
     expect(m.setDoc).not.toHaveBeenCalled();
-    expect(m.upsert).not.toHaveBeenCalled();
     await SE.deleteDataDual('studio_history', '7');
     expect(m.enqueueDelete).toHaveBeenCalledWith('studio_history', '7');
   });
@@ -110,16 +96,13 @@ describe('saveDataDual / deleteDataDual', () => {
     expect(fetchMock).toHaveBeenCalledWith('http://local/api.php?action=save&store=studio_history', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"id":"a","t":1}' });
     expect(m.addToQueue).toHaveBeenCalledWith('local', 'save', 'studio_history', 'a', { id: 'a', t: 1 });
     expect(m.setDoc).toHaveBeenCalledWith('studio_history/a', { id: 'a', t: 1, _syncedAt: 'SERVER_TIME' });
-    expect(m.upsert).toHaveBeenCalledWith({ id: 'a', data: { id: 'a', t: 1 } });
     expect(m.enqueueWrite).not.toHaveBeenCalled();
 
     fetchMock.mockRejectedValueOnce(new Error('down'));
-    m.sbError = { message: 'x' };
     await SE.deleteDataDual('studio_history', 'a', true);
     expect(fetchMock).toHaveBeenLastCalledWith('http://local/api.php?action=delete&store=studio_history&id=a');
     expect(m.addToQueue).toHaveBeenLastCalledWith('local', 'delete', 'studio_history', 'a');
     expect(m.setDoc).toHaveBeenLastCalledWith('studio_history/a', { id: 'a', _deleted: true, _syncedAt: 'SERVER_TIME' });
-    expect(m.sbDelete).toHaveBeenCalledWith('a');
     expect(m.addToQueue).toHaveBeenCalledTimes(2);
   });
 

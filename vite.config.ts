@@ -60,14 +60,13 @@ export default defineConfig(({ mode }) => {
       build: {
         rolldownOptions: {
           output: {
-            // The same vendor chunks as before. Firestore Lite and the Supabase SDK are
-            // imported only when used, so their chunks still download only then.
+            // The same vendor chunks as before. Firestore Lite is imported only when used,
+            // so its chunk still downloads only then.
             codeSplitting: {
               groups: [
                 { name: 'vendor-react', test: inPackages('react', 'react-dom', 'scheduler') },
                 { name: 'vendor-firebase', test: (id: string) => inPackages('firebase', '@firebase')(id) && !/[\\/]lite[\\/]/.test(id) },
                 { name: 'vendor-ui', test: inPackages('framer-motion', 'motion-dom', 'motion-utils', 'lucide-react') },
-                { name: 'vendor-supabase', test: inPackages('@supabase') },
                 { name: 'vendor-i18n', test: inPackages('i18next', 'react-i18next') },
               ],
             },

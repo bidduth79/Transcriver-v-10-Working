@@ -1,11 +1,10 @@
 import { db, authPromise, isFirebaseConfigured } from './firebase';
 import { doc, setDoc } from "firebase/firestore";
 import { getApiUrl, isLocalServerEnabled } from '../utils/config';
-import { getSupabase, isSupabaseConfigured } from './supabase';
 import { addToQueue } from './syncQueue';
 import { FIREBASE_SYNCED_STORES } from '../constants/storeNames';
 import { enqueueFirebaseWrite, enqueueFirebaseDelete } from './firebaseThrottledQueue';
-import { fetchFromPrimaryIdb, fetchFromLocalApi, fetchFromFirebase, fetchFromSupabase } from './sync/syncSources';
+import { fetchFromPrimaryIdb, fetchFromLocalApi, fetchFromFirebase } from './sync/syncSources';
 import { withSyncStamp } from './firebaseSync/syncStamp';
 import { tombstoneFor } from './firebaseSync/tombstone';
 import { packForCloud } from './firebaseSync/transcriptCompression';
@@ -16,7 +15,6 @@ import type { StoredRecord } from '../types';
 // ----------------------------------------------------------------------------
 // Local XAMPP server sync is dynamically controlled via isLocalServerEnabled() (Settings toggle)
 export const AUTO_SYNC_XAMPP_ENABLED = false; // Kept for compatibility; use isLocalServerEnabled()
-export const AUTO_SYNC_SUPABASE_ENABLED = false;  // Supabase অটো সেভ
 export const AUTO_SYNC_FIREBASE_ENABLED = true;   // Firebase ব্যাকগ্রাউন্ড অটো সেভ (ধীরে ধীরে ব্যাকগ্রাউন্ডে প্রেরিত)
 // ============================================================================
 
@@ -33,9 +31,6 @@ export const fetchDataDual = async (storeName: string, forceAll = false) => {
   if (FIREBASE_SYNCED_STORES.includes(storeName)) {
     if (forceAll || AUTO_SYNC_FIREBASE_ENABLED) {
       promises.push(fetchFromFirebase(storeName));
-    }
-    if (forceAll || AUTO_SYNC_SUPABASE_ENABLED) {
-      promises.push(fetchFromSupabase(storeName));
     }
   }
 
@@ -94,19 +89,6 @@ export const saveDataDual = async (storeName: string, data: StoredRecord, forceA
       }
     }
 
-    // 3. Supabase Write (with config guard)
-    if ((forceAll || AUTO_SYNC_SUPABASE_ENABLED) && isSupabaseConfigured) {
-      promises.push(
-        getSupabase().then(client => client.from(storeName).upsert({ id: id, data: payload })).then(({ error }) => {
-            if (error) throw error;
-        }).catch((e: Error) => {
-            console.warn("Supabase save failed, queuing...", e.message);
-            if (AUTO_SYNC_SUPABASE_ENABLED) {
-              addToQueue('supabase', 'save', storeName, id, payload);
-            }
-        })
-      );
-    }
   }
 
   await Promise.allSettled(promises);
@@ -143,18 +125,6 @@ export const deleteDataDual = async (storeName: string, id: string, forceAll = f
       }
     }
 
-    // Supabase delete (with config guard)
-    if ((forceAll || AUTO_SYNC_SUPABASE_ENABLED) && isSupabaseConfigured) {
-      promises.push(
-        getSupabase().then(client => client.from(storeName).delete().eq('id', id)).then(({ error }) => {
-            if (error) throw error;
-        }).catch(() => {
-          if (AUTO_SYNC_SUPABASE_ENABLED) {
-            addToQueue('supabase', 'delete', storeName, id);
-          }
-        })
-      );
-    }
   }
 
   await Promise.allSettled(promises);

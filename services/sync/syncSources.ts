@@ -1,13 +1,12 @@
 import { db, authPromise, isFirebaseConfigured } from '../firebase';
 import { collection, getDocs } from "firebase/firestore";
 import { getApiUrl, isLocalServerEnabled } from '../../utils/config';
-import { getSupabase, isSupabaseConfigured } from '../supabase';
 import { withoutSyncStamp } from '../firebaseSync/syncStamp';
 import { unpackFromCloud } from '../firebaseSync/transcriptCompression';
 import { isTombstone } from '../firebaseSync/tombstone';
 import type { StoredRecord } from '../../types';
 
-// Local server and Supabase rows wrap the record in `data`
+// Local server rows wrap the record in `data`
 type WrappedRow = StoredRecord & { data?: StoredRecord };
 const unwrapRow = (row: WrappedRow): StoredRecord => row.data || row;
 
@@ -83,35 +82,6 @@ export const fetchFromFirebase = async (storeName: string): Promise<StoredRecord
     // Deleted items stay in the cloud only as markers
     const liveDocs = querySnapshot.docs.filter(d => !isTombstone(d.data()));
     return await Promise.all(liveDocs.map(async d => ({ id: d.id, ...await unpackFromCloud(withoutSyncStamp(d.data())) })));
-  } catch (e) {
-    return [];
-  }
-};
-
-export const fetchFromSupabase = async (storeName: string): Promise<StoredRecord[]> => {
-  if (!isSupabaseConfigured) return [];
-  try {
-    let allSupabaseData: WrappedRow[] = [];
-    let from = 0;
-    const limit = 50;
-
-    while (true) {
-      const { data, error } = await (await getSupabase()).from(storeName).select('*').range(from, from + limit - 1);
-
-      if (error) {
-        console.warn(`[Supabase Fetch] Info for ${storeName}:`, error.message || error);
-        break;
-      }
-
-      if (data && data.length > 0) {
-        allSupabaseData = allSupabaseData.concat(data);
-        if (data.length < limit) break;
-        from += limit;
-      } else {
-        break;
-      }
-    }
-    return allSupabaseData.map(unwrapRow);
   } catch (e) {
     return [];
   }
