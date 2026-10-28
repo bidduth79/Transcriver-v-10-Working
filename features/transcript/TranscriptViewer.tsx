@@ -1,6 +1,9 @@
 import React, { useRef, useMemo } from 'react';
 import { useTranscriptFormatter } from './hooks/useTranscriptFormatter.tsx';
 import { splitLongParagraphs } from '../../hooks/transcription/textCleanup';
+import { UNCLEAR_MARK } from '../../constants/instructions';
+import { useThemeStore } from '../../hooks/useThemeStore';
+import { uiText } from '../../utils/uiText';
 
 // Robust Regex Escaping
 export const escapeRegExp = (string: string) => {
@@ -46,6 +49,7 @@ export const FormattedTranscript = React.memo(({
   
   // Use the hook safely inside this component
   const { formatText } = useTranscriptFormatter(searchTerm, isDark, currentMatchIndex, sensitiveMatches);
+  const appLang = useThemeStore(state => state.appLang);
 
   // CRITICAL: Reset match index on every render to ensure consistent IDs (match-0, match-1, etc.)
   matchIndexRef.current = 0;
@@ -58,6 +62,8 @@ export const FormattedTranscript = React.memo(({
     // Older transcripts may hold one huge paragraph; it is shown in readable pieces (the saved text is unchanged)
     const textWithNewlines = splitLongParagraphs(text).replace(/([\[\(](?:[0-9০-৯]{1,2}:)?[0-9০-৯]{1,2}:[0-9০-৯]{2}[\]\)])/g, '\n$1');
     
+    // A line without its own time (a split paragraph) seeks to the last time above it
+    let lastTimestamp = '';
     return textWithNewlines
       .split('\n')
       .map((line: string) => line.trim())
@@ -82,7 +88,8 @@ export const FormattedTranscript = React.memo(({
           }
           return { isSpeaker: false, textInside: part, cleanName: '' };
         });
-        return { timestamp, parsedParts };
+        if (timestamp) lastTimestamp = timestamp;
+        return { timestamp, seekTime: lastTimestamp, parsedParts };
       });
   }, [text]);
 
@@ -90,7 +97,7 @@ export const FormattedTranscript = React.memo(({
 
   return (
     <div className="space-y-2 selection:bg-indigo-500/30">
-      {parsedLines.map(({ timestamp, parsedParts }, i) => (
+      {parsedLines.map(({ timestamp, seekTime, parsedParts }, i) => (
         <div 
           key={i}
           style={!searchTerm ? { contentVisibility: 'auto', containIntrinsicSize: '0 36px' } : undefined}
@@ -134,6 +141,24 @@ export const FormattedTranscript = React.memo(({
                 return <strong key={j} className={isDark ? 'text-indigo-400' : 'text-indigo-700'}>{item.textInside}</strong>;
               }
 
+              // Words Gemini could not make out: highlighted, and a click plays that part of the audio
+              if (item.textInside.includes(UNCLEAR_MARK)) {
+                return (
+                  <span key={j}>
+                    {item.textInside.split(UNCLEAR_MARK).map((piece, k) => (
+                      <React.Fragment key={k}>
+                        {k > 0 && (
+                          <button type="button" onClick={() => seekTime && onSeek?.(seekTime)} title={uiText(appLang, 'unclearListenHint')}
+                            className={`mx-0.5 px-1.5 rounded font-bold ${isDark ? 'bg-amber-400/20 text-amber-300' : 'bg-amber-200 text-amber-800'}`}>
+                            {UNCLEAR_MARK}
+                          </button>
+                        )}
+                        {formatText(piece, matchIndexRef)}
+                      </React.Fragment>
+                    ))}
+                  </span>
+                );
+              }
               const elements = formatText(item.textInside, matchIndexRef);
               return <span key={j}>{elements}</span>;
             })}

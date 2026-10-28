@@ -46,3 +46,6 @@ export const TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL = `You are a fast audio tra
 5. Never guess or invent words; write [অস্পষ্ট] where speech cannot be understood.`;
 
 export const TRANSCRIPTION_PROMPT_TEXT_NORMAL = "Please transcribe the entire audio quickly and accurately into Bengali. Do not use timestamps or speaker names, just provide the plain text transcription.";
+
+// The mark the instructions ask for in place of words that cannot be understood (shown highlighted)
+export const UNCLEAR_MARK = '[অস্পষ্ট]';

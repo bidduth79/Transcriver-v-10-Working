@@ -374,5 +374,6 @@
   "backgroundDone": "Transcription finished",
   "backgroundFailed": "Transcription failed",
   "backgroundShow": "Show",
-  "backgroundOpen": "Open"
+  "backgroundOpen": "Open",
+  "unclearListenHint": "Could not be made out: click to listen to this part"
 }

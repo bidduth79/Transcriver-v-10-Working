@@ -374,5 +374,6 @@
   "backgroundDone": "ট্রান্সক্রাইব শেষ",
   "backgroundFailed": "ট্রান্সক্রাইব ব্যর্থ",
   "backgroundShow": "দেখুন",
-  "backgroundOpen": "খুলুন"
+  "backgroundOpen": "খুলুন",
+  "unclearListenHint": "বোঝা যায়নি: এই অংশ শুনতে ক্লিক করুন"
 }
