@@ -1,6 +1,6 @@
 import type { HarmCategory, HarmBlockThreshold, ThinkingLevel, Part, GenerateContentConfig, GenerateContentParameters, ThinkingConfig } from "../../types/gemini";
 import { getModelDefinition, isSpeedOptimizationEnabled } from '../../services/ApiKeyManager';
-import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL, TRANSCRIPTION_PROMPT_TEXT_NORMAL } from '../../constants/instructions';
+import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL, TRANSCRIPTION_PROMPT_TEXT_NORMAL, continuationPrompt } from '../../constants/instructions';
 import { isTranscribeModel, TRANSCRIBE_HTTP_OPTIONS, formatAudioTranscription } from './transcribeModel';
 
 const SAFETY_SETTINGS = [
@@ -58,10 +58,12 @@ export const buildTranscriptionRequest = (
   modelName: string,
   mode: 'normal' | 'pro',
   audioPart: Part,
-  cleanFallback = false
+  cleanFallback = false,
+  // "[26:35]" without brackets: transcribe only what comes after it
+  continueFrom?: string
 ): GenerateContentParameters => {
   const systemInstruction = mode === 'normal' ? TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL : TRANSCRIPTION_SYSTEM_INSTRUCTION;
-  const promptText = mode === 'normal' ? TRANSCRIPTION_PROMPT_TEXT_NORMAL : TRANSCRIPTION_PROMPT_TEXT;
+  const promptText = continueFrom ? continuationPrompt(continueFrom) : mode === 'normal' ? TRANSCRIPTION_PROMPT_TEXT_NORMAL : TRANSCRIPTION_PROMPT_TEXT;
   if (cleanFallback) {
     return buildAudioRequest(modelName, audioPart, promptText, { systemInstruction });
   }

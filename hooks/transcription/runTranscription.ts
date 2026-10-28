@@ -3,7 +3,10 @@ import { buildTranscriptionRequest, extractResponseText, transcriptionTimeoutMs 
 import { generateWithRecovery, type BuildRequest } from './geminiTranscriptionRunner';
 import { createAudioSource } from './geminiAudioSource';
 import { planAudioChunks, type AudioChunk } from './audioChunks';
-import { shiftTimestamps } from './timestampShift';
+import { shiftTimestamps, formatClock } from './timestampShift';
+import { lastTimestampSeconds, appendContinuation } from './transcriptContinuation';
+import { isTranscribeModel, LONG_AUDIO_MODEL } from './transcribeModel';
+import { uiText } from '../../utils/uiText';
 import { emptyTranscriptError } from './transcriptionErrors';
 import { OVERLOAD_FALLBACK_MODEL } from '../../services/apiKeys/geminiClient';
 
@@ -17,10 +20,15 @@ interface TranscribeOptions {
   lang: Lang;
   setStage: (stage: string) => void;
   addToast: Toast;
+  // Set when asking for the rest of a transcript that stopped at this time ("26:35")
+  continueFrom?: string;
 }
 
 // Parts of a long recording sent to Gemini at the same time
 const PARALLEL_PARTS = 2;
+// A transcript ending this much before the audio does stopped early; up to this many requests ask for the rest
+const CONTINUE_WHEN_LEFT_SECONDS = 120;
+const MAX_CONTINUATIONS = 3;
 // Answers that asking again would not change
 const FINAL_REASONS = ['SAFETY', 'RECITATION', 'MAX_TOKENS'];
 
@@ -31,13 +39,13 @@ const emptyReasonOf = (response: GenerateContentResponse | null) =>
 // One piece of audio. An empty answer is a failed request, not silence: it is asked once more in exactly
 // the same way (never with a looser prompt, which could make the model write words that were not said).
 const transcribeOnce = async (blob: Blob, mimeType: string, audioSeconds: number, options: TranscribeOptions) => {
-  const { provider, modelName, mode, lang, setStage, addToast } = options;
+  const { provider, modelName, mode, lang, setStage, addToast, continueFrom } = options;
   const source = createAudioSource(blob, mimeType);
   try {
     // The time limit follows the audio length, so a stuck request is retried sooner on short audio
     const timeoutMs = transcriptionTimeoutMs(audioSeconds);
     const buildRequest: BuildRequest = async (ai, key) => {
-      const request = buildTranscriptionRequest(modelName, mode, await source.partFor(ai, key));
+      const request = buildTranscriptionRequest(modelName, mode, await source.partFor(ai, key), false, continueFrom);
       return timeoutMs ? { ...request, config: { ...request.config, timeoutMs } } : request;
     };
     let result = await generateWithRecovery({ provider, buildRequest, lang, setStage, addToast });
@@ -56,7 +64,7 @@ const transcribeOnce = async (blob: Blob, mimeType: string, audioSeconds: number
       const fallbackModel = OVERLOAD_FALLBACK_MODEL[modelName] || (modelName !== 'gemini-3.5-flash-lite' ? 'gemini-3.5-flash-lite' : modelName);
       console.warn(`Empty answer (OTHER) persisted; retrying with ${fallbackModel} and default generation config`);
       setStage(lang === 'bn' ? `বিকল্প মডেল (${fallbackModel}) দিয়ে পুনরায় চেষ্টা করা হচ্ছে...` : `Retrying with fallback model (${fallbackModel})...`);
-      const buildFallback: BuildRequest = async (ai, key) => buildTranscriptionRequest(fallbackModel, mode, await source.partFor(ai, key), true);
+      const buildFallback: BuildRequest = async (ai, key) => buildTranscriptionRequest(fallbackModel, mode, await source.partFor(ai, key), true, continueFrom);
       result = await generateWithRecovery({ provider: { key: result.apiKey, source: result.source }, buildRequest: buildFallback, lang, setStage, addToast });
       text = extractResponseText(result.response);
       requests = 3;
@@ -75,6 +83,31 @@ const transcribeOnce = async (blob: Blob, mimeType: string, audioSeconds: number
 };
 
 type PieceResult = Awaited<ReturnType<typeof transcribeOnce>>;
+
+// Gemini sometimes takes a long silence in the middle (a programme's break) for the end and stops there.
+// The rest is asked for with the same whole audio (it is not cut), and joined after what was written.
+const continueUntilEnd = async (blob: Blob, mimeType: string, durationSeconds: number, first: PieceResult, options: TranscribeOptions) => {
+  const { lang, setStage, addToast } = options;
+  let result = first;
+  let last = lastTimestampSeconds(result.text);
+  if (options.mode !== 'pro' || durationSeconds <= 0 || last === null) return result;
+  // A transcribe model takes no written instructions, so the general model writes the rest
+  const modelName = isTranscribeModel(options.modelName) ? LONG_AUDIO_MODEL : options.modelName;
+  for (let round = 0; round < MAX_CONTINUATIONS && durationSeconds - last > CONTINUE_WHEN_LEFT_SECONDS; round++) {
+    const from = formatClock(last);
+    console.warn(`Transcript stopped at ${from} of ${formatClock(Math.round(durationSeconds))}; asking for the rest`);
+    setStage(lang === 'bn' ? `লেখা [${from}]-এ থেমে গেছে, বাকি অংশ ট্রান্সক্রাইব করা হচ্ছে...` : `The transcript stopped at [${from}]; transcribing the rest...`);
+    const rest = await transcribeOnce(blob, mimeType, durationSeconds, { ...options, modelName, continueFrom: from }).catch(() => null);
+    const text: string = rest ? appendContinuation(result.text, rest.text, last) : result.text;
+    if (!rest || text === result.text) break;
+    result = { ...rest, text, requests: result.requests + rest.requests };
+    last = lastTimestampSeconds(text) ?? last;
+  }
+  if (durationSeconds - last > CONTINUE_WHEN_LEFT_SECONDS) {
+    addToast(uiText(lang, 'transcriptStoppedEarly', { at: formatClock(last), end: formatClock(Math.round(durationSeconds)) }), 'warning');
+  }
+  return result;
+};
 
 const transcribeParts = async (parts: AudioChunk[], totalSeconds: number, options: TranscribeOptions) => {
   const { lang, setStage } = options;
@@ -121,5 +154,6 @@ export const transcribeAudio = async (blob: Blob, mimeType: string, durationSeco
   const parts = await planAudioChunks(blob, mimeType, durationSeconds).catch(() => null);
   if (parts && parts.length > 1) return transcribeParts(parts, durationSeconds, options);
   options.setStage(options.lang === 'bn' ? 'এআই সার্ভারে সম্পূর্ণ অডিও বিশ্লেষণ ও ট্রান্সক্রাইব করা হচ্ছে...' : 'Transcribing media on AI server...');
-  return { ...(await transcribeOnce(blob, mimeType, durationSeconds, options)), parts: 1 };
+  const result = await transcribeOnce(blob, mimeType, durationSeconds, options);
+  return { ...(await continueUntilEnd(blob, mimeType, durationSeconds, result, options)), parts: 1 };
 };

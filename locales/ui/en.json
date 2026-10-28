@@ -389,5 +389,6 @@
   "longAudioOtherModel": "The audio is longer than Gemini 3.5 Transcribe can take (about 50 minutes), so it is transcribed with {model}",
   "watchFolderPaused": "Paused: {name}",
   "watchFolderPause": "Pause: new audio is not taken until it is turned on again",
-  "watchFolderResume": "Turn watching back on"
+  "watchFolderResume": "Turn watching back on",
+  "transcriptStoppedEarly": "The transcript stops at [{at}] although the audio goes on to [{end}]. Try transcribing it again."
 }

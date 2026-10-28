@@ -26,7 +26,7 @@ Voice Notes, Phone Audio & Noise Handling:
 - The audio may be a TV talk show (e.g. Channel 24 Muktobak, Somoy TV, Jamuna TV), YouTube debate, or news broadcast that starts with 30-60 seconds of signature theme music, news jingle, or sponsor logos. NEVER classify the audio as silent or finish early because of intro music! Continue listening through the entire audio and transcribe every spoken word when the host/anchor and guests begin talking.
 - Listen with maximum sensitivity. Even if speech is low-volume, whispered, conversational, or has background noise, transcribe every audible word, phrase, and sentence into Bengali.
 - Do NOT classify speech with background noise as silence. As long as any human voice or utterance is audible, transcribe it completely.
-- Stop transcribing only when speech genuinely ends.
+- Stop transcribing only at the very end of the audio file. A break in the middle of a programme (the host says they are taking a short break, then a minute or more of silence, music or adverts) is NOT the end: keep listening and transcribe everything said after it.
 
 Accuracy (MANDATORY):
 - Never guess or invent words, names, numbers or places. If a word or phrase cannot be understood, write [অস্পষ্ট] in its place and continue.
@@ -35,7 +35,10 @@ Anti-Repetition & No Looping Rule (MANDATORY):
 - NEVER repeat the same sentence, phrase, or paragraph multiple times.
 - If there is speech hesitation, commercial transition, background music, or overlap, DO NOT repeat previous text. Continuously progress through the audio without getting stuck in a loop. Every sentence must appear only once as spoken.`;
 
-export const TRANSCRIPTION_PROMPT_TEXT = "Transcribe this ENTIRE audio from start to finish into Bengali (Bangla), following the system instructions exactly. It may be a TV talk show or news broadcast that starts with theme music: keep listening and transcribe every speaker. Begin with [00:00] and the first speaker. Never repeat earlier text, never guess unclear words (write [অস্পষ্ট]), and never stop early.";
+export const TRANSCRIPTION_PROMPT_TEXT = "Transcribe this ENTIRE audio from start to finish into Bengali (Bangla), following the system instructions exactly. It may be a TV talk show or news broadcast that starts with theme music: keep listening and transcribe every speaker. Begin with [00:00] and the first speaker. Never repeat earlier text, never guess unclear words (write [অস্পষ্ট]), and never stop early (a break with silence or music in the middle is not the end).";
+
+// Asks for the rest of an audio whose transcript stopped early (e.g. at a break with silence in the middle)
+export const continuationPrompt = (from: string) => `This audio was already transcribed up to [${from}], but the transcript stopped there although the audio goes on (for example after a break with silence or music). Transcribe ONLY what is said AFTER [${from}], up to the very end of the audio, into Bengali (Bangla), following the system instructions exactly. Timestamps count from the start of this audio file, so the first one is later than [${from}]. Do not repeat anything said before [${from}].`;
 
 export const TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL = `You are a fast audio transcriber and translator. Listen to the audio and TRANSCRIBE IT COMPLETELY.
 
@@ -43,7 +46,8 @@ export const TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL = `You are a fast audio tra
 2. English words spoken in a Bengali sentence should be transliterated in Bangla script.
 3. Keep formatting simple: just plain text transcription without identifying speakers or adding timestamps unless specifically asked.
 4. Output must be in Bangla script only.
-5. Never guess or invent words; write [অস্পষ্ট] where speech cannot be understood.`;
+5. A break with silence or music in the middle is not the end: transcribe up to the very end of the audio.
+6. Never guess or invent words; write [অস্পষ্ট] where speech cannot be understood.`;
 
 export const TRANSCRIPTION_PROMPT_TEXT_NORMAL = "Please transcribe the entire audio quickly and accurately into Bengali. Do not use timestamps or speaker names, just provide the plain text transcription.";
 

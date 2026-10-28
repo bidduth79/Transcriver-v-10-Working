@@ -389,5 +389,6 @@
   "longAudioOtherModel": "অডিওটা Gemini 3.5 Transcribe-এর সীমার (প্রায় ৫০ মিনিট) চেয়ে লম্বা, তাই এটা {model} দিয়ে ট্রান্সক্রাইব হচ্ছে",
   "watchFolderPaused": "বন্ধ রাখা হয়েছে: {name}",
   "watchFolderPause": "বন্ধ রাখুন: আবার চালু না করা পর্যন্ত নতুন অডিও নেওয়া হবে না",
-  "watchFolderResume": "আবার নজরে রাখা চালু করুন"
+  "watchFolderResume": "আবার নজরে রাখা চালু করুন",
+  "transcriptStoppedEarly": "লেখা [{at}]-এ থেমে গেছে, অথচ অডিও [{end}] পর্যন্ত আছে। আবার ট্রান্সক্রাইব করে দেখুন।"
 }
