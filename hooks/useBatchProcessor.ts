@@ -34,7 +34,7 @@ export const useBatchProcessor = (
   const inFlightIndexRef = useRef<number | null>(null);
 
   const { progress, etaSeconds, resetMetrics } =
-    useBatchMetrics(isBatchProcessing, isBatchPaused, hasBatchStarted, batchQueue.length, currentBatchIndex);
+    useBatchMetrics(isBatchProcessing, isBatchPaused, hasBatchStarted, batchQueue, currentBatchIndex);
   const { batchCountdown, setBatchCountdown, isExtendedPause, setIsExtendedPause, clearTimer, startCountdown } =
     useBatchTimer(isBatchPausedRef);
 

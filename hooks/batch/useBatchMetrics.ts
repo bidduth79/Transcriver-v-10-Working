@@ -4,9 +4,10 @@ export const useBatchMetrics = (
   isBatchProcessing: boolean, 
   isBatchPaused: boolean, 
   hasBatchStarted: boolean,
-  batchQueueLength: number,
+  batchQueue: File[],
   currentBatchIndex: number
 ) => {
+  const batchQueueLength = batchQueue.length;
   const [activeProcessingTime, setActiveProcessingTime] = useState(0);
   const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
@@ -43,14 +44,16 @@ export const useBatchMetrics = (
     const currentProgress = (currentBatchIndex / batchQueueLength) * 100;
     setProgress(currentProgress);
 
-    if (currentBatchIndex > 0 && activeProcessingTime > 0) {
-      const timePerFile = activeProcessingTime / currentBatchIndex;
-      const remainingFiles = batchQueueLength - currentBatchIndex;
-      setEtaSeconds(Math.round((timePerFile * remainingFiles) / 1000));
+    // Time grows with the audio, not the number of files: the time spent on the finished files is scaled
+    // by how much audio (file size, about the same per minute within a format) is still left
+    const doneBytes = batchQueue.slice(0, currentBatchIndex).reduce((sum, f) => sum + f.size, 0);
+    const leftBytes = batchQueue.slice(currentBatchIndex).reduce((sum, f) => sum + f.size, 0);
+    if (doneBytes > 0 && activeProcessingTime > 0) {
+      setEtaSeconds(Math.round((activeProcessingTime * (leftBytes / doneBytes)) / 1000));
     } else {
       setEtaSeconds(null);
     }
-  }, [currentBatchIndex, batchQueueLength, activeProcessingTime]);
+  }, [currentBatchIndex, batchQueue, batchQueueLength, activeProcessingTime]);
 
   const resetMetrics = () => {
     setActiveProcessingTime(0);
