@@ -4,6 +4,10 @@ export const escapeRegExp = (string: string) => {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 };
 
+// Bengali vowel signs and joined letters right after a match belong to its last letter; leaving them
+// outside the highlight cuts them off from that letter and they show up broken
+const BENGALI_TAIL = '(?:\u09CD[\u0995-\u09B9\u09DC-\u09DF]|[\u0981-\u0983\u09BC\u09BE-\u09CD\u09D7\u09E2\u09E3\u200C\u200D])*';
+
 export const useTranscriptFormatter = (
   searchTerm: string,
   isDark: boolean,
@@ -15,7 +19,7 @@ export const useTranscriptFormatter = (
   // Precompile search regex once per searchTerm change (NOT per paragraph)
   const searchRegex = useMemo(() => {
     if (!trimmedSearch) return null;
-    return new RegExp(`(${escapeRegExp(trimmedSearch)})`, 'gi');
+    return new RegExp(`(${escapeRegExp(trimmedSearch)}${BENGALI_TAIL})`, 'gi');
   }, [trimmedSearch]);
 
   // Precompute O(1) Set of lowercase sensitive matches
@@ -33,7 +37,7 @@ export const useTranscriptFormatter = (
   const { sensitiveRegex, sensitiveHighlightCache } = useMemo(() => {
     const cleanMatches = Array.from(sensitiveSet).map(escapeRegExp);
     return {
-      sensitiveRegex: cleanMatches.length === 0 ? null : new RegExp(`(${cleanMatches.join('|')})`, 'gi'),
+      sensitiveRegex: cleanMatches.length === 0 ? null : new RegExp(`((?:${cleanMatches.join('|')})${BENGALI_TAIL})`, 'gi'),
       sensitiveHighlightCache: new Map<string, (string | React.ReactNode)[]>(),
     };
   }, [sensitiveSet]);
@@ -49,8 +53,9 @@ export const useTranscriptFormatter = (
       const cached = sensitiveHighlightCache.get(text);
       if (cached) return cached;
 
+      // split() puts each match (with its tail) at an odd index
       const result = text.split(sensitiveRegex).map((sub, subIdx) => {
-        if (sensitiveSet.has(sub.toLowerCase())) {
+        if (subIdx % 2 === 1) {
           return (
             <mark
               key={`sens-0-${subIdx}`}
@@ -75,11 +80,10 @@ export const useTranscriptFormatter = (
 
     // 1. Process Search Term FIRST (Fast O(N) linear regex)
     if (searchRegex && trimmedSearch) {
-      const lowerSearch = trimmedSearch.toLowerCase();
       elements = elements.flatMap((el, elIdx) => {
         if (typeof el !== 'string') return el;
         return el.split(searchRegex).map((sub, subIdx) => {
-          if (sub.toLowerCase() === lowerSearch) {
+          if (subIdx % 2 === 1) {
             const currentId = `match-${matchIndexRef.current}`;
             const isCurrent = matchIndexRef.current === currentMatchIndex;
             matchIndexRef.current++;
@@ -103,7 +107,7 @@ export const useTranscriptFormatter = (
       elements = elements.flatMap((el, elIdx) => {
         if (typeof el !== 'string') return el;
         return el.split(sensitiveRegex).map((sub, subIdx) => {
-          if (sensitiveSet.has(sub.toLowerCase())) {
+          if (subIdx % 2 === 1) {
             return (
               <mark
                 key={`sens-${elIdx}-${subIdx}`}

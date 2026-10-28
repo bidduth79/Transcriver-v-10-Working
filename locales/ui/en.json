@@ -375,5 +375,7 @@
   "backgroundFailed": "Transcription failed",
   "backgroundShow": "Show",
   "backgroundOpen": "Open",
-  "unclearListenHint": "Could not be made out: click to listen to this part"
+  "unclearListenHint": "Could not be made out: click to listen to this part",
+  "speakersLabel": "Speakers:",
+  "renameSpeakerHint": "Click to rename this speaker everywhere"
 }

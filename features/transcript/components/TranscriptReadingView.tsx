@@ -4,6 +4,7 @@ import { TranscriptSidebarTools } from './TranscriptSidebarTools';
 import type { TranscriptOutputProps } from '../transcriptOutputTypes';
 import type { TranscriptOutputState } from '../hooks/useTranscriptOutputState';
 import { uiText } from '../../../utils/uiText';
+import { SpeakerChips } from './SpeakerChips';
 
 interface Props {
   props: TranscriptOutputProps;
@@ -42,6 +43,8 @@ export const TranscriptReadingView = ({ props, state }: Props) => {
                   bgbAnalysisResult={bgb.bgbAnalysisResult}
                   isAnalyzing={bgb.isAnalyzing}
                   triggerAnalysis={bgb.triggerAnalysis}
+                  transcript={status === 'completed' ? transcript : ''}
+                  onRenameSpeaker={handleRenameSpeaker}
                 />
 
                 <div className={`p-6 md:p-10 lg:p-20 rounded-[2rem] md:rounded-[3rem] border shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] transition-colors duration-300 group/content ${
@@ -49,6 +52,10 @@ export const TranscriptReadingView = ({ props, state }: Props) => {
                     ? (isDark ? 'bg-red-950/30 border-red-500/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]' : 'bg-red-50/80 border-red-200 shadow-[0_0_30px_rgba(239,68,68,0.1)]')
                     : (isDark ? 'bg-slate-900/60 border-white/10' : 'bg-white/80 border-white/40')
                 }`}>
+                  {/* On smaller screens the side box is hidden, so the speakers stay above the text */}
+                  {status === 'completed' && (
+                    <SpeakerChips transcript={transcript} isDark={isDark} appLang={appLang} onRename={handleRenameSpeaker} className="xl:hidden mb-6" />
+                  )}
                   <TranscriptContent
                     fontSize={fontSize}
                     isDark={isDark}
