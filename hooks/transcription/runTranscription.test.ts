@@ -9,6 +9,7 @@ vi.mock('./geminiAudioSource', () => ({
 vi.mock('./geminiRequest', () => ({
   buildTranscriptionRequest: (_model: string, _mode: string, part: { name: string }) => part,
   extractResponseText: (resp: { text?: string } | null) => resp?.text ?? '',
+  transcriptionTimeoutMs: () => undefined,
 }));
 vi.mock('./geminiTranscriptionRunner', () => ({
   // Answers "[00:10] <part name>" after a short wait, so parts overlap in time

@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const m = vi.hoisted(() => ({ logged: [] as any[], next: null as any, queue: [] as any[], models: [] as string[] }));
+const m = vi.hoisted(() => ({ logged: [] as any[], next: null as any, queue: [] as any[], models: [] as string[], configs: [] as any[] }));
 vi.mock('./geminiTransport', () => ({
   requestGenerateContent: async (_apiKey: string, p: any) => {
     m.models.push(p.model);
+    m.configs.push(p.config);
     const next = m.queue.length ? m.queue.shift() : m.next;
     // 'hang': never answers, like an overloaded model, until the request is cancelled
     if (next === 'hang') return new Promise((_, reject) => p.config.abortSignal.addEventListener('abort', () => reject(new Error('aborted'))));
@@ -21,7 +22,7 @@ vi.mock('./apiCallStats', () => ({ logApiCall: (e: any) => m.logged.push(e) }));
 import { createGeminiClient } from './geminiClient';
 import { pacificDayStart, pacificDayIndex } from '../../components/modals/quota/pacificDay';
 
-beforeEach(() => { m.logged = []; m.queue = []; m.models = []; });
+beforeEach(() => { m.logged = []; m.queue = []; m.models = []; m.configs = []; });
 
 describe('createGeminiClient', () => {
   it('logs every request with Gemini token counts and the key tail', async () => {
@@ -110,6 +111,22 @@ describe('request time limit', () => {
     expect(m.logged).toHaveLength(0);
     await vi.advanceTimersByTimeAsync(1000);
     expect(m.logged[0]).toMatchObject({ status: 'error', model: 'gemini-3.5-flash-lite' });
+    vi.useRealTimers();
+  });
+
+  it("uses a request's own time limit and does not send it to Gemini", async () => {
+    vi.useFakeTimers();
+    m.queue = ['hang'];
+    const contents = [{ role: 'user', parts: [{ fileData: { fileUri: 'u', mimeType: 'audio/ogg' } }] }];
+    let settled = false;
+    (await createGeminiClient('K')).models.generateContent({ model: 'gemini-3.5-flash-lite', contents, config: { temperature: 0.35, timeoutMs: 300000 } })
+      .catch(() => {}).finally(() => { settled = true; });
+    await vi.advanceTimersByTimeAsync(299000);
+    expect(settled).toBe(false);
+    expect(m.configs[0]).not.toHaveProperty('timeoutMs');
+    expect(m.configs[0].temperature).toBe(0.35);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(m.logged[0]).toMatchObject({ status: 'error' });
     vi.useRealTimers();
   });
 });

@@ -48,6 +48,12 @@ export const buildThinkingConfig = (modelName: string): ThinkingConfig | undefin
   return undefined;
 };
 
+// How long to wait for a transcription of this many seconds of audio before trying again: about a quarter
+// of its length plus two minutes, between 5 and 20 minutes (measured: a 66 minute talk took 5 minutes).
+// Without a known length the client's 10 minute default applies.
+export const transcriptionTimeoutMs = (audioSeconds: number) =>
+  audioSeconds > 0 ? Math.min(20 * 60, Math.max(5 * 60, 120 + audioSeconds / 4)) * 1000 : undefined;
+
 export const buildTranscriptionRequest = (
   modelName: string,
   mode: 'normal' | 'pro',

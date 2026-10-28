@@ -42,9 +42,11 @@ const hasMedia = (contents: unknown) =>
 export const createGeminiClient = async (apiKey: string): Promise<GeminiClient> => {
   const keyTail = apiKey.slice(-4);
 
-  const trackedGenerate = async (params: GenerateContentParameters) => {
+  const trackedGenerate = async (request: GenerateContentParameters) => {
     const started = Date.now();
-    const timeoutMs = hasMedia(params.contents) ? MEDIA_TIMEOUT_MS : TEXT_TIMEOUT_MS;
+    const { timeoutMs: wantedTimeout, ...config } = request.config ?? {};
+    const params = { ...request, config };
+    const timeoutMs = wantedTimeout ?? (hasMedia(params.contents) ? MEDIA_TIMEOUT_MS : TEXT_TIMEOUT_MS);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     const timedOut = () => Object.assign(new Error(`503 UNAVAILABLE: no answer from ${params.model} within ${timeoutMs / 1000}s`), { status: 503 });

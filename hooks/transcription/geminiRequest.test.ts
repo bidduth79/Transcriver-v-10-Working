@@ -5,7 +5,7 @@ vi.mock('../../services/ApiKeyManager', () => ({
   isSpeedOptimizationEnabled: () => false,
 }));
 
-import { buildTranscriptionRequest, extractResponseText } from './geminiRequest';
+import { buildTranscriptionRequest, extractResponseText, transcriptionTimeoutMs } from './geminiRequest';
 import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT } from '../../constants/instructions';
 
 const audio = { inlineData: { mimeType: 'audio/wav', data: 'AAA' } };
@@ -45,5 +45,12 @@ describe('Gemini transcription requests', () => {
     expect(extractResponseText(resp)).toBe('[00:15] **Speaker 1:** Hello there.\n[01:15] **Speaker 2:** Hi.\n[1:02:05] **Speaker 1:** Back to you.');
     expect(extractResponseText({ candidates: [{ content: { parts: [{ text: '[00:01] **Speaker 1:** ok' }] } }] })).toBe('[00:01] **Speaker 1:** ok');
     expect(extractResponseText({ candidates: [{ content: { parts: [{ audioTranscription: { text: 'no labels' } }] } }] })).toBe('[00:00] **Speaker 1:** no labels');
+  });
+
+  it('waits longer for longer audio: a quarter of its length plus two minutes, 5 to 20 minutes', () => {
+    expect(transcriptionTimeoutMs(0)).toBeUndefined();
+    expect(transcriptionTimeoutMs(60)).toBe(300000);
+    expect(transcriptionTimeoutMs(66 * 60)).toBe((120 + 990) * 1000);
+    expect(transcriptionTimeoutMs(3 * 3600)).toBe(1200000);
   });
 });

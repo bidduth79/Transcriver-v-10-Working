@@ -49,6 +49,8 @@ export interface GenerateContentConfig {
   tools?: unknown[];
   httpOptions?: unknown;
   abortSignal?: AbortSignal;
+  // The app's own time limit for this request; removed before the request is sent
+  timeoutMs?: number;
 }
 
 export interface GenerateContentParameters {

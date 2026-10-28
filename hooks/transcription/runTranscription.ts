@@ -1,5 +1,5 @@
 import type { GenerateContentResponse } from '../../types/gemini';
-import { buildTranscriptionRequest, extractResponseText } from './geminiRequest';
+import { buildTranscriptionRequest, extractResponseText, transcriptionTimeoutMs } from './geminiRequest';
 import { generateWithRecovery, type BuildRequest } from './geminiTranscriptionRunner';
 import { createAudioSource } from './geminiAudioSource';
 import { planAudioChunks, type AudioChunk } from './audioChunks';
@@ -30,11 +30,16 @@ const emptyReasonOf = (response: GenerateContentResponse | null) =>
 
 // One piece of audio. An empty answer is a failed request, not silence: it is asked once more in exactly
 // the same way (never with a looser prompt, which could make the model write words that were not said).
-const transcribeOnce = async (blob: Blob, mimeType: string, options: TranscribeOptions) => {
+const transcribeOnce = async (blob: Blob, mimeType: string, audioSeconds: number, options: TranscribeOptions) => {
   const { provider, modelName, mode, lang, setStage, addToast } = options;
   const source = createAudioSource(blob, mimeType);
   try {
-    const buildRequest: BuildRequest = async (ai, key) => buildTranscriptionRequest(modelName, mode, await source.partFor(ai, key));
+    // The time limit follows the audio length, so a stuck request is retried sooner on short audio
+    const timeoutMs = transcriptionTimeoutMs(audioSeconds);
+    const buildRequest: BuildRequest = async (ai, key) => {
+      const request = buildTranscriptionRequest(modelName, mode, await source.partFor(ai, key));
+      return timeoutMs ? { ...request, config: { ...request.config, timeoutMs } } : request;
+    };
     let result = await generateWithRecovery({ provider, buildRequest, lang, setStage, addToast });
     let text = extractResponseText(result.response);
     let requests = 1;
@@ -71,7 +76,7 @@ const transcribeOnce = async (blob: Blob, mimeType: string, options: TranscribeO
 
 type PieceResult = Awaited<ReturnType<typeof transcribeOnce>>;
 
-const transcribeParts = async (parts: AudioChunk[], options: TranscribeOptions) => {
+const transcribeParts = async (parts: AudioChunk[], totalSeconds: number, options: TranscribeOptions) => {
   const { lang, setStage } = options;
   const results: PieceResult[] = new Array(parts.length);
   let next = 0;
@@ -86,7 +91,8 @@ const transcribeParts = async (parts: AudioChunk[], options: TranscribeOptions) 
   const worker = async () => {
     while (next < parts.length) {
       const index = next++;
-      results[index] = await transcribeOnce(parts[index].blob, parts[index].blob.type, partOptions);
+      const partSeconds = (parts[index + 1]?.startSeconds ?? totalSeconds) - parts[index].startSeconds;
+      results[index] = await transcribeOnce(parts[index].blob, parts[index].blob.type, partSeconds, partOptions);
       done++;
       showProgress();
     }
@@ -113,7 +119,7 @@ const transcribeParts = async (parts: AudioChunk[], options: TranscribeOptions) 
  */
 export const transcribeAudio = async (blob: Blob, mimeType: string, durationSeconds: number, options: TranscribeOptions) => {
   const parts = await planAudioChunks(blob, mimeType, durationSeconds).catch(() => null);
-  if (parts && parts.length > 1) return transcribeParts(parts, options);
+  if (parts && parts.length > 1) return transcribeParts(parts, durationSeconds, options);
   options.setStage(options.lang === 'bn' ? 'এআই সার্ভারে সম্পূর্ণ অডিও বিশ্লেষণ ও ট্রান্সক্রাইব করা হচ্ছে...' : 'Transcribing media on AI server...');
-  return { ...(await transcribeOnce(blob, mimeType, options)), parts: 1 };
+  return { ...(await transcribeOnce(blob, mimeType, durationSeconds, options)), parts: 1 };
 };
