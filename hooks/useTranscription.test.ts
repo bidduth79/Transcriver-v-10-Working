@@ -13,16 +13,15 @@ const m = vi.hoisted(() => ({
   setHistory: vi.fn(),
 }));
 
-vi.mock('@google/genai', async (orig) => ({
-  ...(await orig<typeof import('@google/genai')>()),
-  GoogleGenAI: class {
-    models: any;
-    files = { delete: vi.fn() };
-    constructor({ apiKey }: { apiKey: string }) {
-      m.keys.push(apiKey);
-      this.models = { generateContent: (opts: any) => m.generate(apiKey, structuredClone(opts)) };
-    }
+vi.mock('../services/apiKeys/geminiTransport', () => ({
+  requestGenerateContent: (apiKey: string, opts: any) => {
+    m.keys.push(apiKey);
+    const { abortSignal: _sig, ...restConfig } = opts.config ?? {};
+    return m.generate(apiKey, structuredClone({ ...opts, config: restConfig }));
   },
+  requestUploadFile: vi.fn(),
+  requestGetFile: vi.fn(),
+  requestDeleteFile: vi.fn(),
 }));
 vi.mock('../services/ApiKeyManager', () => ({
   getActiveProvider: m.getActiveProvider,

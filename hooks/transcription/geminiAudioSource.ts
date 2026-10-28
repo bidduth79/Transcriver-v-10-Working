@@ -1,4 +1,4 @@
-import type { FileState, GoogleGenAI, Part } from "@google/genai";
+import type { FileState, GoogleGenAI, Part } from "../../types/gemini";
 import { blobToBase64 } from './transcriptionUtils';
 
 // Gemini rejects inline requests over 20 MB and base64 adds about a third, so larger audio goes through the Files API

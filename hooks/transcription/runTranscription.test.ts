@@ -19,8 +19,9 @@ vi.mock('./geminiTranscriptionRunner', () => ({
     await new Promise(resolve => setTimeout(resolve, 5));
     m.running--;
     m.asked[part.name] = (m.asked[part.name] ?? 0) + 1;
-    // 'empty' never answers with text; 'flaky' answers only the second time
+    // 'empty' never answers with text; 'flaky' answers only the second time; 'other' answers on fallback (3rd try)
     if (part.name === 'empty' || (part.name === 'flaky' && m.asked.flaky === 1)) return { response: { text: '', candidates: [] }, ai: {}, apiKey: 'KEY', source: 'Main', keyLabel: 'Main …KEY' };
+    if (part.name === 'other' && m.asked.other <= 2) return { response: { text: '', candidates: [{ finishReason: 'OTHER' }] }, ai: {}, apiKey: 'KEY', source: 'Main', keyLabel: 'Main …KEY' };
     const text = `[00:10] **Speaker 1:** ${part.name}`;
     return { response: { text, candidates: [{ finishReason: 'STOP' }] }, ai: {}, apiKey: 'KEY', source: 'Main', keyLabel: 'Main …KEY' };
   },
@@ -56,6 +57,12 @@ describe('transcribeAudio', () => {
     const result = await transcribeAudio(named('flaky'), 'audio/wav', 600, options());
     expect(result).toMatchObject({ text: '[00:10] **Speaker 1:** flaky', requests: 2, parts: 1 });
     expect(m.asked.flaky).toBe(2);
+  });
+
+  it('recovers with fallback model and clean config when finishReason OTHER persists twice', async () => {
+    const result = await transcribeAudio(named('other'), 'audio/wav', 600, options());
+    expect(result).toMatchObject({ text: '[00:10] **Speaker 1:** other', requests: 3, parts: 1 });
+    expect(m.asked.other).toBe(3);
   });
 
   it('reports an empty answer as an error instead of "no speech", and never leaves a silent gap', async () => {

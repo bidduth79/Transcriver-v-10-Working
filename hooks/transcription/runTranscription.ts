@@ -1,10 +1,11 @@
-import type { GenerateContentResponse } from '@google/genai';
+import type { GenerateContentResponse } from '../../types/gemini';
 import { buildTranscriptionRequest, extractResponseText } from './geminiRequest';
 import { generateWithRecovery, type BuildRequest } from './geminiTranscriptionRunner';
 import { createAudioSource } from './geminiAudioSource';
 import { planAudioChunks, type AudioChunk } from './audioChunks';
 import { shiftTimestamps } from './timestampShift';
 import { emptyTranscriptError } from './transcriptionErrors';
+import { OVERLOAD_FALLBACK_MODEL } from '../../services/apiKeys/geminiClient';
 
 type Lang = 'en' | 'bn';
 type Toast = (msg: string, type: 'success' | 'error' | 'info' | 'warning') => void;
@@ -43,6 +44,17 @@ const transcribeOnce = async (blob: Blob, mimeType: string, options: TranscribeO
       result = await generateWithRecovery({ provider: { key: result.apiKey, source: result.source }, buildRequest, lang, setStage, addToast });
       text = extractResponseText(result.response);
       requests = 2;
+    }
+    // When Gemini aborts twice with finishReason OTHER (e.g. model/low-temperature/thinkingConfig abort),
+    // try once more with the fallback model and default temperature/thinking while keeping the same prompt.
+    if (!text.trim() && emptyReasonOf(result.response) === 'OTHER') {
+      const fallbackModel = OVERLOAD_FALLBACK_MODEL[modelName] || (modelName !== 'gemini-3.5-flash-lite' ? 'gemini-3.5-flash-lite' : modelName);
+      console.warn(`Empty answer (OTHER) persisted; retrying with ${fallbackModel} and default generation config`);
+      setStage(lang === 'bn' ? `বিকল্প মডেল (${fallbackModel}) দিয়ে পুনরায় চেষ্টা করা হচ্ছে...` : `Retrying with fallback model (${fallbackModel})...`);
+      const buildFallback: BuildRequest = async (ai, key) => buildTranscriptionRequest(fallbackModel, mode, await source.partFor(ai, key), true);
+      result = await generateWithRecovery({ provider: { key: result.apiKey, source: result.source }, buildRequest: buildFallback, lang, setStage, addToast });
+      text = extractResponseText(result.response);
+      requests = 3;
     }
     return {
       text,

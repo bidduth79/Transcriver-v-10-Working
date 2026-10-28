@@ -1,5 +1,8 @@
 {
   "name": "Transcrive V-10",
   "description": "New Work For Transcrive v-10",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

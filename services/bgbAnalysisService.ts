@@ -1,7 +1,7 @@
 import { BgbRemarkType, BgbAnalysisResult } from '../types/bgb';
 import { getActiveProvider } from './ApiKeyManager';
 import { DEFAULT_MODEL } from '../constants/aiModels';
-import type { Type } from '@google/genai';
+import type { Type } from '../types/gemini';
 import { createGeminiClient } from './apiKeys/geminiClient';
 import { parseJsonAnswer } from '../utils/aiAnswer';
 import { buildThinkingConfig } from '../hooks/transcription/geminiRequest';

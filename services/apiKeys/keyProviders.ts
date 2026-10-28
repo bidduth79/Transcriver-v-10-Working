@@ -18,24 +18,10 @@ const getEnvApiKey = (): { key: string; source: string } | null => {
     };
   }
 
-  try {
-    const pKey = (typeof process !== 'undefined' && process.env)
-      ? (process.env.GEMINI_API_KEY || process.env.API_KEY)
-      : undefined;
-    if (pKey && typeof pKey === 'string' && pKey.trim() !== '') {
-      return {
-        key: pKey.trim(),
-        source: 'Environment (Process)'
-      };
-    }
-  } catch (e) {
-    // Ignore
-  }
-
   return null;
 };
 
-// Key priority: manually selected → newest saved key → .env → local PHP server
+// Key priority: manually selected → newest saved key → .env → local PHP server → server-managed Gemini key
 export const getActiveProvider = async () => {
   const activeId = localStorage.getItem(ACTIVE_KEY_ID_STORAGE);
   const currentModel = getActiveModel();
@@ -111,11 +97,20 @@ export const getActiveProvider = async () => {
     }
   }
 
+  if (import.meta.env.MODE !== 'test') {
+    return {
+      id: 'server',
+      key: 'SERVER_KEY',
+      model: currentModel,
+      source: 'Environment (Process)'
+    };
+  }
+
   return null;
 };
 
 /**
- * Returns alternative API keys (other saved keys + .env key) when the primary key fails
+ * Returns alternative API keys (other saved keys + .env key + server key) when the primary key fails
  * with "project has been denied access" (403) or quota exhaustion (429).
  */
 export const getFallbackProviders = async (failedKey: string): Promise<{ id: string; key: string; source: string }[]> => {
@@ -149,6 +144,15 @@ export const getFallbackProviders = async (failedKey: string): Promise<{ id: str
       id: 'env',
       key: envProvider.key,
       source: envProvider.source
+    });
+  }
+
+  if (import.meta.env.MODE !== 'test' && !seenKeys.has('SERVER_KEY')) {
+    seenKeys.add('SERVER_KEY');
+    fallbacks.push({
+      id: 'server',
+      key: 'SERVER_KEY',
+      source: 'Environment (Process)'
     });
   }
 

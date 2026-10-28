@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { GenerateContentResponse, Type } from "@google/genai";
+import type { GenerateContentResponse, Type } from "../../../types/gemini";
 import { addToStore, getAllFromStore, deleteFromStore, STORES } from '../../../services/db';
 import { getActiveProvider, incrementTotalCalls } from '../../../services/ApiKeyManager';
 import { logSystemActivity } from '../../../services/SystemLogger';

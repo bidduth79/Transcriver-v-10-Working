@@ -1,4 +1,4 @@
-import type { GoogleGenAI, GenerateContentParameters, GenerateContentResponse } from "@google/genai";
+import type { GoogleGenAI, GenerateContentParameters, GenerateContentResponse } from "../../types/gemini";
 import { parseRateLimit, rateLimitWaitMs, sleepMs } from './rateLimit';
 import { getFallbackProviders, setActiveApiKey } from '../../services/ApiKeyManager';
 import { detectAudioMimeType, convertAudioToWav } from './transcriptionUtils';
@@ -18,8 +18,10 @@ export const keyLabelOf = (source: string, key: string) => `${source} (****${key
 export const prepareAudio = async (inputFile: Blob, fileName: string) => {
   const lowerName = fileName.toLowerCase();
   const sniffed = await detectAudioMimeType(inputFile, fileName);
-  let effectiveMimeType = sniffed.mimeType || inputFile.type || 'audio/mp3';
-  if (effectiveMimeType.includes('opus') || lowerName.endsWith('.opus') || lowerName.endsWith('.ogg')) {
+  let effectiveMimeType = sniffed.mimeType || inputFile.type || 'audio/mpeg';
+  if (effectiveMimeType === 'audio/mp3') {
+    effectiveMimeType = 'audio/mpeg';
+  } else if (effectiveMimeType.includes('opus') || lowerName.endsWith('.opus') || lowerName.endsWith('.ogg')) {
     effectiveMimeType = 'audio/ogg';
   }
 
@@ -74,7 +76,7 @@ export const generateWithRecovery = async ({ provider, buildRequest, lang, setSt
     request = await buildRequest(ai, provider.key);
     response = await generateWaitingOnRateLimit(ai, request, lang, setStage);
   } catch (err) {
-    console.error("Transcription generation failed on primary key:", err);
+    console.warn("Transcription generation failed on primary key:", err);
     if (messageOf(err)?.includes('RECITATION') || messageOf(err)?.includes('Recitation')) {
       console.warn("Caught recitation in generateContent error");
     } else if (isKeyOrProjectBlockedError(err)) {

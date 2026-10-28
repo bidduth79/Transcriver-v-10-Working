@@ -1,4 +1,4 @@
-import type { HarmCategory, HarmBlockThreshold, ThinkingLevel, Part, GenerateContentConfig, GenerateContentParameters, ThinkingConfig } from "@google/genai";
+import type { HarmCategory, HarmBlockThreshold, ThinkingLevel, Part, GenerateContentConfig, GenerateContentParameters, ThinkingConfig } from "../../types/gemini";
 import { getModelDefinition, isSpeedOptimizationEnabled } from '../../services/ApiKeyManager';
 import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL, TRANSCRIPTION_PROMPT_TEXT_NORMAL } from '../../constants/instructions';
 import { isTranscribeModel, TRANSCRIBE_HTTP_OPTIONS, formatAudioTranscription } from './transcribeModel';
@@ -51,10 +51,14 @@ export const buildThinkingConfig = (modelName: string): ThinkingConfig | undefin
 export const buildTranscriptionRequest = (
   modelName: string,
   mode: 'normal' | 'pro',
-  audioPart: Part
+  audioPart: Part,
+  cleanFallback = false
 ): GenerateContentParameters => {
   const systemInstruction = mode === 'normal' ? TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL : TRANSCRIPTION_SYSTEM_INSTRUCTION;
   const promptText = mode === 'normal' ? TRANSCRIPTION_PROMPT_TEXT_NORMAL : TRANSCRIPTION_PROMPT_TEXT;
+  if (cleanFallback) {
+    return buildAudioRequest(modelName, audioPart, promptText, { systemInstruction });
+  }
   const thinkingConfig = buildThinkingConfig(modelName);
   return buildAudioRequest(modelName, audioPart, promptText, {
     systemInstruction,

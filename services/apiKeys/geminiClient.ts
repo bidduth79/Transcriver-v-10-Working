@@ -1,5 +1,11 @@
-import type { GoogleGenAI } from '@google/genai';
+import type { GeminiClient, GenerateContentParameters } from '../../types/gemini';
 import { logApiCall } from './apiCallStats';
+import {
+  requestGenerateContent,
+  requestUploadFile,
+  requestGetFile,
+  requestDeleteFile,
+} from './geminiTransport';
 import { messageOf } from '../../utils/errorMessage';
 
 const statusOf = (err: unknown) => (err as { status?: number } | null | undefined)?.status;
@@ -29,26 +35,24 @@ const hasMedia = (contents: unknown) =>
     Array.isArray(c?.parts) && c.parts.some((p: { inlineData?: unknown; fileData?: unknown } | null | undefined) => p?.inlineData || p?.fileData));
 
 /**
- * Every Gemini client in the app is created here. Each generateContent request (retries and failures
- * included) is logged with Gemini's own token counts, the model and the key's last 4 characters,
- * so the quota monitor shows real usage. A model that is temporarily busy (503, or no answer within the
- * time limit) is retried after short waits and then replaced by a similar model on the same key.
+ * Every Gemini client in the app is created here and routes requests through the server API.
+ * Each generateContent request (retries and failures included) is logged with Gemini's own token
+ * counts, the model and the key's last 4 characters, so the quota monitor shows real usage.
  */
-export const createGeminiClient = async (apiKey: string): Promise<GoogleGenAI> => {
-  // The SDK (about 270 KB) is downloaded with the first AI request, not when the app opens
-  const { GoogleGenAI: Client } = await import('@google/genai');
-  const ai = new Client({ apiKey });
-  const generate = ai.models.generateContent.bind(ai.models);
+export const createGeminiClient = async (apiKey: string): Promise<GeminiClient> => {
   const keyTail = apiKey.slice(-4);
 
-  const trackedGenerate: typeof generate = async (params) => {
+  const trackedGenerate = async (params: GenerateContentParameters) => {
     const started = Date.now();
     const timeoutMs = hasMedia(params.contents) ? MEDIA_TIMEOUT_MS : TEXT_TIMEOUT_MS;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     const timedOut = () => Object.assign(new Error(`503 UNAVAILABLE: no answer from ${params.model} within ${timeoutMs / 1000}s`), { status: 503 });
     try {
-      const response = await generate({ ...params, config: { ...params.config, abortSignal: controller.signal } });
+      const response = await requestGenerateContent(apiKey, {
+        ...params,
+        config: { ...params.config, abortSignal: controller.signal },
+      });
       // A cancelled request can come back as an empty answer instead of an error; it is a timeout, not "no text"
       if (controller.signal.aborted) throw timedOut();
       const usage = response?.usageMetadata;
@@ -66,22 +70,30 @@ export const createGeminiClient = async (apiKey: string): Promise<GoogleGenAI> =
     }
   };
 
-  ai.models.generateContent = async (params) => {
-    for (let attempt = 0; ; attempt++) {
-      try {
-        return await trackedGenerate(params);
-      } catch (err) {
-        if (!isOverloaded(err)) throw err;
-        if (attempt < OVERLOAD_RETRY_DELAYS_MS.length) {
-          await sleep(OVERLOAD_RETRY_DELAYS_MS[attempt]);
-          continue;
+  return {
+    models: {
+      generateContent: async (params: GenerateContentParameters) => {
+        for (let attempt = 0; ; attempt++) {
+          try {
+            return await trackedGenerate(params);
+          } catch (err) {
+            if (!isOverloaded(err)) throw err;
+            if (attempt < OVERLOAD_RETRY_DELAYS_MS.length) {
+              await sleep(OVERLOAD_RETRY_DELAYS_MS[attempt]);
+              continue;
+            }
+            const fallback = OVERLOAD_FALLBACK_MODEL[params.model];
+            if (!fallback) throw err;
+            console.info(`[Gemini] ${params.model} is busy; using ${fallback} for this request`);
+            return await trackedGenerate({ ...params, model: fallback });
+          }
         }
-        const fallback = OVERLOAD_FALLBACK_MODEL[params.model];
-        if (!fallback) throw err;
-        console.info(`[Gemini] ${params.model} is busy; using ${fallback} for this request`);
-        return await trackedGenerate({ ...params, model: fallback });
-      }
-    }
+      },
+    },
+    files: {
+      upload: (params) => requestUploadFile(apiKey, params),
+      get: (params) => requestGetFile(apiKey, params),
+      delete: (params) => requestDeleteFile(apiKey, params),
+    },
   };
-  return ai;
 };

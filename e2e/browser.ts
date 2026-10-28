@@ -31,7 +31,7 @@ export const openApp = async (): Promise<AppSession> => {
   await page.setRequestInterception(true);
   page.on('request', request => {
     const url = request.url();
-    if (/generativelanguage\.googleapis\.com/.test(url)) {
+    if (/generativelanguage\.googleapis\.com|\/api\/gemini\/generate/.test(url)) {
       if (request.method() === 'OPTIONS') return void request.respond({ status: 200, headers: CORS, body: '' });
       calls += 1;
       const text = `[00:00] **Speaker 1:** পরীক্ষার লেখা নম্বর ${calls}।\n[00:05] **Speaker 2:** ঠিক আছে ${calls}।`;

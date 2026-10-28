@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const m = vi.hoisted(() => ({ logged: [] as any[], next: null as any, queue: [] as any[], models: [] as string[] }));
-vi.mock('@google/genai', () => ({
-  GoogleGenAI: class { models = { generateContent: async (p: any) => {
+vi.mock('./geminiTransport', () => ({
+  requestGenerateContent: async (_apiKey: string, p: any) => {
     m.models.push(p.model);
     const next = m.queue.length ? m.queue.shift() : m.next;
     // 'hang': never answers, like an overloaded model, until the request is cancelled
@@ -11,7 +11,10 @@ vi.mock('@google/genai', () => ({
     if (next === 'hangEmpty') return new Promise(resolve => p.config.abortSignal.addEventListener('abort', () => resolve({ candidates: [] })));
     if (next instanceof Error) throw next;
     return next;
-  } }; },
+  },
+  requestUploadFile: vi.fn(),
+  requestGetFile: vi.fn(),
+  requestDeleteFile: vi.fn(),
 }));
 vi.mock('./apiCallStats', () => ({ logApiCall: (e: any) => m.logged.push(e) }));
 

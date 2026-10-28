@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { GenerateContentResponse, Type } from "@google/genai";
+import type { GenerateContentResponse, Type } from "../../../types/gemini";
 import { getActiveProvider, incrementTotalCalls } from '../../../services/ApiKeyManager';
 import { logSystemActivity } from '../../../services/SystemLogger';
 import { createGeminiClient } from '../../../services/apiKeys/geminiClient';

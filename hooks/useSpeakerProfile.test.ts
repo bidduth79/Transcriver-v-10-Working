@@ -8,7 +8,7 @@ const m = vi.hoisted(() => ({
   wikiImg: vi.fn(async () => null as any), searchImg: vi.fn(async () => null as any), wikiSummary: vi.fn(async (..._a: any[]) => null as any),
 }));
 vi.mock('../services/ApiKeyManager', () => ({ getActiveProvider: async () => m.provider.value, incrementTotalCalls: m.increment }));
-vi.mock('@google/genai', () => ({ GoogleGenAI: class { models = { generateContent: m.generate }; } }));
+vi.mock('../services/apiKeys/geminiClient', () => ({ createGeminiClient: async () => ({ models: { generateContent: m.generate } }) }));
 vi.mock('../services/speakerArchiveService', () => ({ scanDatabaseForSpeaker: m.scan, getCustomNote: () => m.note.value, saveCustomNote: m.saveNote }));
 vi.mock('./speakerProfileUtils', async (orig) => ({
   ...(await orig<typeof import('./speakerProfileUtils')>()),
