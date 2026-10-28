@@ -6,6 +6,7 @@ import { useTranscriptionState } from './transcription/useTranscriptionState';
 import { removeRepetitiveBlocks, splitLongParagraphs, calculateEstimatedSeconds, parseDurationToSeconds, learnedSecondsPerAudioSecond } from './transcription/transcriptionUtils';
 import { formatErrorMessage, emptyTranscriptError } from './transcription/transcriptionErrors';
 import { useHistoryStore } from './useHistoryStore';
+import { useBackgroundJobStore, isJobInBackground } from './transcription/useBackgroundJobStore';
 import { getDecodingStage, getProgressStage } from './transcription/transcriptionStages';
 import { prepareAudio, keyLabelOf } from './transcription/geminiTranscriptionRunner';
 import { transcribeAudio } from './transcription/runTranscription';
@@ -77,8 +78,14 @@ export const useTranscription = (
 
     clearTranscriptionTimer();
     setHeavyProcessingActive('transcription', true);
-    setStatus('processing');
-    setTranscript('');
+    const jobs = useBackgroundJobStore.getState();
+    const jobName = inputMetadata?.name || (inputFile as File).name || 'audio';
+    jobs.setRunning({ name: jobName, meta: inputMetadata, file: inputFile instanceof File ? inputFile : undefined });
+    // While a saved transcript is open, the job runs in the background and leaves the screen alone
+    if (!isJobInBackground()) {
+      setStatus('processing');
+      setTranscript('');
+    }
     setProgress(0);
     setElapsedSeconds(0);
 
@@ -131,15 +138,20 @@ export const useTranscription = (
       setElapsedSeconds(actualElapsedSeconds);
       setProgress(100);
       setCurrentStage(uiText(appLang, 'completed'));
-      setTranscript(fullText);
-      setStatus('completed');
+      const inBackground = isJobInBackground();
+      if (inBackground) {
+        jobs.setFinished({ name: historyItem.fileName, historyId: historyItem.id });
+      } else {
+        setTranscript(fullText);
+        setStatus('completed');
+      }
 
       // 1. Trigger sound and toast after first paint completes
       setTimeout(() => {
         playSuccessSound();
         if (!isAutoProcess) {
           addToast(
-            uiText(appLang, 'transcriptionCompletedSuccessfully'),
+            inBackground ? uiText(appLang, 'backgroundJobDoneToast', { name: historyItem.fileName }) : uiText(appLang, 'transcriptionCompletedSuccessfully'),
             'success'
           );
         }
@@ -155,14 +167,19 @@ export const useTranscription = (
       return { success: true, text: fullText };
     } catch (error) {
       console.warn("Transcription Error:", error);
-      setStatus('error');
       const safeMsg = formatErrorMessage(error, appLang, lastUsedKeyLabel);
-      setErrorMessage(safeMsg);
+      if (isJobInBackground()) {
+        jobs.setFinished({ name: jobName, error: safeMsg });
+      } else {
+        setStatus('error');
+        setErrorMessage(safeMsg);
+      }
       logSystemActivity('TRANSCRIPTION', 'ERROR', 'Failed',
         `${safeMsg} | model: ${modelUsed} | audio: ${audioDurationSeconds}s | after: ${Math.round((Date.now() - startTime) / 1000)}s`);
       return { success: false, error: safeMsg, rateLimit: parseRateLimit(error) };
     } finally {
       clearTranscriptionTimer();
+      useBackgroundJobStore.getState().setRunning(null);
       setHeavyProcessingActive('transcription', false);
       setProgress(100);
     }

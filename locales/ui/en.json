@@ -368,5 +368,11 @@
   "firebaseNotConfigured": "Firebase is not configured",
   "pleaseConfirm": "Please confirm",
   "renameSpeakerTitle": "Rename speaker",
-  "takingABitLonger": "A little longer..."
+  "takingABitLonger": "A little longer...",
+  "backgroundJobDoneToast": "{name}: transcription finished in the background",
+  "backgroundRunning": "Transcribing in the background",
+  "backgroundDone": "Transcription finished",
+  "backgroundFailed": "Transcription failed",
+  "backgroundShow": "Show",
+  "backgroundOpen": "Open"
 }

@@ -368,5 +368,11 @@
   "firebaseNotConfigured": "ফায়ারবেইজ কনফিগার করা নেই",
   "pleaseConfirm": "নিশ্চিত করুন",
   "renameSpeakerTitle": "স্পীকারের নাম বদলান",
-  "takingABitLonger": "আরও কিছুক্ষণ লাগছে..."
+  "takingABitLonger": "আরও কিছুক্ষণ লাগছে...",
+  "backgroundJobDoneToast": "{name}: পেছনে ট্রান্সক্রাইব শেষ হয়েছে",
+  "backgroundRunning": "পেছনে ট্রান্সক্রাইব চলছে",
+  "backgroundDone": "ট্রান্সক্রাইব শেষ",
+  "backgroundFailed": "ট্রান্সক্রাইব ব্যর্থ",
+  "backgroundShow": "দেখুন",
+  "backgroundOpen": "খুলুন"
 }

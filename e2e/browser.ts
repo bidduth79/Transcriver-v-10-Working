@@ -14,6 +14,8 @@ export interface AppSession {
   page: Page;
   errors: string[];
   geminiCalls: () => number;
+  // Makes the fake Gemini answer only after this many milliseconds (0 = at once)
+  setGeminiDelay: (ms: number) => void;
   close: () => Promise<void>;
 }
 
@@ -27,6 +29,7 @@ export const openApp = async (): Promise<AppSession> => {
   await page.setViewport({ width: 1500, height: 950 });
   const errors: string[] = [];
   let calls = 0;
+  let delayMs = 0;
 
   await page.setRequestInterception(true);
   page.on('request', request => {
@@ -35,10 +38,11 @@ export const openApp = async (): Promise<AppSession> => {
       if (request.method() === 'OPTIONS') return void request.respond({ status: 200, headers: CORS, body: '' });
       calls += 1;
       const text = `[00:00] **Speaker 1:** পরীক্ষার লেখা নম্বর ${calls}।\n[00:05] **Speaker 2:** ঠিক আছে ${calls}।`;
-      return void request.respond({
+      const answer = () => request.respond({
         status: 200, headers: CORS, contentType: 'application/json',
         body: JSON.stringify({ candidates: [{ content: { role: 'model', parts: [{ text }] }, finishReason: 'STOP' }], usageMetadata: { totalTokenCount: 20 } }),
       });
+      return void (delayMs ? setTimeout(answer, delayMs) : answer());
     }
     if (/googleapis\.com|firebaseio|identitytoolkit|securetoken/.test(url)) return void request.abort();
     return void request.continue();
@@ -50,7 +54,7 @@ export const openApp = async (): Promise<AppSession> => {
 
   await page.goto(E2E_URL, { waitUntil: 'networkidle0', timeout: 60000 });
   await seedFakeKey(page);
-  return { browser, page, errors, geminiCalls: () => calls, close: () => browser.close() };
+  return { browser, page, errors, geminiCalls: () => calls, setGeminiDelay: ms => { delayMs = ms; }, close: () => browser.close() };
 };
 
 // Stores a made-up Gemini key and makes it active, the same way Settings does

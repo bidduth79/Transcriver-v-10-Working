@@ -12,6 +12,7 @@ import type { SpeakerProfile } from '../../../types/speaker';
 import type { SpeakerCustomNote } from '../../../types/speaker';
 import type { FormattedTranscriptProps } from '../TranscriptViewer';
 import { uiText } from '../../../utils/uiText';
+import { moveRunningJobToBackground } from '../../../hooks/transcription/useBackgroundJobStore';
 
 export interface TranscriptModalsProps {
   isSummaryOpen: boolean;
@@ -135,6 +136,7 @@ export const TranscriptModals: React.FC<TranscriptModalsProps> = ({
             />
           )}
           loadHistoryItem={async (h) => {
+            moveRunningJobToBackground();
             // List items are light; the saved transcript is read from IndexedDB
             setTranscript(h.transcript ?? await loadHistoryTranscript(h.id));
             setStatus('completed');

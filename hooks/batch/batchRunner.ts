@@ -7,6 +7,7 @@ import { notifyWhenHidden } from '../../services/browserNotification';
 import { messageOf } from '../../utils/errorMessage';
 import type { TranscriptionOutcome } from '../useTranscription';
 import { uiText } from '../../utils/uiText';
+import { isJobInBackground } from '../transcription/useBackgroundJobStore';
 
 export interface FailedFile {
   file: File;
@@ -116,17 +117,21 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
       await new Promise(resolve => setTimeout(resolve, 150));
     }
 
-    ctx.setFile(currentFile);
-    const url = URL.createObjectURL(currentFile);
-    prevBatchUrlRef.current = url;
-    ctx.setFileUrl(url);
-    ctx.setActiveHistoryId(null);
-    ctx.setTranscriptMeta(null);
+    // While a saved transcript is open, the batch goes on in the background and leaves the screen alone
+    const onScreen = !isJobInBackground();
+    if (onScreen) {
+      ctx.setFile(currentFile);
+      const url = URL.createObjectURL(currentFile);
+      prevBatchUrlRef.current = url;
+      ctx.setFileUrl(url);
+      ctx.setActiveHistoryId(null);
+      ctx.setTranscriptMeta(null);
+    }
 
     inFlightIndexRef.current = index;
     try {
       const metadata = await getFileMetadata(currentFile);
-      ctx.setFileMeta(metadata);
+      if (!isJobInBackground()) ctx.setFileMeta(metadata);
       const result = await ctx.processTranscription(currentFile, metadata, true);
       // processTranscription reports a failure in its result instead of throwing
       if (result?.success === false) {
