@@ -44,7 +44,8 @@ describe('BatchProcessingQueue behavior', () => {
     const { container } = setup();
     const label = (i: number) => row(container, i).querySelectorAll('span.text-\\[10px\\]');
     expect(Array.from(label(0)).map(s => s.textContent)).toEqual(['সফল']);
-    expect(Array.from(label(1)).map(s => s.textContent)).toEqual(['ব্যর্থ', 'সফল']);
+    // A failed file is not also marked as a success
+    expect(Array.from(label(1)).map(s => s.textContent)).toEqual(['ব্যর্থ']);
     expect(Array.from(label(3)).map(s => s.textContent)).toEqual(['ডুপ্লিকেট']);
     expect(Array.from(label(4)).map(s => s.textContent)).toEqual(['ডুপ্লিকেট']);
     expect(label(5)).toHaveLength(0);

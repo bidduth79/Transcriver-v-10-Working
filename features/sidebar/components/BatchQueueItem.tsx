@@ -71,7 +71,8 @@ export const BatchQueueItem = ({
                           {uiText(appLang, 'failedAlt')}
                         </span>
                       )}
-                      {isProcessed && (
+                      {/* A failed file is also behind the current index, but it did not succeed */}
+                      {isProcessed && !isFailed && (
                         <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 rounded uppercase shrink-0">
                           {uiText(appLang, 'success')}
                         </span>
