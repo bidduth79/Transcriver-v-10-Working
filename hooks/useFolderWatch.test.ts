@@ -5,6 +5,7 @@ const m = vi.hoisted(() => ({
   files: [] as File[],
   saved: undefined as unknown,
   granted: true,
+  paused: undefined as boolean | undefined,
   toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }));
 vi.mock('sonner', () => ({ toast: m.toast }));
@@ -16,9 +17,11 @@ vi.mock('../services/watchFolder', () => ({
   saveWatchFolder: async (h: unknown) => { m.saved = h; },
   loadWatchFolder: async () => m.saved,
   forgetWatchFolder: async () => { m.saved = undefined; },
+  saveWatchPaused: async (p: boolean) => { m.paused = p; },
+  loadWatchPaused: async () => m.paused,
 }));
 
-import { useFolderWatch, useFolderWatchStore, chooseWatchFolder, stopWatchFolder } from './useFolderWatch';
+import { useFolderWatch, useFolderWatchStore, chooseWatchFolder, stopWatchFolder, pauseWatchFolder, allowWatchFolder } from './useFolderWatch';
 import { useHistoryStore } from './useHistoryStore';
 import { useBackgroundJobStore } from './transcription/useBackgroundJobStore';
 import type { HistoryItem } from '../types';
@@ -32,6 +35,7 @@ beforeEach(() => {
   m.files = [];
   m.saved = undefined;
   m.granted = true;
+  m.paused = undefined;
   useFolderWatchStore.setState({ handle: null, status: 'off' });
   useHistoryStore.setState({ history: [] });
   useBackgroundJobStore.setState({ running: null });
@@ -67,6 +71,30 @@ describe('useFolderWatch', () => {
     await look();
     await look();
     expect(runFiles).toHaveBeenCalledTimes(1);
+  });
+
+  it('takes nothing while paused, stays paused after a reload, and goes on when turned back on', async () => {
+    const runFiles = vi.fn();
+    m.files = [audio('new.opus')];
+    renderHook(() => useFolderWatch('en', false, runFiles));
+    await act(async () => { await chooseWatchFolder('en'); });
+    await act(async () => { await pauseWatchFolder('en'); });
+    await look();
+    await look();
+    expect(runFiles).not.toHaveBeenCalled();
+    expect(m.paused).toBe(true);
+
+    useFolderWatchStore.setState({ handle: null, status: 'off' });
+    renderHook(() => useFolderWatch('en', false, runFiles));
+    await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+    expect(useFolderWatchStore.getState().status).toBe('paused');
+
+    await act(async () => { await allowWatchFolder('en'); });
+    expect(useFolderWatchStore.getState().status).toBe('watching');
+    expect(m.paused).toBe(false);
+    await look();
+    await look();
+    expect(runFiles).toHaveBeenCalled();
   });
 
   it('after a reload asks for permission again, and stops when told to', async () => {

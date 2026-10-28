@@ -3,15 +3,16 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import {
   type WatchFolderHandle, isFolderWatchSupported, pickWatchFolder, canReadFolder, listFolderFiles,
-  saveWatchFolder, loadWatchFolder, forgetWatchFolder,
+  saveWatchFolder, loadWatchFolder, forgetWatchFolder, saveWatchPaused, loadWatchPaused,
 } from '../services/watchFolder';
 import { pickNewFiles } from './batch/folderWatchUtils';
 import { useHistoryStore } from './useHistoryStore';
 import { useBackgroundJobStore } from './transcription/useBackgroundJobStore';
 import { uiText } from '../utils/uiText';
 
-// 'needsPermission': a folder is saved, but after a reload the browser wants one click before it can be read
-export type FolderWatchStatus = 'off' | 'needsPermission' | 'watching';
+// 'needsPermission': a folder is saved, but after a reload the browser wants one click before it can be read.
+// 'paused': the folder is kept, but not looked into until it is turned on again.
+export type FolderWatchStatus = 'off' | 'needsPermission' | 'watching' | 'paused';
 
 interface FolderWatchState {
   handle: WatchFolderHandle | null;
@@ -31,6 +32,7 @@ export const chooseWatchFolder = async (appLang: string) => {
   try {
     const handle = await pickWatchFolder();
     await saveWatchFolder(handle);
+    await saveWatchPaused(false);
     useFolderWatchStore.getState().setWatch(handle, 'watching');
     toast.success(uiText(appLang, 'watchFolderStarted', { name: handle.name }));
   } catch (error) {
@@ -39,11 +41,25 @@ export const chooseWatchFolder = async (appLang: string) => {
   }
 };
 
+// Also turns a paused folder back on
 export const allowWatchFolder = async (appLang: string) => {
   const { handle, setWatch } = useFolderWatchStore.getState();
   if (!handle) return;
   try {
-    if (await canReadFolder(handle, true)) setWatch(handle, 'watching');
+    if (!(await canReadFolder(handle, true))) return setWatch(handle, 'needsPermission');
+    setWatch(handle, 'watching');
+    await saveWatchPaused(false);
+  } catch {
+    toast.error(uiText(appLang, 'watchFolderBlocked'));
+  }
+};
+
+export const pauseWatchFolder = async (appLang: string) => {
+  const { handle, setWatch } = useFolderWatchStore.getState();
+  if (!handle) return;
+  setWatch(handle, 'paused');
+  try {
+    await saveWatchPaused(true);
   } catch {
     toast.error(uiText(appLang, 'watchFolderBlocked'));
   }
@@ -53,6 +69,7 @@ export const stopWatchFolder = async () => {
   useFolderWatchStore.getState().setWatch(null, 'off');
   try {
     await forgetWatchFolder();
+    await saveWatchPaused(false);
   } catch {
     // Not watched for the rest of this session either way; the saved folder is asked about again after a reload
   }
@@ -78,7 +95,9 @@ export const useFolderWatch = (appLang: string, isBatchProcessing: boolean, runF
     loadWatchFolder()
       .then(async saved => {
         if (!saved) return;
-        useFolderWatchStore.getState().setWatch(saved, (await canReadFolder(saved, false)) ? 'watching' : 'needsPermission');
+        const { setWatch } = useFolderWatchStore.getState();
+        if (await loadWatchPaused()) return setWatch(saved, 'paused');
+        setWatch(saved, (await canReadFolder(saved, false)) ? 'watching' : 'needsPermission');
       })
       .catch(() => {
         // Nothing saved, or the browser does not allow it here: the folder is simply not watched

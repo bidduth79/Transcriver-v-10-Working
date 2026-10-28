@@ -386,5 +386,8 @@
   "watchFolderNeedsPermission": "\"{name}\" পড়ার অনুমতি আবার দিন",
   "watchFolderAllow": "অনুমতি দিন",
   "watchFolderStop": "এই ফোল্ডার আর নজরে রাখবেন না",
-  "longAudioOtherModel": "অডিওটা Gemini 3.5 Transcribe-এর সীমার (প্রায় ৫০ মিনিট) চেয়ে লম্বা, তাই এটা {model} দিয়ে ট্রান্সক্রাইব হচ্ছে"
+  "longAudioOtherModel": "অডিওটা Gemini 3.5 Transcribe-এর সীমার (প্রায় ৫০ মিনিট) চেয়ে লম্বা, তাই এটা {model} দিয়ে ট্রান্সক্রাইব হচ্ছে",
+  "watchFolderPaused": "বন্ধ রাখা হয়েছে: {name}",
+  "watchFolderPause": "বন্ধ রাখুন: আবার চালু না করা পর্যন্ত নতুন অডিও নেওয়া হবে না",
+  "watchFolderResume": "আবার নজরে রাখা চালু করুন"
 }

@@ -2,12 +2,13 @@ import React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@testing-library/react';
 
-const m = vi.hoisted(() => ({ supported: false, allow: vi.fn(), stop: vi.fn() }));
+const m = vi.hoisted(() => ({ supported: false, allow: vi.fn(), stop: vi.fn(), pause: vi.fn() }));
 vi.mock('../../../services/watchFolder', () => ({ isFolderWatchSupported: () => m.supported }));
 vi.mock('../../../hooks/useFolderWatch', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../../../hooks/useFolderWatch')>()),
   allowWatchFolder: m.allow,
   stopWatchFolder: m.stop,
+  pauseWatchFolder: m.pause,
 }));
 
 import { WatchFolderButton, WatchFolderStatus } from './WatchFolderControl';
@@ -32,5 +33,19 @@ describe('WatchFolderControl', () => {
     expect(m.allow).toHaveBeenCalledWith('en');
     fireEvent.click(getByTitle('Stop watching this folder'));
     expect(m.stop).toHaveBeenCalled();
+  });
+
+  it('pauses a watched folder, and turns a paused one back on', () => {
+    useFolderWatchStore.setState({ handle: { name: 'Audio' } as WatchFolderHandle, status: 'watching' });
+    const watching = render(<WatchFolderStatus isDark={false} appLang="en" />);
+    fireEvent.click(watching.getByTitle('Pause: new audio is not taken until it is turned on again'));
+    expect(m.pause).toHaveBeenCalledWith('en');
+    cleanup();
+
+    useFolderWatchStore.setState({ status: 'paused' });
+    const paused = render(<WatchFolderStatus isDark={false} appLang="en" />);
+    expect(paused.getByText('Paused: Audio')).toBeTruthy();
+    fireEvent.click(paused.getByTitle('Turn watching back on'));
+    expect(m.allow).toHaveBeenCalledWith('en');
   });
 });

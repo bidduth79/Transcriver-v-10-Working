@@ -39,6 +39,7 @@ export const listFolderFiles = async (handle: WatchFolderHandle) => {
 const DB_NAME = 'TranscriverWatchFolder';
 const STORE = 'kv';
 const HANDLE_KEY = 'folder';
+const PAUSED_KEY = 'paused';
 
 const openDb = () => new Promise<IDBDatabase>((resolve, reject) => {
   const request = indexedDB.open(DB_NAME, 1);
@@ -63,3 +64,7 @@ const run = async <T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) 
 export const saveWatchFolder = (handle: WatchFolderHandle) => run('readwrite', store => store.put(handle, HANDLE_KEY));
 export const loadWatchFolder = () => run<WatchFolderHandle | undefined>('readonly', store => store.get(HANDLE_KEY));
 export const forgetWatchFolder = () => run('readwrite', store => store.delete(HANDLE_KEY));
+
+// Paused stays paused after a reload, until it is turned on again
+export const saveWatchPaused = (paused: boolean) => run('readwrite', store => store.put(paused, PAUSED_KEY));
+export const loadWatchPaused = () => run<boolean | undefined>('readonly', store => store.get(PAUSED_KEY));

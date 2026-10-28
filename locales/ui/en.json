@@ -386,5 +386,8 @@
   "watchFolderNeedsPermission": "Allow access to \"{name}\" again",
   "watchFolderAllow": "Allow",
   "watchFolderStop": "Stop watching this folder",
-  "longAudioOtherModel": "The audio is longer than Gemini 3.5 Transcribe can take (about 50 minutes), so it is transcribed with {model}"
+  "longAudioOtherModel": "The audio is longer than Gemini 3.5 Transcribe can take (about 50 minutes), so it is transcribed with {model}",
+  "watchFolderPaused": "Paused: {name}",
+  "watchFolderPause": "Pause: new audio is not taken until it is turned on again",
+  "watchFolderResume": "Turn watching back on"
 }
