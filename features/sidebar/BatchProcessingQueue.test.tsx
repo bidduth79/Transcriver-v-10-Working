@@ -1,7 +1,9 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, act, within } from '@testing-library/react';
 import { BatchProcessingQueue } from './BatchProcessingQueue';
+import { useBatchDuplicateStore } from '../../hooks/batch/useBatchDuplicateStore';
+import { uiText } from '../../utils/uiText';
 
 const f = (name: string, mb = 1) => ({ name, size: mb * 1024 * 1024 });
 const queue = [f('done.mp3'), f('bad.mp3'), f('now.mp3'), f('dup.mp3', 2), f('dup-nosize.mp3'), f('todo.mp3'), f('sizediff.mp3', 3)];
@@ -60,6 +62,23 @@ describe('BatchProcessingQueue behavior', () => {
     const label = (i: number) => row(container, i).querySelectorAll('span.text-\\[10px\\]');
     expect(label(0)).toHaveLength(1);
     expect(label(1)).toHaveLength(0);
+  });
+
+  it('lets a duplicate be transcribed anyway, and marks a skipped one', () => {
+    useBatchDuplicateStore.getState().reset();
+    const dup = f('dup.mp3', 2);
+    const { container, rerender, props } = setup({ batchQueue: [f('done.mp3'), dup], currentBatchIndex: 0, hasBatchStarted: false, failedFiles: [] });
+    fireEvent.click(within(row(container, 1)).getByText(uiText('bn', 'duplicateTranscribeAnyway')));
+    expect(useBatchDuplicateStore.getState().allowed).toEqual([dup]);
+    fireEvent.click(within(row(container, 1)).getByText(uiText('bn', 'duplicateWillTranscribe')));
+    expect(useBatchDuplicateStore.getState().allowed).toEqual([]);
+
+    const done = props.batchQueue[0];
+    act(() => useBatchDuplicateStore.getState().addSkipped(done));
+    rerender(<BatchProcessingQueue {...props} currentBatchIndex={1} />);
+    const labels = Array.from(row(container, 0).querySelectorAll('span.text-\\[10px\\]')).map(s => s.textContent);
+    expect(labels).toEqual([uiText('bn', 'duplicateSkippedBadge')]);
+    useBatchDuplicateStore.getState().reset();
   });
 
   it('wires per-item buttons', () => {

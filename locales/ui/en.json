@@ -390,5 +390,11 @@
   "watchFolderPaused": "Paused: {name}",
   "watchFolderPause": "Pause: new audio is not taken until it is turned on again",
   "watchFolderResume": "Turn watching back on",
-  "transcriptStoppedEarly": "The transcript stops at [{at}] although the audio goes on to [{end}]. Try transcribing it again."
+  "transcriptStoppedEarly": "The transcript stops at [{at}] although the audio goes on to [{end}]. Try transcribing it again.",
+  "duplicateSkipped": "{name} was transcribed before, so it is skipped",
+  "duplicateTranscribeAnyway": "Transcribe anyway",
+  "duplicateTranscribeAnywayHint": "Already transcribed, so the batch skips it. Click to transcribe it anyway.",
+  "duplicateWillTranscribe": "✓ Will transcribe",
+  "duplicateWillTranscribeHint": "Click to skip it again",
+  "duplicateSkippedBadge": "Skipped"
 }

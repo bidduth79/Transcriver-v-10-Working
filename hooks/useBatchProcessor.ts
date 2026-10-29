@@ -3,6 +3,7 @@ import { TranscriptMeta, FileMeta } from '../types';
 import { useBatchMetrics } from './batch/useBatchMetrics';
 import { useBatchTimer } from './batch/useBatchTimer';
 import { createBatchRunner, FailedFile } from './batch/batchRunner';
+import { useBatchDuplicateStore } from './batch/useBatchDuplicateStore';
 import { setHeavyProcessingActive } from '../services/firebaseThrottledQueue';
 import { requestNotificationPermission } from '../services/browserNotification';
 import type { TranscriptionOutcome } from './useTranscription';
@@ -78,6 +79,7 @@ export const useBatchProcessor = (
     setIsBatchPaused(false);
     setFailedFiles([]);
     setProcessedCount(0);
+    useBatchDuplicateStore.getState().clearSkipped();
     resetMetrics();
     processNextBatchFile(batchQueue, currentBatchIndex);
   };
@@ -113,6 +115,7 @@ export const useBatchProcessor = (
     setIsBatchPaused(false);
     setFailedFiles([]);
     setProcessedCount(0);
+    useBatchDuplicateStore.getState().reset();
     resetMetrics();
   };
 
@@ -153,6 +156,7 @@ export const useBatchProcessor = (
     setCurrentBatchIndex(0);
     setFailedFiles([]);
     setProcessedCount(0);
+    useBatchDuplicateStore.getState().clearSkipped();
     resetMetrics();
     setHeavyProcessingActive('batch', true);
     setHasBatchStarted(true);

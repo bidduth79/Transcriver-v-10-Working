@@ -2,7 +2,8 @@ import React from 'react';
 import type { HistoryItem } from '../../../types';
 import type { FailedFile } from '../../../hooks/useBatchProcessor';
 import { uiText } from '../../../utils/uiText';
-import { isSameRecording } from '../../../utils/sameRecording';
+import { isAlreadyTranscribed } from '../../../utils/sameRecording';
+import { useBatchDuplicateStore } from '../../../hooks/batch/useBatchDuplicateStore';
 
 interface Props {
   file: File;
@@ -26,19 +27,20 @@ export const BatchQueueItem = ({
   file, index, appLang, isDark, history, currentBatchIndex, hasBatchStarted, isBatchPaused, failedFiles,
   pauseBatch, resumeBatch, cancelBatch, removeBatchFile, jumpToBatchFile
 }: Props) => {
+            const { allowed, skipped, toggleAllowed, allow } = useBatchDuplicateStore();
             const isProcessed = index < currentBatchIndex;
             const isFailed = failedFiles.some(f => f.file.name === file.name);
-            const fileSizeMb = (file.size / 1024 / 1024).toFixed(2) + ' MB';
-            // Same name (and size, when history knows it), or the same recording saved under another date
-            const isDuplicate = !isProcessed && history.some(h => {
-              if (h.fileName !== file.name) return isSameRecording(file, { name: h.fileName, size: h.size });
-              return h.size ? h.size === fileSizeMb : true;
-            });
+            const isDuplicate = !isProcessed && isAlreadyTranscribed(file, history);
+            // A duplicate is skipped by the batch unless the user chose to transcribe it anyway
+            const isAllowed = allowed.includes(file);
+            const isSkipped = isProcessed && skipped.includes(file);
             
             const itemBg = index === currentBatchIndex 
               ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-500' 
               : isFailed
                 ? 'bg-red-500/10 border-red-500/30 text-red-500'
+                : isSkipped
+                  ? (isDark ? 'text-slate-500 border-transparent' : 'text-slate-400 border-transparent')
                 : isProcessed
                   ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500'
                   : isDuplicate
@@ -72,7 +74,7 @@ export const BatchQueueItem = ({
                         </span>
                       )}
                       {/* A failed file is also behind the current index, but it did not succeed */}
-                      {isProcessed && !isFailed && (
+                      {isProcessed && !isFailed && !isSkipped && (
                         <span className="text-[10px] font-bold bg-emerald-500/20 text-emerald-500 px-1.5 py-0.5 rounded uppercase shrink-0">
                           {uiText(appLang, 'success')}
                         </span>
@@ -80,6 +82,21 @@ export const BatchQueueItem = ({
                       {isDuplicate && (
                         <span className="text-[10px] font-bold bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded uppercase shrink-0">
                           {uiText(appLang, 'duplicate')}
+                        </span>
+                      )}
+                      {isDuplicate && (
+                        <button
+                          type="button"
+                          onClick={() => toggleAllowed(file)}
+                          title={uiText(appLang, isAllowed ? 'duplicateWillTranscribeHint' : 'duplicateTranscribeAnywayHint')}
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 cursor-pointer transition-colors ${isAllowed ? 'bg-emerald-500/20 text-emerald-600 hover:bg-emerald-500/30' : 'border border-amber-500/40 text-amber-600 hover:bg-amber-500/20'}`}
+                        >
+                          {uiText(appLang, isAllowed ? 'duplicateWillTranscribe' : 'duplicateTranscribeAnyway')}
+                        </button>
+                      )}
+                      {isSkipped && (
+                        <span className="text-[10px] font-bold bg-slate-500/20 text-slate-500 px-1.5 py-0.5 rounded uppercase shrink-0">
+                          {uiText(appLang, 'duplicateSkippedBadge')}
                         </span>
                       )}
                     </div>
@@ -124,7 +141,7 @@ export const BatchQueueItem = ({
                     )}
                     {/* Retry */}
                     {(index < currentBatchIndex || isDuplicate) && (
-                      <button onClick={() => jumpToBatchFile(index)} className="p-1.5 hover:bg-blue-500/20 text-blue-500 rounded-lg transition-colors" title={uiText(appLang, 'retry')}>
+                      <button onClick={() => { allow(file); jumpToBatchFile(index); }} className="p-1.5 hover:bg-blue-500/20 text-blue-500 rounded-lg transition-colors" title={uiText(appLang, 'retry')}>
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                       </button>
                     )}

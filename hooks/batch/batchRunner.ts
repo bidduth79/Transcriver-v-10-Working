@@ -8,6 +8,9 @@ import { messageOf } from '../../utils/errorMessage';
 import type { TranscriptionOutcome } from '../useTranscription';
 import { uiText } from '../../utils/uiText';
 import { isJobInBackground } from '../transcription/useBackgroundJobStore';
+import { useHistoryStore } from '../useHistoryStore';
+import { useBatchDuplicateStore } from './useBatchDuplicateStore';
+import { isAlreadyTranscribed } from '../../utils/sameRecording';
 
 export interface FailedFile {
   file: File;
@@ -100,6 +103,14 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
 
     const currentFile = queue[index];
     ctx.setCurrentBatchIndex(index);
+
+    // Already transcribed: skipped without spending a request, unless the user chose to transcribe it anyway
+    const duplicates = useBatchDuplicateStore.getState();
+    if (!duplicates.allowed.includes(currentFile) && isAlreadyTranscribed(currentFile, useHistoryStore.getState().history)) {
+      duplicates.addSkipped(currentFile);
+      addToast(uiText(appLang, 'duplicateSkipped', { name: currentFile.name }), 'info');
+      return processNextBatchFile(queue, index + 1);
+    }
 
     if (currentFile.size > MAX_FILE_SIZE) {
       addToast(uiText(appLang, 'fileTooLargeSkipping', { name: currentFile.name }), 'error');

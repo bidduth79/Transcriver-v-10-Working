@@ -390,5 +390,11 @@
   "watchFolderPaused": "বন্ধ রাখা হয়েছে: {name}",
   "watchFolderPause": "বন্ধ রাখুন: আবার চালু না করা পর্যন্ত নতুন অডিও নেওয়া হবে না",
   "watchFolderResume": "আবার নজরে রাখা চালু করুন",
-  "transcriptStoppedEarly": "লেখা [{at}]-এ থেমে গেছে, অথচ অডিও [{end}] পর্যন্ত আছে। আবার ট্রান্সক্রাইব করে দেখুন।"
+  "transcriptStoppedEarly": "লেখা [{at}]-এ থেমে গেছে, অথচ অডিও [{end}] পর্যন্ত আছে। আবার ট্রান্সক্রাইব করে দেখুন।",
+  "duplicateSkipped": "{name} আগেই ট্রান্সক্রাইব করা আছে, তাই বাদ দেওয়া হলো",
+  "duplicateTranscribeAnyway": "তবুও করুন",
+  "duplicateTranscribeAnywayHint": "আগেই ট্রান্সক্রাইব করা আছে, তাই ব্যাচে বাদ যাবে। তবুও ট্রান্সক্রাইব করতে ক্লিক করুন।",
+  "duplicateWillTranscribe": "✓ করা হবে",
+  "duplicateWillTranscribeHint": "আবার বাদ দিতে ক্লিক করুন",
+  "duplicateSkippedBadge": "বাদ"
 }

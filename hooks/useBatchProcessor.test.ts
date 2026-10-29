@@ -23,6 +23,9 @@ vi.mock('./batch/useBatchTimer', () => ({
 }));
 
 import { useBatchProcessor } from './useBatchProcessor';
+import { useHistoryStore } from './useHistoryStore';
+import { useBatchDuplicateStore } from './batch/useBatchDuplicateStore';
+import type { HistoryItem } from '../types';
 
 const file = (name: string, size = 10) => { const f = new File(['x'], name); Object.defineProperty(f, 'size', { value: size }); return f; };
 const settle = () => act(async () => { await vi.advanceTimersByTimeAsync(200); });
@@ -43,6 +46,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   m.pendingTick = null;
   urls = 0;
+  useHistoryStore.setState({ history: [] });
+  useBatchDuplicateStore.getState().reset();
   vi.stubGlobal('URL', { createObjectURL: vi.fn(() => `blob:${++urls}`), revokeObjectURL: vi.fn() });
   vi.useFakeTimers();
 });
@@ -172,5 +177,19 @@ describe('useBatchProcessor', () => {
     s.hook.unmount();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:1');
     expect(m.lock).toHaveBeenLastCalledWith('batch', false);
+  });
+
+  it('skips a file that is already in history, unless the user chose to transcribe it anyway', async () => {
+    useHistoryStore.setState({ history: [{ id: 'h1', fileName: 'old.mp3' }, { id: 'h2', fileName: 'again.mp3' }] as HistoryItem[] });
+    const s = setup();
+    const again = file('again.mp3');
+    useBatchDuplicateStore.getState().toggleAllowed(again);
+    await s.queue([file('old.mp3'), file('new.mp3'), again]);
+    await s.call('startBatch');
+    expect(s.process.mock.calls.map((c: any[]) => c[0].name)).toEqual(['new.mp3']);
+    expect(useBatchDuplicateStore.getState().skipped.map(f => f.name)).toEqual(['old.mp3']);
+    expect(s.addToast).toHaveBeenCalledWith(expect.stringContaining('old.mp3'), 'info');
+    await tick();
+    expect(s.process.mock.calls.map((c: any[]) => c[0].name)).toEqual(['new.mp3', 'again.mp3']);
   });
 });

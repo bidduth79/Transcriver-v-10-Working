@@ -22,3 +22,12 @@ export const isSameRecording = (a: Recording, b: Recording) => {
   const [sizeA, sizeB] = [bytesOf(a.size), bytesOf(b.size)];
   return sizeA !== undefined && sizeB !== undefined && Math.abs(sizeA - sizeB) <= Math.max(sizeA, sizeB) * 0.01;
 };
+
+// Already in history: the same name (and size, when history knows it), or the same recording under another date
+export const isAlreadyTranscribed = (file: { name: string; size: number }, history: { fileName: string; size?: string }[]) => {
+  const sizeLabel = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+  return history.some(h => {
+    if (h.fileName !== file.name) return isSameRecording(file, { name: h.fileName, size: h.size });
+    return h.size ? h.size === sizeLabel : true;
+  });
+};
