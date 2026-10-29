@@ -1,7 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 
-export const InteractiveDotBackground = ({ isDark = true }: { isDark?: boolean }) => {
+// `isPaused`: while a transcription or batch runs the dots stand still. Redrawing the whole window 60 times a
+// second under the blurred panels kept the browser busy and made the app stutter.
+export const InteractiveDotBackground = ({ isDark = true, isPaused = false }: { isDark?: boolean; isPaused?: boolean }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pausedRef = useRef(isPaused);
+  const resumeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    pausedRef.current = isPaused;
+    if (!isPaused) resumeRef.current?.();
+  }, [isPaused]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -11,6 +20,7 @@ export const InteractiveDotBackground = ({ isDark = true }: { isDark?: boolean }
     if (!ctx) return;
 
     let animationFrameId: number;
+    let running = true;
     let mouse = { x: -1000, y: -1000, targetX: -1000, targetY: -1000 };
     
     const easing = 0.15;
@@ -126,9 +136,19 @@ export const InteractiveDotBackground = ({ isDark = true }: { isDark?: boolean }
         }
       }
 
+      // Paused: the last frame stays on screen and no more frames are asked for until resumed
+      if (pausedRef.current) {
+        running = false;
+        return;
+      }
       animationFrameId = requestAnimationFrame(draw);
     };
 
+    resumeRef.current = () => {
+      if (running) return;
+      running = true;
+      draw();
+    };
     draw();
 
     return () => {
@@ -136,6 +156,7 @@ export const InteractiveDotBackground = ({ isDark = true }: { isDark?: boolean }
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
       cancelAnimationFrame(animationFrameId);
+      resumeRef.current = null;
     };
   }, [isDark]);
 

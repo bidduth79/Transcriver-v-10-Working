@@ -20,7 +20,7 @@ export const SensitiveMatchBadge = ({ item, sensitiveMatches, loadHistoryItem }:
                             e.stopPropagation();
                             loadHistoryItem(item, sensitiveMatches[0]);
                           }}
-                          className="shrink-0 px-1.5 py-0.5 bg-red-600 hover:bg-red-500 cursor-pointer transition-colors text-white text-[10px] font-black rounded uppercase tracking-wider bn:tracking-normal animate-pulse"
+                          className="shrink-0 px-1.5 py-0.5 bg-red-600 hover:bg-red-500 cursor-pointer transition-colors text-white text-[10px] font-black rounded uppercase tracking-wider bn:tracking-normal"
                         >
                             {sensitiveMatches[0]}
                         </span>

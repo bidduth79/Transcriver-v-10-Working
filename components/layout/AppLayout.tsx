@@ -6,6 +6,7 @@ import { Sidebar } from '../../features/sidebar/Sidebar';
 import { ExpandedHistory } from '../../features/sidebar/ExpandedHistory';
 import { getSidebarProps, getExpandedHistoryProps } from '../../hooks/useAppProps';
 import type { AppCore } from '../../hooks/useAppCore';
+import { useBackgroundJobStore } from '../../hooks/transcription/useBackgroundJobStore';
 
 interface AppLayoutProps {
   core: AppCore;
@@ -14,9 +15,10 @@ interface AppLayoutProps {
 }
 
 export const AppLayout: React.FC<AppLayoutProps> = ({ core, children, modals }) => {
+  const isTranscribing = useBackgroundJobStore(state => state.running !== null);
   return (
     <div className={`flex h-screen overflow-hidden ${core.mainBgColor} ${core.textColor} font-sans selection:bg-indigo-500/30 ${core.isExtendedPause ? 'shadow-[inset_0_0_80px_rgba(239,68,68,0.6)] animate-pulse transition-all duration-500' : ''}`}>
-      <InteractiveDotBackground isDark={core.isDark} />
+      <InteractiveDotBackground isDark={core.isDark} isPaused={isTranscribing || core.isBatchProcessing} />
       <div className="relative flex h-screen w-full">
         {/* Sidebar */}
         <Sidebar {...getSidebarProps(core)} />
