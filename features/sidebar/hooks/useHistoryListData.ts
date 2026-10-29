@@ -10,7 +10,6 @@ interface Options {
   fullHistory: HistoryItem[];
   initialGroupedHistory: HistoryGroups;
   scrollContainerEl: HTMLElement | null;
-  activeHistoryId: string | null;
 }
 
 // Search, grouping, virtualization and calendar data for the sidebar history list

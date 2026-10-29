@@ -36,7 +36,7 @@ export const SidebarHistory = ({
   setHistSentimentFilter,
   totalHistoryCount
 }: SidebarHistoryProps) => {
-  const list = useHistoryListData({ history, fullHistory, initialGroupedHistory, scrollContainerEl, activeHistoryId });
+  const list = useHistoryListData({ history, fullHistory, initialGroupedHistory, scrollContainerEl });
   const { isDatePickerOpen, isSentimentPickerOpen, setIsSentimentPickerOpen, isSearchOpen, searchQuery, setSearchQuery, processedGroupedHistory } = list;
   const cardProps = { activeHistoryId, loadHistoryItem, onDeleteHistoryItem, toggleFavorite, isDark, activeColors, appLang, getSensitiveMatches };
 
