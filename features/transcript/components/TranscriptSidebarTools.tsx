@@ -46,7 +46,8 @@ export const TranscriptSidebarTools: React.FC<TranscriptSidebarToolsProps> = ({
     <div className="absolute top-0 right-full h-full mr-6 xl:mr-10 z-30">
       <div className={`sticky top-8 max-h-[calc(100vh-6rem)] w-48 md:w-56 flex flex-col gap-4 animate-in slide-in-from-top-8 duration-700 hidden xl:flex`}>
         {hasMatches && (<>
-          <div className={`p-4 rounded-3xl shadow-2xl backdrop-blur-xl border border-red-500/20 flex flex-col min-h-0 shrink ${isDark ? 'bg-slate-900/90' : 'bg-white/95'}`}>
+          {/* Keeps its height when the speakers below are many; a long keyword list scrolls inside */}
+          <div className={`p-4 rounded-3xl shadow-2xl backdrop-blur-xl border border-red-500/20 flex flex-col min-h-0 shrink-0 max-h-[40vh] ${isDark ? 'bg-slate-900/90' : 'bg-white/95'}`}>
             <div className="flex items-center gap-2 mb-3 pb-3 border-b border-red-500/20 shrink-0">
               <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center shrink-0">
                 <svg className="w-3.5 h-3.5 text-red-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,8 +143,9 @@ export const TranscriptSidebarTools: React.FC<TranscriptSidebarToolsProps> = ({
           </div>
         </>)}
 
+        {/* Takes the room that is left, and scrolls when there are many speakers */}
         {hasSpeakers && (
-          <div className={`shrink-0 p-4 rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white/95 border-slate-200'}`}>
+          <div className={`min-h-0 shrink overflow-y-auto custom-scrollbar p-4 rounded-3xl shadow-2xl backdrop-blur-xl border ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white/95 border-slate-200'}`}>
             <SpeakerChips transcript={transcript} isDark={isDark} appLang={appLang} onRename={onRenameSpeaker} />
           </div>
         )}
