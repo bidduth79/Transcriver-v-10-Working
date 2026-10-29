@@ -22,15 +22,17 @@ export const formatDuration = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-// Opus speech averages ~32kbps (4000 bytes/sec); used when the stream has no duration header
+// Only a guess for when the file cannot be read: Opus speech is often ~32kbps (4000 bytes/sec), but recordings
+// at half that rate are common, so the real length (read below) is always preferred
 export const estimateOpusDuration = (fileSize: number) => formatDuration(Math.max(10, Math.round(fileSize / 4000)));
 
-// Reads Opus/Ogg duration from container metadata; `onParseError` decides the fallback text
+// Reads Opus/Ogg duration; `onParseError` decides the fallback text. Ogg files carry no length in their header:
+// it comes from the last page, which `duration: true` reads (a quick jump to the end, not the whole file).
 export const readOpusDuration = async (file: File, onParseError: 'estimate' | 'unknown') => {
   try {
     // Loaded on demand so the ~340 KB parser is not part of app startup
     const musicMetadata = await import('music-metadata');
-    const metadata = await musicMetadata.parseBlob(file);
+    const metadata = await musicMetadata.parseBlob(file, { duration: true });
     if (metadata && metadata.format && metadata.format.duration) {
       return formatDuration(metadata.format.duration);
     }

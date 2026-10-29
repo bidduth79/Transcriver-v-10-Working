@@ -98,6 +98,10 @@ export const emptyTranscriptError = (reason: string | undefined, lang: 'bn' | 'e
     return new Error(lang === 'bn'
       ? 'অডিওটিতে থাকা বক্তব্য/উদ্ধৃতি কপিরাইট বা রিসিটেশন ফিল্টারে পড়েছে। অনুগ্রহ করে Settings থেকে অন্য কোনো মডেল (যেমন: Gemini 3.5 Flash বা 3.5 Flash Lite) অথবা Normal মোড দিয়ে পুনরায় চেষ্টা করুন।'
       : 'Transcription was blocked due to copyright or recitation policies. Please select another model in Settings or try Normal mode.');
+  } else if (reason === 'NOT_A_TRANSCRIPT') {
+    return new Error(lang === 'bn'
+      ? 'Gemini অডিওর লেখার বদলে অন্য কিছু ফেরত দিয়েছে (যেমন নিজের কাজের বর্ণনা), তাই এটা সেভ করা হয়নি। আবার চেষ্টা করুন, না হলে Settings থেকে অন্য মডেল বেছে নিন।'
+      : 'Gemini answered with something other than the words of the audio (such as a description of its work), so it was not saved. Please try again, or choose another model in Settings.');
   } else if (reason === 'MAX_TOKENS') {
     return new Error(lang === 'bn'
       ? 'টোকেন লিমিট পূর্ণ হয়ে গেছে। অনুগ্রহ করে অডিও ফাইলটি ছোট করে পুনরায় চেষ্টা করুন।'

@@ -1,4 +1,5 @@
 import type { FileMeta } from '../../types';
+import { readOpusDuration } from '../fileHandler/mediaDuration';
 
 export const getFileMetadata = (file: File): Promise<FileMeta> => {
   return new Promise((resolve) => {
@@ -44,38 +45,14 @@ export const getFileMetadata = (file: File): Promise<FileMeta> => {
     const isOpus = file.name.toLowerCase().endsWith('.opus') || file.name.toLowerCase().endsWith('.ogg') || file.type.includes('opus') || file.type.includes('ogg');
 
     if (isOpus) {
-      // Only parse up to 1MB for small files; for larger files estimate or read header slice to avoid loading entire multi-MB file into JS heap
-      const blobToParse = file.size <= 1.5 * 1024 * 1024 ? file : file.slice(0, 512 * 1024, file.type);
-      // Loaded on demand so the ~340 KB parser is not part of app startup
-      import('music-metadata').then(musicMetadata => musicMetadata.parseBlob(blobToParse)).then((metadata) => {
-          let durationStr = "Unknown";
-          if (metadata && metadata.format && metadata.format.duration && file.size <= 1.5 * 1024 * 1024) {
-              const duration = metadata.format.duration;
-              const mins = Math.floor(duration / 60);
-              const secs = Math.floor(duration % 60);
-              durationStr = `${mins}:${secs.toString().padStart(2, '0')}`;
-          } else {
-              const estimatedSecs = Math.max(10, Math.round(file.size / 4000));
-              const mins = Math.floor(estimatedSecs / 60);
-              const secs = Math.floor(estimatedSecs % 60);
-              durationStr = `${mins}:${secs.toString().padStart(2, '0')}`;
-          }
-          finish({
-            name: file.name,
-            size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-            duration: durationStr,
-            type: file.type,
-            date: new Date().toISOString()
-          });
-      }).catch(() => {
-          finish({
-            name: file.name,
-            size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-            duration: "Unknown",
-            type: file.type,
-            date: new Date().toISOString()
-          });
-      });
+      // The real length, read from the end of the file (see readOpusDuration); a size-based guess only if unreadable
+      readOpusDuration(file, 'estimate').then(duration => finish({
+        name: file.name,
+        size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+        duration,
+        type: file.type,
+        date: new Date().toISOString()
+      }));
       return;
     }
 

@@ -6,6 +6,7 @@ import { planAudioChunks, type AudioChunk } from './audioChunks';
 import { shiftTimestamps, formatClock } from './timestampShift';
 import { lastTimestampSeconds, appendContinuation } from './transcriptContinuation';
 import { isTranscribeModel, LONG_AUDIO_MODEL } from './transcribeModel';
+import { isNotATranscript } from './answerCheck';
 import { uiText } from '../../utils/uiText';
 import { emptyTranscriptError } from './transcriptionErrors';
 import { OVERLOAD_FALLBACK_MODEL } from '../../services/apiKeys/geminiClient';
@@ -48,12 +49,17 @@ const transcribeOnce = async (blob: Blob, mimeType: string, audioSeconds: number
       const request = buildTranscriptionRequest(modelName, mode, await source.partFor(ai, key), false, continueFrom);
       return timeoutMs ? { ...request, config: { ...request.config, timeoutMs } } : request;
     };
+    // An empty answer, or one that is not a transcript of this audio (the rest of a transcript is shorter by nature)
+    const isUnusable = (answer: string) => !answer.trim() || (!continueFrom && isNotATranscript(answer, audioSeconds));
     let result = await generateWithRecovery({ provider, buildRequest, lang, setStage, addToast });
     let text = extractResponseText(result.response);
     let requests = 1;
-    if (!text.trim() && !FINAL_REASONS.includes(emptyReasonOf(result.response))) {
-      console.warn(`Empty answer (${emptyReasonOf(result.response)}); asking once more with the same request`);
-      setStage(lang === 'bn' ? 'উত্তর খালি এসেছে, একই ভাবে আবার চেষ্টা করা হচ্ছে...' : 'The answer was empty; asking once more...');
+    if (isUnusable(text) && !FINAL_REASONS.includes(emptyReasonOf(result.response))) {
+      const empty = !text.trim();
+      console.warn(`${empty ? 'Empty answer' : 'Answer is not a transcript'} (${emptyReasonOf(result.response)}); asking once more with the same request`);
+      setStage(empty
+        ? (lang === 'bn' ? 'উত্তর খালি এসেছে, একই ভাবে আবার চেষ্টা করা হচ্ছে...' : 'The answer was empty; asking once more...')
+        : (lang === 'bn' ? 'উত্তরটা অডিওর লেখা নয়, একই ভাবে আবার চেষ্টা করা হচ্ছে...' : 'The answer is not a transcript; asking once more...'));
       result = await generateWithRecovery({ provider: { key: result.apiKey, source: result.source }, buildRequest, lang, setStage, addToast });
       text = extractResponseText(result.response);
       requests = 2;
@@ -69,10 +75,13 @@ const transcribeOnce = async (blob: Blob, mimeType: string, audioSeconds: number
       text = extractResponseText(result.response);
       requests = 3;
     }
+    // Still not a transcript: reported as a failed answer instead of being saved
+    const notATranscript = text.trim() !== '' && isUnusable(text);
+    if (notATranscript) console.warn(`Answer is not a transcript of ${Math.round(audioSeconds)}s of audio: ${text.slice(0, 120)}`);
     return {
-      text,
+      text: notATranscript ? '' : text,
       finishReason: result.response?.candidates?.[0]?.finishReason as string | undefined,
-      emptyReason: text.trim() ? undefined : emptyReasonOf(result.response),
+      emptyReason: notATranscript ? 'NOT_A_TRANSCRIPT' : text.trim() ? undefined : emptyReasonOf(result.response),
       requests,
       source: result.source,
       keyLabel: result.keyLabel,

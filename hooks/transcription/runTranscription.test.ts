@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const m = vi.hoisted(() => ({ parts: null as { blob: Blob; startSeconds: number }[] | null, running: 0, maxRunning: 0, cleanups: 0, asked: {} as Record<string, number>, models: [] as string[] }));
 
+// The answers here are short English stand-ins; only an answer saying so counts as "not a transcript"
+vi.mock('./answerCheck', () => ({ isNotATranscript: (text: string) => text.includes('describes its work') }));
 vi.mock('./audioChunks', () => ({ planAudioChunks: vi.fn(async () => m.parts) }));
 vi.mock('./geminiAudioSource', () => ({
   createAudioSource: (blob: Blob) => ({ partFor: async () => ({ name: (blob as File).name }), cleanup: () => { m.cleanups++; } }),
@@ -28,6 +30,9 @@ vi.mock('./geminiTranscriptionRunner', () => ({
     if (part.name === 'empty' || (part.name === 'flaky' && m.asked.flaky === 1)) return { response: { text: '', candidates: [] }, ai: {}, apiKey: 'KEY', source: 'Main', keyLabel: 'Main …KEY' };
     if (part.name === 'other' && m.asked.other <= 2) return { response: { text: '', candidates: [{ finishReason: 'OTHER' }] }, ai: {}, apiKey: 'KEY', source: 'Main', keyLabel: 'Main …KEY' };
     // 'break' stops at a programme's break; asked for the rest, it repeats a little and goes on to the end
+    // 'describe' first answers with a description of its work instead of the words, then with the words
+    if (part.name === 'describe' && m.asked.describe === 1) return { response: { text: 'A transcription that describes its work.', candidates: [{ finishReason: 'STOP' }] }, ai: {}, apiKey: 'KEY', source: 'Main', keyLabel: 'Main …KEY' };
+    if (part.name === 'describe-always') return { response: { text: 'A transcription that describes its work.', candidates: [{ finishReason: 'STOP' }] }, ai: {}, apiKey: 'KEY', source: 'Main', keyLabel: 'Main …KEY' };
     const text = BREAK_ANSWERS[part.name] ?? `[00:10] **Speaker 1:** ${part.name}`;
     return { response: { text, candidates: [{ finishReason: 'STOP' }] }, ai: {}, apiKey: 'KEY', source: 'Main', keyLabel: 'Main …KEY' };
   },
@@ -107,5 +112,12 @@ describe('transcribeAudio', () => {
   it('normal mode (no timestamps) is left as it is', async () => {
     await transcribeAudio(named('break'), 'audio/ogg', 2832, { ...options(), mode: 'normal' as const });
     expect(m.models).toHaveLength(1);
+  });
+
+  it('asks again when the answer is not a transcript, and never saves such an answer', async () => {
+    const fixed = await transcribeAudio(named('describe'), 'audio/ogg', 60, options());
+    expect(fixed).toMatchObject({ text: '[00:10] **Speaker 1:** describe', requests: 2 });
+    const failed = await transcribeAudio(named('describe-always'), 'audio/ogg', 60, options());
+    expect(failed).toMatchObject({ text: '', emptyReason: 'NOT_A_TRANSCRIPT', requests: 2 });
   });
 });
