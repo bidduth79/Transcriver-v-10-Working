@@ -79,7 +79,8 @@ export const FormattedTranscript = React.memo(({
               {timestamp}
             </span>
           )}
-          <div className="flex-1">
+          {/* Both edges of a paragraph line up (justified) */}
+          <div className="flex-1 text-justify">
             {parsedParts.map((item, j) => {
               if (item.isSpeaker) {
                 if (onSpeakerClick) {
