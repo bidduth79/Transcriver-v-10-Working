@@ -40,6 +40,9 @@ export const VirtualHistoryRows = ({ list, activeColors, cardProps }: Props) => 
                    return (
                      <div
                        key={virtualRow.key}
+                       // Each row's real height is measured, so cards that grow (a keyword badge) never overlap
+                       data-index={virtualRow.index}
+                       ref={rowVirtualizer.measureElement}
                        id={`history-group-${flatItem.group.replace(/[\s\/,]+/g, '-')}`}
                        className="w-full flex justify-center py-2 z-30 pointer-events-none"
                        style={{
@@ -65,6 +68,9 @@ export const VirtualHistoryRows = ({ list, activeColors, cardProps }: Props) => 
                  return (
                      <div
                        key={virtualRow.key}
+                       // Each row's real height is measured, so cards that grow (a keyword badge) never overlap
+                       data-index={virtualRow.index}
+                       ref={rowVirtualizer.measureElement}
                        style={{
                          position: 'absolute',
                          top: 0,

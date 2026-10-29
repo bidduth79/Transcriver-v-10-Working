@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useEffectEvent } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { buildDuplicateCounts, searchAndGroupHistory, flattenGroups, collectHistoryDates, buildCalendarDays } from '../utils/historyListUtils';
 import { useTranscriptSearchIds } from '../../../hooks/history/useTranscriptSearchIds';
@@ -14,7 +14,7 @@ interface Options {
 }
 
 // Search, grouping, virtualization and calendar data for the sidebar history list
-export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory, scrollContainerEl, activeHistoryId }: Options) => {
+export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory, scrollContainerEl }: Options) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isSentimentPickerOpen, setIsSentimentPickerOpen] = useState(false);
@@ -67,7 +67,8 @@ export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory
 
   const getScrollElement = React.useCallback(() => scrollContainerEl, [scrollContainerEl]);
   const estimateSize = React.useCallback(
-    (index: number) => (flatItemsRef.current[index]?.type === 'header' ? 44 : 126),
+    // A first guess only; rows are measured once shown
+    (index: number) => (flatItemsRef.current[index]?.type === 'header' ? 44 : 125),
     []
   );
   const getItemKey = React.useCallback((index: number) => {
@@ -106,32 +107,7 @@ export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory
     pendingScrollGroupRef.current = null;
     rowVirtualizer.scrollToIndex(index, { align: 'start' });
   }, [flatItems, rowVirtualizer]);
-
-  // Smoothly scroll to active item to prevent layout jump when FileInfoSection mounts
-  const prevActiveIdRef = React.useRef(activeHistoryId);
-  // Reads the current list without making the effect below run again when the list changes
-  const scrollToActiveSoon = useEffectEvent((id: string) => {
-    const index = flatItems.findIndex(i => i.type === 'item' && i.item?.id === id);
-    if (index === -1) return null;
-    return setTimeout(() => {
-      try {
-        rowVirtualizer.scrollToIndex(index, { align: 'auto', behavior: 'smooth' });
-      } catch {
-        // The list may have changed meanwhile; not scrolling is harmless
-      }
-    }, 150);
-  });
-  useEffect(() => {
-    if (!activeHistoryId) {
-      prevActiveIdRef.current = null;
-      return;
-    }
-    if (activeHistoryId !== prevActiveIdRef.current) {
-      prevActiveIdRef.current = activeHistoryId;
-      const timer = scrollToActiveSoon(activeHistoryId);
-      if (timer !== null) return () => clearTimeout(timer);
-    }
-  }, [activeHistoryId]);
+  // Loading an item does not scroll the list: the sidebar stays where the user left it
 
   return {
     isSearchOpen, setIsSearchOpen,

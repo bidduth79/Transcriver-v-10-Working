@@ -147,9 +147,11 @@ describe('SidebarHistory behavior', () => {
     expect(getByText('10/21/2026')).toBeTruthy();
   });
 
-  it('scrolls smoothly to a newly active item', async () => {
+  it('does not scroll the list when an item is loaded', async () => {
     const { rerender, props } = setup();
+    m.scrollToIndex.mockClear();
     await act(async () => { rerender(<SidebarHistory {...props} activeHistoryId="c" />); });
-    await waitFor(() => expect(m.scrollToIndex).toHaveBeenCalledWith(4, { align: 'auto', behavior: 'smooth' }));
+    await act(async () => { await new Promise((r) => setTimeout(r, 300)); });
+    expect(m.scrollToIndex).not.toHaveBeenCalled();
   });
 });

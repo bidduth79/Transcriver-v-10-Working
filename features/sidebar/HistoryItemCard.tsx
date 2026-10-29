@@ -62,7 +62,7 @@ export const HistoryItemCard = memo(({
       onClick={handleClick}
       onContextMenu={(e) => e.preventDefault()}
       onDragStart={(e) => e.preventDefault()}
-      className={`p-4 border rounded-2xl transition-colors duration-200 group relative cursor-pointer shadow-sm hover:shadow-xl select-none overflow-hidden ${itemClass}`}
+      className={`p-4 border rounded-2xl transition-colors duration-200 group relative cursor-pointer shadow-sm hover:shadow-xl select-none ${itemClass}`}
     >
       {/* Smooth GPU-accelerated 3-second hold-to-delete progress bar */}
       {isPressing && <HoldToDeleteProgress />}
