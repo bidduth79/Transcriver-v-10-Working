@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { useListScrollMargin } from './useListScrollMargin';
 import { buildDuplicateCounts, searchAndGroupHistory, flattenGroups, collectHistoryDates, buildCalendarDays } from '../utils/historyListUtils';
 import { useTranscriptSearchIds } from '../../../hooks/history/useTranscriptSearchIds';
 import type { HistoryItem } from '../../../types';
@@ -76,9 +77,11 @@ export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory
     return flatItem.type === 'header' ? `header-${flatItem.group}` : `item-${flatItem.item?.id ?? index}`;
   }, []);
 
+  const { listRef, scrollMargin } = useListScrollMargin(scrollContainerEl);
   const rowVirtualizer = useVirtualizer({
     count: flatItems.length,
     getScrollElement,
+    scrollMargin,
     estimateSize,
     getItemKey,
     overscan: 8,
@@ -116,6 +119,7 @@ export const useHistoryListData = ({ history, fullHistory, initialGroupedHistory
     isLoadingDate, setIsLoadingDate,
     viewDate, setViewDate,
     processedGroupedHistory, flatItems, rowVirtualizer,
+    listRef, scrollMargin,
     availableDateStrings, calendarDays, scrollToGroupWhenListed,
   };
 };

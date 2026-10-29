@@ -24,9 +24,10 @@ interface Props {
 
 // Absolutely-positioned rows (date headers + history cards) driven by the virtualizer
 export const VirtualHistoryRows = ({ list, activeColors, cardProps }: Props) => {
-  const { flatItems, rowVirtualizer } = list;
+  const { flatItems, rowVirtualizer, listRef, scrollMargin } = list;
   return (
              <div
+               ref={listRef}
                style={{
                  height: `${rowVirtualizer.getTotalSize()}px`,
                  width: '100%',
@@ -50,7 +51,7 @@ export const VirtualHistoryRows = ({ list, activeColors, cardProps }: Props) => 
                          top: 0,
                          left: 0,
                          height: '44px',
-                         transform: `translateY(${virtualRow.start}px)`
+                         transform: `translateY(${virtualRow.start - scrollMargin}px)`
                        }}
                      >
                        <div className="flex items-center gap-2">
@@ -76,7 +77,7 @@ export const VirtualHistoryRows = ({ list, activeColors, cardProps }: Props) => 
                          top: 0,
                          left: 0,
                          width: '100%',
-                         transform: `translateY(${virtualRow.start}px)`
+                         transform: `translateY(${virtualRow.start - scrollMargin}px)`
                        }}
                      >
                        <div className="pb-3">
