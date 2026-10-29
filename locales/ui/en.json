@@ -396,5 +396,16 @@
   "duplicateTranscribeAnywayHint": "Already transcribed, so the batch skips it. Click to transcribe it anyway.",
   "duplicateWillTranscribe": "✓ Will transcribe",
   "duplicateWillTranscribeHint": "Click to skip it again",
-  "duplicateSkippedBadge": "Skipped"
+  "duplicateSkippedBadge": "Skipped",
+  "envKeysTitle": ".env keys (kept on the server)",
+  "envKeysHint": "Used after the keys above (saved in this browser), in .env order. Write GEMINI_API_KEY_1, GEMINI_API_KEY_2 … in .env, then press Reload.",
+  "envKeysEmpty": "No keys in .env",
+  "envKeysReload": "Reload .env",
+  "envKeysReloaded": "{count} key(s) found in .env",
+  "envKeysServerMissing": "The app's server is not answering, so the .env keys cannot be read. Start the app with npm run dev.",
+  "envKeyTest": "Test",
+  "envKeyWorks": "{label}: the key works",
+  "envKeyFailed": "{label}: the key does not work. {message}",
+  "keyRequestsToday": "{count} request(s) today",
+  "keyQuotaUsedUp": "{model}: quota used up, back at {time}"
 }

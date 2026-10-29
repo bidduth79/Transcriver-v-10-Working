@@ -1,16 +1,18 @@
 import React from 'react';
 import { UserApiKey } from '../../../services/ApiKeyManager';
+import { KeyQuotaLine } from './KeyQuotaLine';
 
 interface Props {
   keyList: UserApiKey[];
   activeKeyId: string | null;
   isDark: boolean;
+  appLang: string;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-// Saved keys (masked) with radio-style selection and delete buttons
-export const ApiKeyList = ({ keyList, activeKeyId, isDark, onSelect, onDelete }: Props) => (
+// Keys saved in the browser (masked, used before the .env keys) with radio-style selection, today's use and delete buttons
+export const ApiKeyList = ({ keyList, activeKeyId, isDark, appLang, onSelect, onDelete }: Props) => (
             <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
                 {keyList.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center opacity-30">
@@ -41,6 +43,7 @@ export const ApiKeyList = ({ keyList, activeKeyId, isDark, onSelect, onDelete }:
                                             {activeKeyId === k.id && <span className="text-[10px] font-black bg-indigo-500 text-white px-2 py-0.5 rounded-full uppercase tracking-widest">Active</span>}
                                         </div>
                                         <p className="text-[10px] font-mono opacity-40 mt-1 truncate">****{(k.key || '').slice(-8)}</p>
+                                        <KeyQuotaLine tail={(k.key || '').trim().slice(-4)} appLang={appLang} />
                                     </div>
                                 </div>
                                 <button 

@@ -1,6 +1,6 @@
 // The browser's Gemini requests (generate, stream, file upload/get/delete), answered through the server
 import express from 'express';
-import { runWithServerFallback, statusFromError, abortWhenClientLeaves } from './geminiServer.ts';
+import { runWithKey, statusFromError, abortWhenClientLeaves } from './geminiServer.ts';
 
 export const registerGeminiRoutes = (app: express.Express) => {
   app.post(
@@ -12,7 +12,7 @@ export const registerGeminiRoutes = (app: express.Express) => {
         const requestedKey = req.headers['x-gemini-key'];
         const buffer = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body || []);
         const blob = new Blob([buffer], { type: mimeType });
-        const file = await runWithServerFallback(requestedKey, (ai) =>
+        const file = await runWithKey(requestedKey, (ai) =>
           ai.files.upload({ file: blob, config: { mimeType } })
         );
         res.json({ name: file.name, uri: file.uri, state: file.state });
@@ -29,8 +29,8 @@ export const registerGeminiRoutes = (app: express.Express) => {
     try {
       const { apiKey, model, contents, config } = req.body ?? {};
       const signal = abortWhenClientLeaves(res);
-      const response = await runWithServerFallback(apiKey, (ai) =>
-        ai.models.generateContent({ model, contents, config: { ...config, abortSignal: signal } }), signal
+      const response = await runWithKey(apiKey, (ai) =>
+        ai.models.generateContent({ model, contents, config: { ...config, abortSignal: signal } })
       );
       res.json({
         ...response,
@@ -49,8 +49,8 @@ export const registerGeminiRoutes = (app: express.Express) => {
     try {
       const { apiKey, model, contents, config } = req.body ?? {};
       const signal = abortWhenClientLeaves(res);
-      const stream = await runWithServerFallback(apiKey, (ai) =>
-        ai.models.generateContentStream({ model, contents, config: { ...config, abortSignal: signal } }), signal
+      const stream = await runWithKey(apiKey, (ai) =>
+        ai.models.generateContentStream({ model, contents, config: { ...config, abortSignal: signal } })
       );
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
@@ -80,7 +80,7 @@ export const registerGeminiRoutes = (app: express.Express) => {
   app.post('/api/gemini/files/get', async (req, res) => {
     try {
       const { apiKey, name } = req.body ?? {};
-      const file = await runWithServerFallback(apiKey, (ai) => ai.files.get({ name }));
+      const file = await runWithKey(apiKey, (ai) => ai.files.get({ name }));
       res.json({ name: file.name, uri: file.uri, state: file.state });
     } catch (err) {
       const status = statusFromError(err);
@@ -91,7 +91,7 @@ export const registerGeminiRoutes = (app: express.Express) => {
   app.post('/api/gemini/files/delete', async (req, res) => {
     try {
       const { apiKey, name } = req.body ?? {};
-      await runWithServerFallback(apiKey, (ai) => ai.files.delete({ name }));
+      await runWithKey(apiKey, (ai) => ai.files.delete({ name }));
       res.json({ ok: true });
     } catch (err) {
       const status = statusFromError(err);

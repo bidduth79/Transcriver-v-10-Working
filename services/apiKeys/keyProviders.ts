@@ -6,27 +6,22 @@ import { useAppStore } from '../../hooks/useAppStore';
 import { ACTIVE_KEY_ID_STORAGE } from './storageKeys';
 import { getActiveModel } from './modelSettings';
 import { newestFirst, type UserApiKey } from './keyStore';
+import { listEnvKeys, isEnvKeyId } from './envKeys';
 
-const getEnvApiKey = (): { key: string; source: string } | null => {
-  const env = import.meta.env;
-  const envKey = env ? (env.VITE_API_KEY_1 || env.VITE_GEMINI_API_KEY) : undefined;
-
-  if (envKey && typeof envKey === 'string' && envKey.trim() !== '') {
-    return {
-      key: envKey.trim(),
-      source: 'Environment (.env)'
-    };
-  }
-
-  return null;
-};
-
-// Key priority: manually selected → newest saved key → .env → local PHP server → server-managed Gemini key
+// Key priority: manually selected → newest key saved in the browser → .env keys (kept on the server)
+// → local PHP server → server-managed Gemini key
 export const getActiveProvider = async () => {
   const activeId = localStorage.getItem(ACTIVE_KEY_ID_STORAGE);
   const currentModel = getActiveModel();
+  const envKeys = await listEnvKeys();
 
-  if (activeId) {
+  if (activeId && isEnvKeyId(activeId)) {
+    const selected = envKeys.find(k => k.id === activeId);
+    if (selected) return { id: selected.id, key: selected.token, model: currentModel, source: selected.label };
+    // No longer in .env
+    localStorage.removeItem(ACTIVE_KEY_ID_STORAGE);
+    useAppStore.getState().triggerActiveApiKeyChanged();
+  } else if (activeId) {
     try {
       const allKeys = await getAllFromStore(STORES.API_KEYS);
       if (Array.isArray(allKeys)) {
@@ -68,14 +63,8 @@ export const getActiveProvider = async () => {
     // Ignore
   }
 
-  const envProvider = getEnvApiKey();
-  if (envProvider) {
-    return {
-      id: 'env',
-      key: envProvider.key,
-      model: currentModel,
-      source: envProvider.source
-    };
+  if (envKeys.length > 0) {
+    return { id: envKeys[0].id, key: envKeys[0].token, model: currentModel, source: envKeys[0].label };
   }
 
   if (isLocalServerEnabled()) {
@@ -110,7 +99,7 @@ export const getActiveProvider = async () => {
 };
 
 /**
- * Returns alternative API keys (other saved keys + .env key + server key) when the primary key fails
+ * Returns alternative API keys (other saved keys, then the .env keys, then the server key) when the primary key fails
  * with "project has been denied access" (403) or quota exhaustion (429).
  */
 export const getFallbackProviders = async (failedKey: string): Promise<{ id: string; key: string; source: string }[]> => {
@@ -137,17 +126,17 @@ export const getFallbackProviders = async (failedKey: string): Promise<{ id: str
     // Ignore
   }
 
-  const envProvider = getEnvApiKey();
-  if (envProvider && !seenKeys.has(envProvider.key)) {
-    seenKeys.add(envProvider.key);
-    fallbacks.push({
-      id: 'env',
-      key: envProvider.key,
-      source: envProvider.source
-    });
+  // The .env keys come after the browser's, in their .env order
+  const envKeys = await listEnvKeys();
+  for (const envKey of envKeys) {
+    if (!seenKeys.has(envKey.token)) {
+      seenKeys.add(envKey.token);
+      fallbacks.push({ id: envKey.id, key: envKey.token, source: envKey.label });
+    }
   }
 
-  if (import.meta.env.MODE !== 'test' && !seenKeys.has('SERVER_KEY')) {
+  // The server's own key is the first .env key, already tried above when there is one
+  if (envKeys.length === 0 && import.meta.env.MODE !== 'test' && !seenKeys.has('SERVER_KEY')) {
     seenKeys.add('SERVER_KEY');
     fallbacks.push({
       id: 'server',

@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import path from 'path';
 import { registerGeminiRoutes } from './server/geminiRoutes.ts';
+import { registerKeyRoutes } from './server/keyRoutes.ts';
 import { attachLiveSocket } from './server/liveSocket.ts';
 
 const PORT = Number(process.env.PORT) || 3000;
@@ -19,6 +20,7 @@ async function startServer() {
     next();
   });
 
+  registerKeyRoutes(app);
   registerGeminiRoutes(app);
   attachLiveSocket(server);
 

@@ -396,5 +396,16 @@
   "duplicateTranscribeAnywayHint": "আগেই ট্রান্সক্রাইব করা আছে, তাই ব্যাচে বাদ যাবে। তবুও ট্রান্সক্রাইব করতে ক্লিক করুন।",
   "duplicateWillTranscribe": "✓ করা হবে",
   "duplicateWillTranscribeHint": "আবার বাদ দিতে ক্লিক করুন",
-  "duplicateSkippedBadge": "বাদ"
+  "duplicateSkippedBadge": "বাদ",
+  "envKeysTitle": ".env-এর key (সার্ভারে রাখা)",
+  "envKeysHint": "উপরের (এই ব্রাউজারে রাখা) key-এর পরে, .env-এর ক্রমে ব্যবহার হয়। .env-এ GEMINI_API_KEY_1, GEMINI_API_KEY_2 … লিখে 'আবার পড়ুন' চাপুন।",
+  "envKeysEmpty": ".env-এ কোনো key নেই",
+  "envKeysReload": "আবার পড়ুন",
+  "envKeysReloaded": ".env-এ {count}টি key পাওয়া গেছে",
+  "envKeysServerMissing": "অ্যাপের সার্ভার সাড়া দিচ্ছে না, তাই .env-এর key পড়া যাচ্ছে না। npm run dev দিয়ে অ্যাপ চালু করুন।",
+  "envKeyTest": "পরীক্ষা",
+  "envKeyWorks": "{label}: key ঠিক আছে",
+  "envKeyFailed": "{label}: key কাজ করছে না। {message}",
+  "keyRequestsToday": "আজ {count}টি অনুরোধ",
+  "keyQuotaUsedUp": "{model}: কোটা শেষ, {time}-এ ফিরবে"
 }

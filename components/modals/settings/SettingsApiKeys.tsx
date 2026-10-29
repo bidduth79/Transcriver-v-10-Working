@@ -3,6 +3,7 @@ import { ConfirmModal } from '../ConfirmModal';
 import { useApiKeySettings } from './useApiKeySettings';
 import { ApiKeyModelSelect } from './ApiKeyModelSelect';
 import { ApiKeyList } from './ApiKeyList';
+import { EnvKeyList } from './EnvKeyList';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { ToastType } from '../../../hooks/useToast';
 import { uiText } from '../../../utils/uiText';
@@ -54,7 +55,9 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
             </div>
 
             {/* List Area */}
-            <ApiKeyList keyList={keyList} activeKeyId={activeKeyId} isDark={isDark} onSelect={handleSelectKey} onDelete={handleDeleteKey} />
+            <ApiKeyList keyList={keyList} activeKeyId={activeKeyId} isDark={isDark} appLang={appLang} onSelect={handleSelectKey} onDelete={handleDeleteKey} />
+
+            <EnvKeyList activeKeyId={activeKeyId} isDark={isDark} appLang={appLang} addToast={addToast} onSelect={handleSelectKey} />
 
             <ConfirmModal
                 isOpen={!!keyToDelete}

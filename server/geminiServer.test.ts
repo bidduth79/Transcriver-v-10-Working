@@ -3,12 +3,13 @@ import { EventEmitter } from 'events';
 
 vi.mock('@google/genai', () => ({ GoogleGenAI: class { constructor(public opts: { apiKey: string }) {} } }));
 
-import { abortWhenClientLeaves, runWithServerFallback } from './geminiServer';
+import { abortWhenClientLeaves, runWithKey } from './geminiServer';
+import { loadEnvKeys, getEnvKeys, envKeyToken } from './envKeys';
 
 // A stand-in for Express's response: 'close' fires when the connection ends, finished or not
 const response = (finished: boolean) => Object.assign(new EventEmitter(), { writableEnded: finished }) as never;
 
-beforeEach(() => { process.env.GEMINI_API_KEY = 'SERVER-KEY'; });
+beforeEach(() => { process.env.GEMINI_API_KEY = 'SERVER-KEY'; loadEnvKeys('no-such-file.env'); });
 afterEach(() => { delete process.env.GEMINI_API_KEY; });
 
 describe('server Gemini helpers', () => {
@@ -24,20 +25,20 @@ describe('server Gemini helpers', () => {
     expect(answeredSignal.aborted).toBe(false);
   });
 
-  it('tries the server key after a failed request, but not once the browser has gone', async () => {
+  it('uses only the requested key: a browser key as sent, a .env token as its key, no silent second try', async () => {
     const keys: string[] = [];
     const op = async (ai: { opts: { apiKey: string } }) => {
       keys.push(ai.opts.apiKey);
       if (ai.opts.apiKey === 'USER-KEY') throw new Error('503 UNAVAILABLE');
       return 'ok';
     };
-    expect(await runWithServerFallback('USER-KEY', op as never)).toBe('ok');
-    expect(keys).toEqual(['USER-KEY', 'SERVER-KEY']);
+    await expect(runWithKey('USER-KEY', op as never)).rejects.toThrow('503');
+    expect(keys).toEqual(['USER-KEY']);
 
     keys.length = 0;
-    const controller = new AbortController();
-    controller.abort();
-    await expect(runWithServerFallback('USER-KEY', op as never, controller.signal)).rejects.toThrow('503');
-    expect(keys).toEqual(['USER-KEY']);
+    expect(await runWithKey('SERVER_KEY', op as never)).toBe('ok');
+    expect(await runWithKey(envKeyToken(getEnvKeys()[0]), op as never)).toBe('ok');
+    expect(keys).toEqual(['SERVER-KEY', 'SERVER-KEY']);
+    await expect(runWithKey('env:env-99:abcd', op as never)).rejects.toThrow('no longer in .env');
   });
 });

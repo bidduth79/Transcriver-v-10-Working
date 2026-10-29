@@ -5,6 +5,7 @@ const m = vi.hoisted(() => ({
   localServer: { value: false },
   triggerActiveApiKeyChanged: vi.fn(),
   triggerApiCallLogged: vi.fn(),
+  envKeys: [] as { id: string; label: string; token: string }[],
 }));
 
 vi.mock('./db.ts', () => ({
@@ -12,6 +13,8 @@ vi.mock('./db.ts', () => ({
   addToStore: vi.fn(async (_s: string, item: any) => { m.store.push(item); }),
   deleteFromStore: vi.fn(async (_s: string, id: string) => { m.store = m.store.filter(k => k.id !== id); }),
 }));
+// The .env keys as the server lists them
+vi.mock('./apiKeys/envKeys', () => ({ listEnvKeys: async () => m.envKeys, isEnvKeyId: (id: string) => id.startsWith('env-') }));
 vi.mock('./api.ts', () => ({ getApiUrl: (p: string) => `http://local/${p}` }));
 vi.mock('../utils/config', () => ({ isLocalServerEnabled: () => m.localServer.value }));
 vi.mock('../hooks/useAppStore', () => ({
@@ -28,8 +31,7 @@ beforeEach(() => {
   localStorage.clear();
   m.store = [];
   m.localServer.value = false;
-  vi.stubEnv('VITE_API_KEY_1', '');
-  vi.stubEnv('VITE_GEMINI_API_KEY', '');
+  m.envKeys = [];
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
@@ -81,9 +83,12 @@ describe('getActiveProvider', () => {
     expect(m.triggerActiveApiKeyChanged).toHaveBeenCalledTimes(1);
   });
 
-  it('uses the .env key when no saved keys exist', async () => {
-    vi.stubEnv('VITE_GEMINI_API_KEY', ' ENVKEY ');
-    expect(await AKM.getActiveProvider()).toEqual({ id: 'env', key: 'ENVKEY', model: 'gemini-3.8-flash', source: 'Environment (.env)' });
+  it('uses the first .env key (as its token) when no saved keys exist, or the .env key chosen in Settings', async () => {
+    m.envKeys = [{ id: 'env-1', label: 'Office', token: 'env:env-1:AAAA' }, { id: 'env-2', label: 'Home', token: 'env:env-2:BBBB' }];
+    expect(await AKM.getActiveProvider()).toEqual({ id: 'env-1', key: 'env:env-1:AAAA', model: 'gemini-3.8-flash', source: 'Office' });
+    m.store = [key('1', 'SAVED', 'Saved', '2026-01-01')];
+    localStorage.setItem('manual_active_key_id', 'env-2');
+    expect(await AKM.getActiveProvider()).toEqual({ id: 'env-2', key: 'env:env-2:BBBB', model: 'gemini-3.8-flash', source: 'Home' });
   });
 
   it('asks the local server when enabled', async () => {
@@ -100,8 +105,8 @@ describe('getActiveProvider', () => {
 });
 
 describe('getFallbackProviders', () => {
-  it('lists other saved keys newest first, then .env, skipping duplicates', async () => {
-    vi.stubEnv('VITE_API_KEY_1', 'ENV');
+  it('lists other saved keys newest first, then the .env keys, skipping duplicates', async () => {
+    m.envKeys = [{ id: 'env-1', label: 'Office', token: 'env:env-1:AAAA' }];
     m.store = [
       key('1', 'AAA', 'A', '2026-01-01'), key('2', 'BBB ', '', '2026-03-01'),
       key('3', 'AAA', 'Dup', '2026-02-01'), key('4', 'FAILED', 'F', '2026-04-01'),
@@ -109,7 +114,7 @@ describe('getFallbackProviders', () => {
     expect(await AKM.getFallbackProviders(' FAILED ')).toEqual([
       { id: '2', key: 'BBB', source: 'Saved Key' },
       { id: '3', key: 'AAA', source: 'Dup' },
-      { id: 'env', key: 'ENV', source: 'Environment (.env)' },
+      { id: 'env-1', key: 'env:env-1:AAAA', source: 'Office' },
     ]);
   });
 });
