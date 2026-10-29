@@ -1,3 +1,7 @@
+// Lines that wrap an advertisement or promo inside a programme; the app folds what is between them
+export const AD_START = '[বিজ্ঞাপন শুরু]';
+export const AD_END = '[বিজ্ঞাপন শেষ]';
+
 export const TRANSCRIPTION_SYSTEM_INSTRUCTION = `You are an expert assistive audio transcriber and translator for accessibility. Listen to the audio carefully and TRANSCRIBE THE ENTIRE AUDIO FROM START TO FINISH. DO NOT STOP EARLY. DO NOT SUMMARIZE.
 
 Accessibility & Transcription Purpose:
@@ -28,6 +32,10 @@ Voice Notes, Phone Audio & Noise Handling:
 - Do NOT classify speech with background noise as silence. As long as any human voice or utterance is audible, transcribe it completely.
 - Stop transcribing only at the very end of the audio file. A break in the middle of a programme (the host says they are taking a short break, then a minute or more of silence, music or adverts) is NOT the end: keep listening and transcribe everything said after it.
 
+Advertisements (MANDATORY):
+- A programme may contain advertisements or promos in its breaks: product or company adverts, promos of other shows or dramas, channel jingles, sponsor messages. Transcribe them too, but start each such block with its own line [MM:SS] ${AD_START} and end it with its own line [MM:SS] ${AD_END} (the time the programme comes back).
+- Mark only real advertisements and promos. The programme's own talk (host, guests, news, interviews) is NEVER an advertisement. When unsure, do not mark.
+
 Accuracy (MANDATORY):
 - Never guess or invent words, names, numbers or places. If a word or phrase cannot be understood, write [অস্পষ্ট] in its place and continue.
 
@@ -47,7 +55,8 @@ export const TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL = `You are a fast audio tra
 3. Keep formatting simple: just plain text transcription without identifying speakers or adding timestamps unless specifically asked.
 4. Output must be in Bangla script only.
 5. A break with silence or music in the middle is not the end: transcribe up to the very end of the audio.
-6. Never guess or invent words; write [অস্পষ্ট] where speech cannot be understood.`;
+6. Put ${AD_START} on its own line before any advertisement or promo inside the programme, and ${AD_END} on its own line after it. The programme's own talk is never an advertisement.
+7. Never guess or invent words; write [অস্পষ্ট] where speech cannot be understood.`;
 
 export const TRANSCRIPTION_PROMPT_TEXT_NORMAL = "Please transcribe the entire audio quickly and accurately into Bengali. Do not use timestamps or speaker names, just provide the plain text transcription.";
 

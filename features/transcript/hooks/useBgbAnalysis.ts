@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { analyzeTranscriptForBgb } from '../../../services/bgbAnalysisService';
 import { BgbAnalysisResult, BgbRemarkType } from '../../../types/bgb';
+import { withoutAds } from '../../../utils/adBlocks';
 
 export const useBgbAnalysis = (transcript: string, sensitiveMatches: string[]) => {
   const [isBgbAnalysisEnabled, setIsBgbAnalysisEnabled] = useState(() => {
@@ -31,7 +32,7 @@ export const useBgbAnalysis = (transcript: string, sensitiveMatches: string[]) =
     setIsAnalyzing(true);
     setBgbAnalysisResult(null);
 
-    const result = await analyzeTranscriptForBgb(transcript, sensitiveMatches);
+    const result = await analyzeTranscriptForBgb(withoutAds(transcript), sensitiveMatches);
     setBgbAnalysisResult(result);
     setIsAnalyzing(false);
   };

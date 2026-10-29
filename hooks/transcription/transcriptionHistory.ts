@@ -1,5 +1,6 @@
 import type { FileMeta, HistoryItem } from '../../types';
 import { addToStore, STORES } from '../../services/db';
+import { withoutAds } from '../../utils/adBlocks';
 
 // File info shown in the sidebar; YouTube downloads add the channel
 type SourceMeta = Partial<FileMeta> & { channelName?: string };
@@ -65,10 +66,12 @@ export const scheduleBgbAnalysis = (item: TranscriptionHistoryItem, text: string
       const { getSensitiveKeywords } = await import('../../utils/sensitiveKeywords');
       const { analyzeTranscriptForBgb } = await import('../../services/bgbAnalysisService');
       const keywords = getSensitiveKeywords();
-      const lower = text.toLowerCase();
+      // Advertisements in the programme's breaks are not part of what is analysed
+      const programmeText = withoutAds(text);
+      const lower = programmeText.toLowerCase();
       const matches = keywords.filter((kw: string) => lower.includes(kw.toLowerCase()));
       if (matches.length > 0) {
-        const result = await analyzeTranscriptForBgb(text, matches);
+        const result = await analyzeTranscriptForBgb(programmeText, matches);
         if (result?.remark) {
           itemForBgb.bgbRemark = result.remark;
           await addToStore(STORES.HISTORY, itemForBgb);

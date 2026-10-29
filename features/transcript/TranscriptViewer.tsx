@@ -1,6 +1,7 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { useTranscriptFormatter } from './hooks/useTranscriptFormatter.tsx';
-import { splitLongParagraphs } from '../../hooks/transcription/textCleanup';
+import { parseTranscriptLines } from './utils/parseTranscriptLines';
+import { AdBlockToggle } from './components/AdBlockToggle';
 import { UNCLEAR_MARK } from '../../constants/instructions';
 import { useThemeStore } from '../../hooks/useThemeStore';
 import { uiText } from '../../utils/uiText';
@@ -8,18 +9,6 @@ import { uiText } from '../../utils/uiText';
 // Robust Regex Escaping
 export const escapeRegExp = (string: string) => {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-};
-
-const TIMESTAMP_REGEX = /^[\*\_\[\(\s]*((?:[0-9০-৯]{1,2}:)?[0-9০-৯]{1,2}:[0-9০-৯]{2})[\*\_\]\)\s]*\s+(.*)/;
-const GENERIC_NAMES = ['speaker', 'male', 'female', 'unknown', 'host', 'guest', 'interviewer', 'interviewee', 'announcer', 'voice', 'person'];
-
-const isProperName = (name: string) => {
-  const lowerName = name.toLowerCase().replace(/[^a-z]/g, '');
-  for (const generic of GENERIC_NAMES) {
-    if (lowerName.includes(generic)) return false;
-  }
-  if (/^\d+$/.test(lowerName)) return false;
-  return true;
 };
 
 export interface FormattedTranscriptProps {
@@ -55,53 +44,30 @@ export const FormattedTranscript = React.memo(({
   matchIndexRef.current = 0;
 
   // Pre-parse the entire transcript ONCE per text change (0ms re-render overhead)
-  const parsedLines = useMemo(() => {
-    if (!text) return [];
-    
-    // Force a newline before any timestamp like [07:41] or (1:23:45) so that inline speakers get separated properly
-    // Older transcripts may hold one huge paragraph; it is shown in readable pieces (the saved text is unchanged)
-    const textWithNewlines = splitLongParagraphs(text).replace(/([\[\(](?:[0-9০-৯]{1,2}:)?[0-9০-৯]{1,2}:[0-9০-৯]{2}[\]\)])/g, '\n$1');
-    
-    // A line without its own time (a split paragraph) seeks to the last time above it
-    let lastTimestamp = '';
-    return textWithNewlines
-      .split('\n')
-      .map((line: string) => line.trim())
-      .filter((line: string) => line.length > 0)
-      .map((line: string) => {
-        const timestampMatch = line.match(TIMESTAMP_REGEX);
-        let timestamp = '';
-        let content = line;
-        if (timestampMatch) {
-          timestamp = `[${timestampMatch[1]}]`;
-          content = timestampMatch[2];
-        }
-        const parts = content.split(/(\*\*.*?\*\*)/g);
-        const parsedParts = parts.map((part: string) => {
-          if (part.startsWith('**') && part.endsWith('**')) {
-            const textInside = part.slice(2, -2);
-            const hasColon = textInside.trim().endsWith(':');
-            const cleanName = textInside.replace(/:$/, '').trim();
-            const isGeneric = !isProperName(cleanName);
-            const isSpeaker = cleanName.split(/\s+/).length <= 4 && (!isGeneric || hasColon);
-            return { isSpeaker, textInside, cleanName };
-          }
-          return { isSpeaker: false, textInside: part, cleanName: '' };
-        });
-        if (timestamp) lastTimestamp = timestamp;
-        return { timestamp, seekTime: lastTimestamp, parsedParts };
-      });
-  }, [text]);
+  const { lines: parsedLines, adRanges } = useMemo(() => parseTranscriptLines(text), [text]);
+  // Advertisement blocks stay folded until opened; while searching all are open, so every match can be reached
+  const [openAds, setOpenAds] = useState<ReadonlySet<number>>(() => new Set());
+  const toggleAd = (block: number) => setOpenAds(prev => {
+    const next = new Set(prev);
+    if (!next.delete(block)) next.add(block);
+    return next;
+  });
 
   if (!text) return null;
 
   return (
     <div className="space-y-2 selection:bg-indigo-500/30">
-      {parsedLines.map(({ timestamp, seekTime, parsedParts }, i) => (
+      {parsedLines.map(({ timestamp, seekTime, parsedParts, adBlock, adStart }, i) => {
+        if (adBlock !== null) {
+          const isOpen = !!searchTerm || openAds.has(adBlock);
+          if (adStart) return <AdBlockToggle key={i} range={adRanges[adBlock]} isOpen={isOpen} onToggle={() => toggleAd(adBlock)} isDark={isDark} appLang={appLang} />;
+          if (!isOpen) return null;
+        }
+        return (
         <div 
           key={i}
           style={!searchTerm ? { contentVisibility: 'auto', containIntrinsicSize: '0 36px' } : undefined}
-          className="mb-1.5 min-h-[1.5em] leading-relaxed flex items-start group"
+          className={`mb-1.5 min-h-[1.5em] leading-relaxed flex items-start group${adBlock !== null ? ' opacity-60' : ''}`}
         >
           {timestamp && (
             <span 
@@ -164,7 +130,8 @@ export const FormattedTranscript = React.memo(({
             })}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 });

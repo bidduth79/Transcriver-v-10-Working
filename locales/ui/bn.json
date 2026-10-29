@@ -407,5 +407,8 @@
   "envKeyWorks": "{label}: key ঠিক আছে",
   "envKeyFailed": "{label}: key কাজ করছে না। {message}",
   "keyRequestsToday": "আজ {count}টি অনুরোধ",
-  "keyQuotaUsedUp": "{model}: কোটা শেষ, {time}-এ ফিরবে"
+  "keyQuotaUsedUp": "{model}: কোটা শেষ, {time}-এ ফিরবে",
+  "adBlockLabel": "বিজ্ঞাপন / প্রোমো",
+  "adBlockShow": "দেখুন",
+  "adBlockHide": "লুকান"
 }

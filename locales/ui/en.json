@@ -407,5 +407,8 @@
   "envKeyWorks": "{label}: the key works",
   "envKeyFailed": "{label}: the key does not work. {message}",
   "keyRequestsToday": "{count} request(s) today",
-  "keyQuotaUsedUp": "{model}: quota used up, back at {time}"
+  "keyQuotaUsedUp": "{model}: quota used up, back at {time}",
+  "adBlockLabel": "Advertisement / promo",
+  "adBlockShow": "Show",
+  "adBlockHide": "Hide"
 }
