@@ -165,6 +165,16 @@ export const useBatchProcessor = (
     processNextBatchFile(files, 0);
   };
 
+  // Lists files in the batch without starting it, for the user to check (and remove some) before pressing Start
+  const queueFiles = (files: File[]) => {
+    setBatchQueue(files);
+    setCurrentBatchIndex(0);
+    setIsBatchProcessing(true);
+    setHasBatchStarted(false);
+    setIsBatchPaused(false);
+    setBatchCountdown(0);
+  };
+
   const retryFailedFiles = () => {
     if (failedFiles.length === 0) return;
     runFiles(failedFiles.map(f => f.file));
@@ -181,6 +191,6 @@ export const useBatchProcessor = (
     failedFiles, processedCount,
     progress, etaSeconds,
     isBatchSummaryOpen, setIsBatchSummaryOpen,
-    startBatch, pauseBatch, resumeBatch, cancelBatch, skipNextBatchFile, jumpToBatchFile, removeBatchFile, retryFailedFiles, runFiles
+    startBatch, pauseBatch, resumeBatch, cancelBatch, skipNextBatchFile, jumpToBatchFile, removeBatchFile, retryFailedFiles, runFiles, queueFiles
   };
 };

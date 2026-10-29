@@ -36,7 +36,7 @@ beforeEach(() => {
   m.saved = undefined;
   m.granted = true;
   m.paused = undefined;
-  useFolderWatchStore.setState({ handle: null, status: 'off' });
+  useFolderWatchStore.setState({ handle: null, status: 'off', mode: 'auto' });
   useHistoryStore.setState({ history: [] });
   useBackgroundJobStore.setState({ running: null });
 });
@@ -47,7 +47,7 @@ describe('useFolderWatch', () => {
     const runFiles = vi.fn();
     useHistoryStore.setState({ history: [{ id: 'h', fileName: 'old.opus' } as HistoryItem] });
     m.files = [audio('new.opus'), audio('old.opus')];
-    renderHook(() => useFolderWatch('en', false, runFiles));
+    renderHook(() => useFolderWatch('en', false, runFiles, vi.fn()));
     await act(async () => { await chooseWatchFolder('en'); });
     expect(useFolderWatchStore.getState().status).toBe('watching');
     await look();
@@ -61,7 +61,7 @@ describe('useFolderWatch', () => {
     const runFiles = vi.fn();
     m.files = [audio('new.opus')];
     useBackgroundJobStore.setState({ running: { name: 'x', meta: {} } });
-    const { rerender } = renderHook(({ busy }) => useFolderWatch('en', busy, runFiles), { initialProps: { busy: true } });
+    const { rerender } = renderHook(({ busy }) => useFolderWatch('en', busy, runFiles, vi.fn()), { initialProps: { busy: true } });
     await act(async () => { await chooseWatchFolder('en'); });
     await look();
     await look();
@@ -76,7 +76,7 @@ describe('useFolderWatch', () => {
   it('takes nothing while paused, stays paused after a reload, and goes on when turned back on', async () => {
     const runFiles = vi.fn();
     m.files = [audio('new.opus')];
-    renderHook(() => useFolderWatch('en', false, runFiles));
+    renderHook(() => useFolderWatch('en', false, runFiles, vi.fn()));
     await act(async () => { await chooseWatchFolder('en'); });
     await act(async () => { await pauseWatchFolder('en'); });
     await look();
@@ -85,7 +85,7 @@ describe('useFolderWatch', () => {
     expect(m.paused).toBe(true);
 
     useFolderWatchStore.setState({ handle: null, status: 'off' });
-    renderHook(() => useFolderWatch('en', false, runFiles));
+    renderHook(() => useFolderWatch('en', false, runFiles, vi.fn()));
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
     expect(useFolderWatchStore.getState().status).toBe('paused');
 
@@ -100,11 +100,40 @@ describe('useFolderWatch', () => {
   it('after a reload asks for permission again, and stops when told to', async () => {
     m.saved = { name: 'Audio' };
     m.granted = false;
-    renderHook(() => useFolderWatch('en', false, vi.fn()));
+    renderHook(() => useFolderWatch('en', false, vi.fn(), vi.fn()));
     await act(async () => { await vi.advanceTimersByTimeAsync(0); });
     expect(useFolderWatchStore.getState().status).toBe('needsPermission');
     await act(async () => { await stopWatchFolder(); });
     expect(useFolderWatchStore.getState()).toMatchObject({ handle: null, status: 'off' });
     expect(m.saved).toBeUndefined();
+  });
+
+  it('takes at most ten files at a time, oldest first; the rest come with the next batch', async () => {
+    const runFiles = vi.fn();
+    m.files = Array.from({ length: 13 }, (_, i) => new File(['x'], `f${String(i).padStart(2, '0')}.opus`, { type: 'audio/ogg', lastModified: i }));
+    const { rerender } = renderHook(({ busy }) => useFolderWatch('en', busy, runFiles, vi.fn()), { initialProps: { busy: false } });
+    await act(async () => { await chooseWatchFolder('en'); });
+    await look();
+    expect(runFiles.mock.calls[0][0].map((f: File) => f.name)).toEqual(['f00.opus', 'f01.opus', 'f02.opus', 'f03.opus', 'f04.opus', 'f05.opus', 'f06.opus', 'f07.opus', 'f08.opus', 'f09.opus']);
+    rerender({ busy: true });
+    await look();
+    expect(runFiles).toHaveBeenCalledTimes(1);
+    rerender({ busy: false });
+    await look();
+    expect(runFiles.mock.calls[1][0].map((f: File) => f.name)).toEqual(['f10.opus', 'f11.opus', 'f12.opus']);
+  });
+
+  it('in review mode lists the new files in the batch without starting it, and remembers the mode', async () => {
+    const runFiles = vi.fn();
+    const queueFiles = vi.fn();
+    m.files = [audio('new.opus')];
+    useFolderWatchStore.getState().setMode('review');
+    expect(localStorage.getItem('watchFolderMode')).toBe('review');
+    renderHook(() => useFolderWatch('en', false, runFiles, queueFiles));
+    await act(async () => { await chooseWatchFolder('en'); });
+    await look();
+    expect(runFiles).not.toHaveBeenCalled();
+    expect(queueFiles.mock.calls.map(([files]) => files.map((f: File) => f.name))).toEqual([['new.opus']]);
+    useFolderWatchStore.getState().setMode('auto');
   });
 });

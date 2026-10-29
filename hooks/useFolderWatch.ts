@@ -13,20 +13,44 @@ import { uiText } from '../utils/uiText';
 // 'needsPermission': a folder is saved, but after a reload the browser wants one click before it can be read.
 // 'paused': the folder is kept, but not looked into until it is turned on again.
 export type FolderWatchStatus = 'off' | 'needsPermission' | 'watching' | 'paused';
+// 'auto': new files are transcribed at once; 'review': they wait in the batch list until the user starts it
+export type FolderWatchMode = 'auto' | 'review';
+
+const MODE_STORAGE = 'watchFolderMode';
+const readMode = (): FolderWatchMode => {
+  try {
+    return localStorage.getItem(MODE_STORAGE) === 'review' ? 'review' : 'auto';
+  } catch {
+    return 'auto';
+  }
+};
 
 interface FolderWatchState {
   handle: WatchFolderHandle | null;
   status: FolderWatchStatus;
+  mode: FolderWatchMode;
   setWatch: (handle: WatchFolderHandle | null, status: FolderWatchStatus) => void;
+  setMode: (mode: FolderWatchMode) => void;
 }
 
 export const useFolderWatchStore = create<FolderWatchState>(set => ({
   handle: null,
   status: 'off',
+  mode: readMode(),
   setWatch: (handle, status) => set({ handle, status }),
+  setMode: mode => {
+    try {
+      localStorage.setItem(MODE_STORAGE, mode);
+    } catch {
+      // Blocked storage: the choice lasts for this session only
+    }
+    set({ mode });
+  },
 }));
 
 const LOOK_EVERY_MS = 15_000;
+// New files are taken at most this many at a time; the rest come once that batch is done
+export const MAX_FILES_PER_BATCH = 10;
 
 export const chooseWatchFolder = async (appLang: string) => {
   try {
@@ -75,8 +99,14 @@ export const stopWatchFolder = async () => {
   }
 };
 
-// While the app is open, looks into the watched folder and starts a batch with new audio when nothing else is running
-export const useFolderWatch = (appLang: string, isBatchProcessing: boolean, runFiles: (files: File[]) => void) => {
+// While the app is open, looks into the watched folder and, when nothing else is running, hands up to ten new
+// files to the batch: started at once ('auto'), or listed for the user to check and start ('review')
+export const useFolderWatch = (
+  appLang: string,
+  isBatchProcessing: boolean,
+  runFiles: (files: File[]) => void,
+  queueFiles: (files: File[]) => void,
+) => {
   const handle = useFolderWatchStore(state => state.handle);
   const status = useFolderWatchStore(state => state.status);
   // Files handed to a batch in this session: not taken again, even when they failed
@@ -119,9 +149,15 @@ export const useFolderWatch = (appLang: string, isBatchProcessing: boolean, runF
     const { ready, sizes } = pickNewFiles(files, { done: [...history, ...takenRef.current], lastSizes: lastSizesRef.current });
     lastSizesRef.current = sizes;
     if (ready.length === 0 || isBusy()) return;
-    takenRef.current.push(...ready);
-    toast.info(uiText(appLang, 'watchFolderNewFiles', { count: ready.length }));
-    runFiles(ready);
+    const batch = ready.slice(0, MAX_FILES_PER_BATCH);
+    takenRef.current.push(...batch);
+    if (useFolderWatchStore.getState().mode === 'review') {
+      toast.info(uiText(appLang, 'watchFolderReviewFiles', { count: batch.length }));
+      queueFiles(batch);
+    } else {
+      toast.info(uiText(appLang, 'watchFolderNewFiles', { count: batch.length }));
+      runFiles(batch);
+    }
   });
 
   useEffect(() => {

@@ -192,4 +192,12 @@ describe('useBatchProcessor', () => {
     await tick();
     expect(s.process.mock.calls.map((c: any[]) => c[0].name)).toEqual(['new.mp3', 'again.mp3']);
   });
+
+  it('lists files without starting them, for the user to check first', async () => {
+    const s = setup();
+    await s.call('queueFiles', [file('a.mp3'), file('b.mp3')]);
+    expect(s.r()).toMatchObject({ isBatchProcessing: true, hasBatchStarted: false, currentBatchIndex: 0 });
+    expect(s.r().batchQueue.map(f => f.name)).toEqual(['a.mp3', 'b.mp3']);
+    expect(s.process).not.toHaveBeenCalled();
+  });
 });

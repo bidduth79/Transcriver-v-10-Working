@@ -110,12 +110,12 @@ export function useAppCore() {
     failedFiles, processedCount, retryFailedFiles,
     progress: batchProgress, etaSeconds,
     isBatchSummaryOpen, setIsBatchSummaryOpen,
-    startBatch, pauseBatch, resumeBatch, cancelBatch, skipNextBatchFile, jumpToBatchFile, removeBatchFile, runFiles
+    startBatch, pauseBatch, resumeBatch, cancelBatch, skipNextBatchFile, jumpToBatchFile, removeBatchFile, runFiles, queueFiles
   } = useBatchProcessor(
     appLang, addToast, setFile, setFileUrl, setActiveHistoryId, setTranscriptMeta, setFileMeta, processTranscription
   );
 
-  useFolderWatch(appLang, isBatchProcessing, runFiles);
+  useFolderWatch(appLang, isBatchProcessing, runFiles, queueFiles);
 
   const { handleFileChange } = useFileHandler({
     appLang, addToast, setFile, setFileUrl, fileUrl, setActiveHistoryId, setTranscriptMeta, setTranscript, setStatus,

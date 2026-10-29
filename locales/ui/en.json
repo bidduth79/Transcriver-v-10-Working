@@ -410,5 +410,10 @@
   "keyQuotaUsedUp": "{model}: quota used up, back at {time}",
   "adBlockLabel": "Advertisement / promo",
   "adBlockShow": "Show",
-  "adBlockHide": "Hide"
+  "adBlockHide": "Hide",
+  "watchFolderReviewFiles": "{count} new audio file(s) from the watched folder are in the batch list: check them, then press Start",
+  "watchFolderModeAuto": "Auto",
+  "watchFolderModeReview": "Review",
+  "watchFolderModeAutoHint": "New audio is transcribed at once, up to 10 at a time",
+  "watchFolderModeReviewHint": "New audio (up to 10 at a time) waits in the batch list; remove what you do not want, then press Start"
 }

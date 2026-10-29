@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'fs';
-import { openApp, historyCount, waitFor, makeWavFiles, type AppSession } from './browser';
+import { openApp, historyCount, waitFor, makeWavFiles, bodyText, clickButton, sleep, type AppSession } from './browser';
 
 let app: AppSession;
 
@@ -36,6 +36,25 @@ describe('watched folder', () => {
     await app.page.reload({ waitUntil: 'networkidle0' });
     const status = await app.page.evaluate(() => document.body.innerText.includes('watched'));
     expect(status).toBe(true);
+    expect(app.errors).toEqual([]);
+  });
+
+  it('in review mode lists new audio in the batch and waits for Start', async () => {
+    await app.page.evaluateOnNewDocument(fakePicker);
+    await app.page.evaluate(() => localStorage.setItem('watchFolderMode', 'review'));
+    await app.page.reload({ waitUntil: 'networkidle0' });
+
+    await app.page.click('button:has(svg.lucide-folder-sync)');
+    await waitFor(async () => (await app.page.$('button:has(svg.lucide-x)')) !== null, 10000, 'watching status');
+    const [a, b] = makeWavFiles(['review-a.wav', 'review-b.wav']);
+    await putInFolder('review-a.wav', readFileSync(a).toString('base64'));
+    await putInFolder('review-b.wav', readFileSync(b).toString('base64'));
+
+    await waitFor(async () => (await bodyText(app.page)).includes('review-b.wav'), 60000, 'files in the batch list');
+    await sleep(3000);
+    expect(app.geminiCalls()).toBe(0);
+    expect(await clickButton(app.page, 'শুরু করুন', true)).toBe(true);
+    await waitFor(async () => (await historyCount(app.page)) === 2, 90000, 'both transcribed after Start');
     expect(app.errors).toEqual([]);
   });
 });

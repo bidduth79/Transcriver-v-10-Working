@@ -410,5 +410,10 @@
   "keyQuotaUsedUp": "{model}: কোটা শেষ, {time}-এ ফিরবে",
   "adBlockLabel": "বিজ্ঞাপন / প্রোমো",
   "adBlockShow": "দেখুন",
-  "adBlockHide": "লুকান"
+  "adBlockHide": "লুকান",
+  "watchFolderReviewFiles": "নজরে রাখা ফোল্ডারের {count}টি নতুন অডিও ব্যাচের তালিকায় রাখা হয়েছে: দেখে নিয়ে 'শুরু করুন' চাপুন",
+  "watchFolderModeAuto": "অটো",
+  "watchFolderModeReview": "রিভিউ",
+  "watchFolderModeAutoHint": "নতুন অডিও সাথে সাথেই ট্রান্সক্রাইব হবে, একবারে সর্বোচ্চ ১০টি",
+  "watchFolderModeReviewHint": "নতুন অডিও (একবারে সর্বোচ্চ ১০টি) ব্যাচের তালিকায় অপেক্ষা করবে; অপ্রয়োজনীয়গুলো সরিয়ে 'শুরু করুন' চাপুন"
 }

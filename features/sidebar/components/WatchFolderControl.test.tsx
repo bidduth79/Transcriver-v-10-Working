@@ -48,4 +48,13 @@ describe('WatchFolderControl', () => {
     fireEvent.click(paused.getByTitle('Turn watching back on'));
     expect(m.allow).toHaveBeenCalledWith('en');
   });
+
+  it('switches between Auto and Review', () => {
+    useFolderWatchStore.setState({ handle: { name: 'Audio' } as WatchFolderHandle, status: 'watching', mode: 'auto' });
+    const { getByText } = render(<WatchFolderStatus isDark={false} appLang="en" />);
+    fireEvent.click(getByText('Review'));
+    expect(useFolderWatchStore.getState().mode).toBe('review');
+    fireEvent.click(getByText('Auto'));
+    expect(useFolderWatchStore.getState().mode).toBe('auto');
+  });
 });
