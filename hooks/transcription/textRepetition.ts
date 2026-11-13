@@ -4,6 +4,7 @@
 // The limits below were measured on the app's own saved transcripts (October-November 2026).
 import { removeRepetitiveBlocks, splitLongParagraphs } from './textCleanup';
 import { TIMESTAMP_SOURCE } from '../../utils/transcriptTimes';
+import { removeTimedCopies } from './timedCopies';
 
 const TIMES = new RegExp(TIMESTAMP_SOURCE, 'g');
 
@@ -127,6 +128,7 @@ export const repeatsOf = (pieces: string[], transcript: string): (boolean | null
   });
 };
 
-// The saved form of an answer: repeats taken out, long paragraphs split for reading
+// The saved form of an answer: lines written again with their old times and other repeats taken out, long
+// paragraphs split for reading
 export const cleanTranscript = (text: string) =>
-  removeRepeatedPieces(splitLongParagraphs(removeRepetitiveBlocks(text)));
+  removeRepeatedPieces(splitLongParagraphs(removeRepetitiveBlocks(removeTimedCopies(text))));
