@@ -1,4 +1,5 @@
 import { messageOf } from '../../utils/errorMessage';
+import { isServerBusy } from '../../utils/serverBusy';
 
 export const isKeyOrProjectBlockedError = (err: unknown): boolean => {
   const msg = (typeof err === 'string' ? err : (messageOf(err) || '')).toLowerCase();
@@ -93,7 +94,7 @@ export type FailureKind = 'busy' | 'refused' | 'other';
 export const failureKindOf = (error: unknown): FailureKind => {
   const { reason, status } = (error ?? {}) as { reason?: string; status?: number };
   if (REFUSAL_REASONS.includes(reason ?? '')) return 'refused';
-  return status === 503 || /\b503\b|UNAVAILABLE|high demand|overloaded/i.test(messageOf(error) ?? '') ? 'busy' : 'other';
+  return isServerBusy(status, messageOf(error)) ? 'busy' : 'other';
 };
 
 // The error of an answer without text, carrying the reason so the batch can tell a refusal from a busy server

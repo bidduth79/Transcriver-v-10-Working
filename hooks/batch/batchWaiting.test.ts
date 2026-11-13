@@ -91,4 +91,16 @@ describe('a batch while another tab is transcribing', () => {
     await wait(15_000);
     expect(s.process).toHaveBeenCalledTimes(1);
   });
+
+  it('resumed after the other tab did its last file, skips that file and finishes instead of hanging', async () => {
+    const s = setup(vi.fn().mockResolvedValueOnce({ success: true }).mockResolvedValueOnce(busy));
+    await s.start([file('a.mp3'), file('b.mp3')]);
+    await act(async () => { s.r().pauseBatch(); });
+    // Meanwhile the other tab saved b.mp3
+    useHistoryStore.setState({ history: [{ id: '1', fileName: 'b.mp3', size: '0.00 MB' } as never] });
+    await act(async () => { s.r().resumeBatch(); });
+    await wait(200);
+    expect(s.process).toHaveBeenCalledTimes(1);
+    expect(s.r()).toMatchObject({ isBatchProcessing: false, isBatchPaused: false, isBatchSummaryOpen: true });
+  });
 });

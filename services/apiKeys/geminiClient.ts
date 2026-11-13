@@ -8,6 +8,7 @@ import {
 } from './geminiTransport';
 import { messageOf } from '../../utils/errorMessage';
 import { noteQuotaError } from './keyQuota';
+import { isServerBusy } from '../../utils/serverBusy';
 
 const statusOf = (err: unknown) => (err as { status?: number } | null | undefined)?.status;
 
@@ -15,8 +16,7 @@ const isRateLimited = (err: unknown) =>
   statusOf(err) === 429 || /\b429\b|RESOURCE_EXHAUSTED/.test(String(messageOf(err) ?? ''));
 
 // 503 "This model is currently experiencing high demand": temporary, worth retrying
-const isOverloaded = (err: unknown) =>
-  statusOf(err) === 503 || /\b503\b|UNAVAILABLE|high demand|overloaded/i.test(String(messageOf(err) ?? ''));
+const isOverloaded = (err: unknown) => isServerBusy(statusOf(err), messageOf(err));
 
 // A request cancelled at its time limit (it is reported as a busy model, with this mark)
 const isTimedOut = (err: unknown) => (err as { timedOut?: boolean } | null | undefined)?.timedOut === true;

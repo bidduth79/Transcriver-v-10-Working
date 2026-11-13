@@ -69,6 +69,10 @@ describe('busy model (503)', () => {
     m.models = []; m.queue = [new Error('400 bad request')];
     await expect((await createGeminiClient('K')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' })).rejects.toThrow('400');
     expect(m.models).toHaveLength(1);
+    // A key without free tier: its message links to "#project-unavailable", which is not a busy server
+    m.models = []; m.queue = [Object.assign(new Error('{"error":{"code":403,"message":"The Gemini API free tier is not available for this project. See https://ai.google.dev/gemini-api/docs/troubleshooting#project-unavailable","status":"PERMISSION_DENIED"}}'), { status: 403 })];
+    await expect((await createGeminiClient('K')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' })).rejects.toThrow('403');
+    expect(m.models).toHaveLength(1);
     vi.useRealTimers();
   });
 });

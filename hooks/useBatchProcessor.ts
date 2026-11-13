@@ -97,6 +97,8 @@ export const useBatchProcessor = (
   };
 
   const resumeBatch = () => {
+    // Set now, not after the next render: a file skipped at once (already transcribed) must not see the old pause
+    isBatchPausedRef.current = false;
     setIsBatchPaused(false);
     setHeavyProcessingActive('batch', true);
     // A file still being transcribed continues the queue by itself when it finishes
