@@ -7,6 +7,9 @@ const isVideoMeta = (name: string, type: string) =>
   type.startsWith('video/') || name.endsWith('.mp4') || name.endsWith('.mkv') || name.endsWith('.mov') || name.endsWith('.webm');
 const isOpusOrOggMeta = (name: string, type: string) =>
   name.endsWith('.opus') || name.endsWith('.ogg') || type.includes('opus') || type.includes('ogg');
+// Ogg Opus plays in Chrome, Edge and Firefox (the player reads it in small pieces); a browser that cannot play it
+// gets a note instead of a broken player
+const canPlayOpus = () => document.createElement('audio').canPlayType('audio/ogg; codecs="opus"') !== '';
 
 export const FileInfoSection = ({
   fileUrl,
@@ -30,7 +33,8 @@ export const FileInfoSection = ({
 }: FileInfoSectionProps) => {
   const metaName = fileMeta?.name?.toLowerCase() || '';
   const metaType = fileMeta?.type || '';
-  const isPlainAudio = !!fileMeta && !isVideoMeta(metaName, metaType) && !isOpusOrOggMeta(metaName, metaType);
+  // The waveform decodes the file at a low rate and skips files over 30 MB, so Opus gets one as well
+  const isPlainAudio = !!fileMeta && !isVideoMeta(metaName, metaType) && (!isOpusOrOggMeta(metaName, metaType) || canPlayOpus());
   const peaks = useWaveform(fileUrl, isPlainAudio && !isRecording);
 
   if (!fileUrl || isRecording) return null;
@@ -82,7 +86,7 @@ export const FileInfoSection = ({
                 );
             }
             
-            if (isOpusOrOgg) {
+            if (isOpusOrOgg && !canPlayOpus()) {
                 return (
                     <div className="w-full h-10 flex items-center justify-center text-[10px] text-slate-500 bg-slate-100 rounded-lg p-1 font-bold">
                         {(t as Partial<Record<string, string>>).previewNotSupported || 'Preview not supported for Opus files in browser'}
