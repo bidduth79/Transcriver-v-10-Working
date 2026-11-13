@@ -88,7 +88,7 @@ describe('useTranscription.processTranscription', () => {
     const [key, req] = m.generate.mock.calls[0];
     expect(key).toBe('KEY-AAAA');
     expect(req.model).toBe('gemini-3.8-flash');
-    expect(req.config.temperature).toBe(0.35);
+    expect(req.config.temperature).toBeUndefined();
     expect(req.config.safetySettings).toHaveLength(4);
     expect(req.config.thinkingConfig).toBeUndefined();
     expect(req.contents[0].parts[0].inlineData).toEqual({ mimeType: 'audio/mpeg', data: 'BASE64' });

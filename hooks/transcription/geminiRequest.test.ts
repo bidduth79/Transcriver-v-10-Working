@@ -26,8 +26,8 @@ describe('Gemini transcription requests', () => {
     expect(req.config.systemInstruction).toBe(TRANSCRIPTION_SYSTEM_INSTRUCTION);
     expect(req.contents[0].parts).toEqual([audio, { text: TRANSCRIPTION_PROMPT_TEXT }]);
     expect(req.config.safetySettings).toHaveLength(4);
-    // Low, so unclear parts are not filled with invented words
-    expect(req.config.temperature).toBe(0.35);
+    // Gemini 3's own default (1.0): a lowered temperature makes these models loop
+    expect(req.config.temperature).toBeUndefined();
   });
 
   it('asks for the rest of a transcript with instructions for that part only, and normal mode with its own', () => {

@@ -49,7 +49,7 @@ export const transcribeOnce = async (blob: Blob, mimeType: string, audioSeconds:
   try {
     // The time limit follows the audio length, so a stuck request is retried sooner on short audio
     const timeoutMs = transcriptionTimeoutMs(audioSeconds);
-    // `clean`: the model's default settings (no lowered temperature or thinking level)
+    // `clean`: the model's default settings (no lowered thinking level)
     const requestFor = (clean: boolean): BuildRequest => async (ai, key) => {
       const request = buildTranscriptionRequest(modelName, mode, await source.partFor(ai, key), clean, continueFrom);
       return timeoutMs ? { ...request, config: { ...request.config, timeoutMs } } : request;

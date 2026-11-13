@@ -10,9 +10,10 @@ const SAFETY_SETTINGS = [
   { category: 'HARM_CATEGORY_DANGEROUS_CONTENT' as HarmCategory, threshold: 'BLOCK_NONE' as HarmBlockThreshold },
 ];
 
-// Low, so the model writes what it hears instead of filling unclear parts with likely-sounding words.
-// (Google suggests 1.0 for Gemini 3, mainly against looping; repeated blocks are removed afterwards.)
-const TRANSCRIPTION_TEMPERATURE = 0.35;
+// No temperature is set: Gemini 3 models are tuned for their default (1.0), and Google warns that lower values can
+// make them loop or degrade. Seen here too: the loops of November came at 0.35, and on the same 11-minute call 0.35
+// gave one line while 1.0 gave 110 timed lines to the end, with the same text and no repeats. Guessed words are
+// kept out by the instructions ([অস্পষ্ট] for what cannot be heard), not by a lowered temperature.
 
 // Speech-only transcribe models reject written instructions ("Developer instruction is not enabled for
 // this model") and do not follow them, so they get only the audio plus their diarization settings
@@ -72,7 +73,6 @@ export const buildTranscriptionRequest = (
   const thinkingConfig = buildThinkingConfig(modelName);
   return buildAudioRequest(modelName, audioPart, promptText, {
     systemInstruction,
-    temperature: TRANSCRIPTION_TEMPERATURE,
     ...(thinkingConfig ? { thinkingConfig } : {}),
   });
 };
