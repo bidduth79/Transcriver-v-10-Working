@@ -118,9 +118,16 @@ describe('transcribeAudio', () => {
     expect(opts.addToast).not.toHaveBeenCalled();
   });
 
-  it('never swaps a transcribe model for another: its transcript is kept as it came', async () => {
-    await transcribeAudio(named('break'), 'audio/ogg', 2832, { ...options(), modelName: 'gemini-3.5-transcribe' });
+  it('never swaps a transcribe model for another, and says first when the audio is past its limit for the mode', async () => {
+    const opts = { ...options(), modelName: 'gemini-3.5-transcribe' };
+    await transcribeAudio(named('break'), 'audio/ogg', 2832, opts);
     expect(m.models).toEqual(['gemini-3.5-transcribe']);
+    expect(opts.addToast).toHaveBeenCalledWith(expect.stringContaining('This audio is 47 minutes. In Pro mode'), 'warning');
+    const normal = { ...opts, mode: 'normal' as const, addToast: vi.fn() };
+    await transcribeAudio(named('break'), 'audio/ogg', 2832, normal);
+    expect(normal.addToast).not.toHaveBeenCalled();
+    await transcribeAudio(named('break'), 'audio/ogg', 3720, normal);
+    expect(normal.addToast).toHaveBeenCalledWith(expect.stringContaining('This audio is 62 minutes. The Transcribe model handles 1 hour'), 'warning');
   });
 
   it('warns when the rest cannot be had, and keeps what was written', async () => {

@@ -44,7 +44,7 @@ describe('model settings', () => {
     expect(AKM.MODEL_CATEGORY_GROUPS.map(g => g.id)).toEqual(['fast', 'balanced', 'thinking']);
     expect(AKM.getModelDefinition('gemini-3.1-pro-preview').category).toBe('thinking');
     expect(AKM.getModelDefinition('unknown').id).toBe('gemini-3.8-flash');
-    expect(JSON.stringify(AKM.AVAILABLE_MODELS).length).toMatchInlineSnapshot(`2986`);
+    expect(JSON.stringify(AKM.AVAILABLE_MODELS).length).toMatchInlineSnapshot(`3175`);
   });
 
   it('stores active model and speed mode', () => {

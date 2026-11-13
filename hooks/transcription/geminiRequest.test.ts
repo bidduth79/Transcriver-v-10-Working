@@ -55,12 +55,15 @@ describe('Gemini transcription requests', () => {
     expect(TRANSCRIPTION_SYSTEM_INSTRUCTION).not.toMatch(/বিজ্ঞাপন শুরু|বিজ্ঞাপন শেষ/);
   });
 
-  it('sends speech-only transcribe models just the audio with diarization turned on', () => {
-    for (const req of [buildTranscriptionRequest('gemini-3.5-transcribe', 'pro', audio), buildTranscriptionRequest('gemini-3.5-transcribe', 'normal', audio)].map(view)) {
+  it('sends speech-only transcribe models just the audio: speakers and times in Pro, smart (punctuated) text in Normal', () => {
+    const pro = view(buildTranscriptionRequest('gemini-3.5-transcribe', 'pro', audio));
+    const normal = view(buildTranscriptionRequest('gemini-3.5-transcribe', 'normal', audio));
+    for (const req of [pro, normal]) {
       expect(req.config).not.toHaveProperty('systemInstruction');
       expect(req.contents[0].parts).toEqual([audio]);
-      expect(req.config.httpOptions.extraBody.generationConfig.audioTranscriptionConfig).toEqual({ diarization: true, wordTimestamp: true });
     }
+    expect(pro.config.httpOptions.extraBody.generationConfig.audioTranscriptionConfig).toEqual({ diarization: true, wordTimestamp: true });
+    expect(normal.config.httpOptions.extraBody.generationConfig.audioTranscriptionConfig).toEqual({ mode: 'smart' });
   });
 
   it('turns a transcribe answer into speaker lines, and leaves normal answers alone', () => {
@@ -72,7 +75,9 @@ describe('Gemini transcription requests', () => {
     ] } }] };
     expect(extractResponseText(resp)).toBe('[00:15] **Speaker 1:** Hello there.\n[01:15] **Speaker 2:** Hi.\n[1:02:05] **Speaker 1:** Back to you.');
     expect(extractResponseText({ candidates: [{ content: { parts: [{ text: '[00:01] **Speaker 1:** ok' }] } }] })).toBe('[00:01] **Speaker 1:** ok');
-    expect(extractResponseText({ candidates: [{ content: { parts: [{ audioTranscription: { text: 'no labels' } }] } }] })).toBe('[00:00] **Speaker 1:** no labels');
+    // A smart answer has no speakers or times: plain paragraphs, never a made-up [00:00] Speaker 1
+    const smart = { candidates: [{ content: { parts: [{ audioTranscription: { text: 'প্রথম কথা। দ্বিতীয় কথা।' } }, { audioTranscription: { text: 'পরের অংশ।' } }] } }] };
+    expect(extractResponseText(smart)).toBe('প্রথম কথা। দ্বিতীয় কথা।\n\nপরের অংশ।');
   });
 
   it('waits longer for longer audio: a quarter of its length plus two minutes, 5 to 20 minutes', () => {

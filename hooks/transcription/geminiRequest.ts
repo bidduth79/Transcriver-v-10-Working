@@ -1,7 +1,7 @@
 import type { HarmCategory, HarmBlockThreshold, ThinkingLevel, Part, GenerateContentConfig, GenerateContentParameters, ThinkingConfig } from "../../types/gemini";
 import { getModelDefinition, isSpeedOptimizationEnabled } from '../../services/ApiKeyManager';
 import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL, TRANSCRIPTION_PROMPT_TEXT_NORMAL, CONTINUATION_SYSTEM_INSTRUCTION, continuationPrompt } from '../../constants/instructions';
-import { isTranscribeModel, TRANSCRIBE_HTTP_OPTIONS, formatAudioTranscription } from './transcribeModel';
+import { isTranscribeModel, transcribeHttpOptions, formatAudioTranscription } from './transcribeModel';
 
 const SAFETY_SETTINGS = [
   { category: 'HARM_CATEGORY_HARASSMENT' as HarmCategory, threshold: 'BLOCK_NONE' as HarmBlockThreshold },
@@ -16,14 +16,14 @@ const SAFETY_SETTINGS = [
 // kept out by the instructions ([অস্পষ্ট] for what cannot be heard), not by a lowered temperature.
 
 // Speech-only transcribe models reject written instructions ("Developer instruction is not enabled for
-// this model") and do not follow them, so they get only the audio plus their diarization settings
-const buildAudioRequest = (model: string, audioPart: Part, text: string, config: GenerateContentConfig): GenerateContentParameters => {
+// this model") and do not follow them, so they get only the audio plus the transcription way of the mode
+const buildAudioRequest = (model: string, mode: 'normal' | 'pro', audioPart: Part, text: string, config: GenerateContentConfig): GenerateContentParameters => {
   if (isTranscribeModel(model)) {
     const { systemInstruction: _ignored, ...rest } = config;
     return {
       model,
       contents: [{ role: 'user', parts: [audioPart] }],
-      config: { ...rest, httpOptions: TRANSCRIBE_HTTP_OPTIONS, safetySettings: SAFETY_SETTINGS }
+      config: { ...rest, httpOptions: transcribeHttpOptions(mode), safetySettings: SAFETY_SETTINGS }
     };
   }
   return {
@@ -68,10 +68,10 @@ export const buildTranscriptionRequest = (
     : continueFrom ? CONTINUATION_SYSTEM_INSTRUCTION : TRANSCRIPTION_SYSTEM_INSTRUCTION;
   const promptText = continueFrom ? continuationPrompt(continueFrom) : mode === 'normal' ? TRANSCRIPTION_PROMPT_TEXT_NORMAL : TRANSCRIPTION_PROMPT_TEXT;
   if (cleanFallback) {
-    return buildAudioRequest(modelName, audioPart, promptText, { systemInstruction });
+    return buildAudioRequest(modelName, mode, audioPart, promptText, { systemInstruction });
   }
   const thinkingConfig = buildThinkingConfig(modelName);
-  return buildAudioRequest(modelName, audioPart, promptText, {
+  return buildAudioRequest(modelName, mode, audioPart, promptText, {
     systemInstruction,
     ...(thinkingConfig ? { thinkingConfig } : {}),
   });

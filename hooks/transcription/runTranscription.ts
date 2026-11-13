@@ -3,6 +3,8 @@ import { shiftTimestamps } from './timestampShift';
 import { transcribeOnce, type PieceResult, type TranscribeOptions } from './transcribeOnce';
 import { continueUntilEnd } from './continueTranscript';
 import { emptyTranscriptError } from './transcriptionErrors';
+import { isTranscribeModel, TRANSCRIBE_LIMIT_SECONDS } from './transcribeModel';
+import { uiText } from '../../utils/uiText';
 
 // Parts of a long recording sent to Gemini at the same time
 const PARALLEL_PARTS = 2;
@@ -51,6 +53,11 @@ const transcribeParts = async (parts: AudioChunk[], totalSeconds: number, option
 export const transcribeAudio = async (blob: Blob, mimeType: string, durationSeconds: number, options: TranscribeOptions) => {
   const parts = await planAudioChunks(blob, mimeType, durationSeconds).catch(() => null);
   if (parts && parts.length > 1) return transcribeParts(parts, durationSeconds, options);
+  // Sent whole past Google's limit, a transcribe model silently stops before the end: said before it starts
+  const limit = TRANSCRIBE_LIMIT_SECONDS[options.mode];
+  if (isTranscribeModel(options.modelName) && durationSeconds > limit) {
+    options.addToast(uiText(options.lang, options.mode === 'pro' ? 'transcribeLongAudioPro' : 'transcribeLongAudioNormal', { minutes: Math.round(durationSeconds / 60) }), 'warning');
+  }
   options.setStage(options.lang === 'bn' ? 'এআই সার্ভারে সম্পূর্ণ অডিও বিশ্লেষণ ও ট্রান্সক্রাইব করা হচ্ছে...' : 'Transcribing media on AI server...');
   const result = await transcribeOnce(blob, mimeType, durationSeconds, options);
   return { ...(await continueUntilEnd(blob, mimeType, durationSeconds, result, options)), parts: 1 };

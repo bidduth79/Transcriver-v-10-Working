@@ -2,14 +2,20 @@
 // with `audioTranscription` parts in the spoken language, so speaker turns and times come from the
 // model's own diarization and word timestamps, formatted here like the app's normal transcripts.
 
-// A transcribe model takes at most 98,304 input tokens (audio is 32 tokens a second, about 51 minutes); the app does
-// not swap it for another model on longer audio, so Gemini's own error is shown then.
 export const isTranscribeModel = (model: string) => model.includes('transcribe');
 
+// Google offers two ways, and the app's Pro/Normal switch picks one (both checked on real talk shows):
+// - Pro, verbatim: speaker turns and word times, but every word as said and no punctuation at all;
+// - Normal, smart: punctuation (দাঁড়ি, comma, ?), Bengali digits and cleaned-up text, but no speakers or times.
+// Google's limits per request: 30 minutes with speakers and times, 1 hour in smart mode. Longer audio is cut off
+// silently (a 54-minute talk show in verbatim stopped at 42:16 and wrote an earlier stretch again), and the app
+// never swaps the model, so it warns before starting instead.
+export const TRANSCRIBE_LIMIT_SECONDS = { pro: 30 * 60, normal: 60 * 60 };
+
 // Sent through the SDK's extraBody: the SDK has no typed field for it yet
-export const TRANSCRIBE_HTTP_OPTIONS = {
-  extraBody: { generationConfig: { audioTranscriptionConfig: { diarization: true, wordTimestamp: true } } },
-};
+export const transcribeHttpOptions = (mode: 'normal' | 'pro') => ({
+  extraBody: { generationConfig: { audioTranscriptionConfig: mode === 'pro' ? { diarization: true, wordTimestamp: true } : { mode: 'smart' } } },
+});
 
 interface TranscriptionSegment {
   text?: string;
@@ -29,17 +35,21 @@ const formatOffset = (offset: string | undefined) => {
 
 /**
  * "[MM:SS] **Speaker N:** text" lines from a transcribe model's answer, or null when the answer has no
- * audioTranscription parts. Speakers are numbered in the order they first speak.
+ * audioTranscription parts. Speakers are numbered in the order they first speak. A smart answer has no speakers
+ * or times: its text is kept as plain paragraphs.
  */
 export const formatAudioTranscription = (resp: unknown): string | null => {
   const parts = (resp as { candidates?: { content?: { parts?: { audioTranscription?: TranscriptionSegment }[] } }[] })
     ?.candidates?.[0]?.content?.parts;
   const segments = (parts ?? []).map(part => part?.audioTranscription).filter((s): s is TranscriptionSegment => !!s);
   if (segments.length === 0) return null;
+  const spoken = segments.filter(segment => segment.text?.trim());
+  if (!spoken.some(segment => segment.speakerLabel || segment.words?.length)) {
+    return spoken.map(segment => segment.text!.trim()).join('\n\n');
+  }
 
   const speakers = new Map<string, number>();
-  return segments
-    .filter(segment => segment.text?.trim())
+  return spoken
     .map(segment => {
       const label = segment.speakerLabel ?? '';
       if (!speakers.has(label)) speakers.set(label, speakers.size + 1);
