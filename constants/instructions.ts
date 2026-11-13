@@ -1,6 +1,3 @@
-// Marks older transcripts may hold around an advertisement (the app no longer asks for them or folds them)
-export const AD_START = '[বিজ্ঞাপন শুরু]';
-export const AD_END = '[বিজ্ঞাপন শেষ]';
 // The mark the instructions ask for in place of words that cannot be understood (shown highlighted)
 export const UNCLEAR_MARK = '[অস্পষ্ট]';
 

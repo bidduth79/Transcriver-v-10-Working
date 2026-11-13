@@ -407,9 +407,6 @@
   "envKeyFailed": "{label}: the key does not work. {message}",
   "keyRequestsToday": "{count} request(s) today",
   "keyQuotaUsedUp": "{model}: quota used up, back at {time}",
-  "adBlockLabel": "Advertisement / promo",
-  "adBlockShow": "Show",
-  "adBlockHide": "Hide",
   "watchFolderReviewFiles": "{count} new audio file(s) from the watched folder are in the batch list: check them, then press Start",
   "watchFolderModeAuto": "Auto",
   "watchFolderModeReview": "Review",
@@ -418,5 +415,12 @@
   "serverBusyWaiting": "The server is busy. {name} will be tried again in {minutes} minute(s).",
   "serverBusyBatchPaused": "The server is still busy, so the batch was paused at this file. Press Resume later; no file was marked as failed.",
   "otherTabTranscribing": "Another tab of the app is transcribing. This batch goes on when that file is done.",
-  "answerLoopRetrying": "The answer wrote the same words over and over; asking once more..."
+  "answerLoopRetrying": "The answer wrote the same words over and over; asking once more...",
+  "transcriptWarningBadge": "Check",
+  "transcriptWarningTitle": "This transcript may be wrong; check it, or transcribe it again:",
+  "transcriptWarningLoop": "Gemini's answer repeated the same text over and over (the repeats were removed), so some speech may be missing",
+  "transcriptWarningLittleText": "Much less text than usual for the length of the audio",
+  "transcriptWarningEndsEarly": "The transcript stops more than 5 minutes before the end of the audio",
+  "transcriptWarningPastEnd": "Its times go past the end of the audio, so some text may be made up",
+  "transcriptWarningGap": "Several minutes in the middle have almost no text"
 }

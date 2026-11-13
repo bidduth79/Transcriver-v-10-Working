@@ -1,12 +1,16 @@
 import type { FileMeta, HistoryItem } from '../../types';
 import { addToStore, STORES } from '../../services/db';
+import { transcriptWarnings } from './transcriptWarnings';
+import { parseDurationToSeconds } from './transcriptionUtils';
 
 // File info shown in the sidebar; YouTube downloads add the channel
 type SourceMeta = Partial<FileMeta> & { channelName?: string };
 
-export const buildHistoryItem = (inputFile: Blob, inputMetadata: SourceMeta, transcript: string, elapsedSeconds: number, model?: string) => {
+// `answer` is Gemini's text before cleanup; given, the item gets the warnings of transcriptWarnings
+export const buildHistoryItem = (inputFile: Blob, inputMetadata: SourceMeta, transcript: string, elapsedSeconds: number, model?: string, answer?: string) => {
   const fileName = (inputFile as File).name || inputMetadata.name || "audio_file";
   const fileExtension = fileName.includes('.') ? fileName.split('.').pop() : 'mp3';
+  const warnings = answer === undefined ? [] : transcriptWarnings(transcript, answer, parseDurationToSeconds(inputMetadata.duration));
   return {
     id: `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
     fileName: fileName,
@@ -18,6 +22,8 @@ export const buildHistoryItem = (inputFile: Blob, inputMetadata: SourceMeta, tra
     timeTaken: `${elapsedSeconds}s`,
     // The model that wrote it: later time estimates learn from runs of the same model
     model,
+    // Left out when there is nothing to warn about
+    ...(warnings.length > 0 ? { warnings } : {}),
     channelName: inputMetadata.channelName,
     size: inputMetadata.size || `${(inputFile.size / (1024 * 1024)).toFixed(2)} MB`,
     bgbRemark: undefined as string | undefined

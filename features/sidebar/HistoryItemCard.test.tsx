@@ -87,4 +87,15 @@ describe('HistoryItemCard behavior', () => {
     r({ isDuplicate: true }); r({ isDark: false }); r({ appLang: 'bn' }); r({ getSensitiveMatches: () => [] }); r({ activeColors: { text: 'y' } }); r({ item: { ...base } });
     expect(calls()).toBe(start + 7);
   });
+
+  it('marks a transcript that may be wrong, with the reasons on hover; others get no mark', () => {
+    expect(setup().queryByTestId('transcript-warning')).toBeNull();
+    const badge = setup({ appLang: 'bn', item: { ...base, warnings: ['endsEarly', 'loop'] } }).getByTestId('transcript-warning');
+    expect(badge.textContent).toBe('যাচাই');
+    expect(badge.title.split('\n')).toEqual([
+      'এই ট্রান্সক্রিপ্টে ভুল থাকতে পারে; দেখে নিন, অথবা আবার ট্রান্সক্রাইব করুন:',
+      '• অডিও শেষ হওয়ার ৫ মিনিটেরও বেশি আগে লেখা থেমে গেছে',
+      '• Gemini-র উত্তরে একই কথা বারবার এসেছিল (পুনরাবৃত্তি বাদ দেওয়া হয়েছে), তাই কিছু কথা বাদ পড়ে থাকতে পারে',
+    ]);
+  });
 });

@@ -129,7 +129,7 @@ export const useTranscription = (
       if (!fullText.trim()) throw emptyTranscriptError(result.emptyReason ?? finishReason, appLang);
 
       const actualElapsedSeconds = Math.round((Date.now() - startTime) / 1000);
-      const historyItem = buildHistoryItem(inputFile, inputMetadata, fullText, actualElapsedSeconds, modelUsed);
+      const historyItem = buildHistoryItem(inputFile, inputMetadata, fullText, actualElapsedSeconds, modelUsed, result.text);
 
       await addToInMemoryHistory(historyItem);
 

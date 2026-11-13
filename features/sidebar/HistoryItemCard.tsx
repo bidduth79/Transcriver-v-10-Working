@@ -123,7 +123,7 @@ export const HistoryItemCard = memo(({
             </div>
         </div>
         
-        <HistoryCardStatsRow item={item} isActive={isActive} isDark={isDark} activeColors={activeColors} formatProcessingTime={formatProcessingTime} />
+        <HistoryCardStatsRow item={item} isActive={isActive} isDark={isDark} activeColors={activeColors} appLang={appLang} formatProcessingTime={formatProcessingTime} />
       </div>
     </div>
   );

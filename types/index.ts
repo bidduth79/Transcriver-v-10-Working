@@ -13,6 +13,10 @@ export interface TranscriptMeta {
   date: string;
 }
 
+// A sign that a transcript may be wrong: Gemini's answer went round in a loop, little text for the audio's length,
+// words end well before the audio does or go past its end, or minutes in the middle with almost no text
+export type TranscriptWarning = 'loop' | 'littleText' | 'endsEarly' | 'pastEnd' | 'gap';
+
 export interface HistoryItem {
   id: string;
   fileName: string;
@@ -33,6 +37,8 @@ export interface HistoryItem {
   timeTaken?: string;
   // The Gemini model that wrote the transcript (saved since November 2026)
   model?: string;
+  // Signs that the transcript may be wrong, found when it was made (only on new transcripts)
+  warnings?: TranscriptWarning[];
   hasBeenOpened?: boolean;
   // Other fields some features add (BGB analysis, sync flags, ...)
   [key: string]: unknown;

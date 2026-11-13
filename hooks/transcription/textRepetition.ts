@@ -61,6 +61,9 @@ const REPEAT_SHARE = 0.9;
 const MIN_JUDGED = 30;
 const MIN_TAKEN_OUT = 80;
 
+// An answer this much made of repeats went round in a loop
+export const LOOP_SHARE = 0.25;
+
 // Share of the transcript (0 to 1) that only repeats what was written before it.
 // Measured: a looping answer about 0.9; talk shows below 0.1 (only 2% of them reach 0.25).
 export const repeatedShare = (text: string): number => {

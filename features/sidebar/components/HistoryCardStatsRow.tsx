@@ -1,17 +1,19 @@
 import React from 'react';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { HistoryItem } from '../../../types';
+import { TranscriptWarningBadge } from './TranscriptWarningBadge';
 
 interface Props {
   item: HistoryItem;
   isActive: boolean;
   isDark: boolean;
   activeColors: ActiveColors;
+  appLang: string;
   formatProcessingTime: (t?: string) => string | undefined;
 }
 
-// Duration, BGB remark and processing time
-export const HistoryCardStatsRow = ({ item, isActive, isDark, activeColors, formatProcessingTime }: Props) => (
+// Duration, BGB remark, a "check" mark when the transcript may be wrong, and processing time
+export const HistoryCardStatsRow = ({ item, isActive, isDark, activeColors, appLang, formatProcessingTime }: Props) => (
         <div className={`flex items-center justify-between border-t border-dashed pt-1.5 mt-0.5 ${isActive ? (isDark ? 'border-green-500/30' : 'border-green-300') : 'border-current/20'}`}>
             <div className="flex items-center gap-1.5">
                 <span className="opacity-70 group-hover:opacity-100 transition-opacity flex items-center gap-1" title="File Duration">
@@ -27,6 +29,7 @@ export const HistoryCardStatsRow = ({ item, isActive, isDark, activeColors, form
                         {item.bgbRemark}
                     </span>
                 )}
+                <TranscriptWarningBadge warnings={item.warnings} isDark={isDark} appLang={appLang} />
             </div>
             <span className={`${isActive ? (isDark ? 'text-green-300' : 'text-green-600') : activeColors.text} flex items-center gap-1`} title="Processing Time">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>

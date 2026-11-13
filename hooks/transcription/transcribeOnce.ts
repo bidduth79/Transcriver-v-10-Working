@@ -3,7 +3,7 @@ import { buildTranscriptionRequest, extractResponseText, transcriptionTimeoutMs 
 import { generateWithRecovery, type BuildRequest } from './geminiTranscriptionRunner';
 import { createAudioSource } from './geminiAudioSource';
 import { isNotATranscript } from './answerCheck';
-import { repeatedShare } from './textRepetition';
+import { repeatedShare, LOOP_SHARE } from './textRepetition';
 import { uiText } from '../../utils/uiText';
 
 type Lang = 'en' | 'bn';
@@ -22,9 +22,6 @@ export interface TranscribeOptions {
 
 // Empty answers that asking again would not change
 const FINAL_REASONS = ['SAFETY', 'RECITATION', 'MAX_TOKENS', 'PROHIBITED_CONTENT'];
-// An answer this much made of repeats went round in a loop (measured: a loop about 0.9, talk shows below 0.1)
-const LOOP_SHARE = 0.25;
-
 type Problem = 'EMPTY' | 'NOT_A_TRANSCRIPT' | 'LOOP';
 
 // Why an answer has no text: a block of the request, the model's finish reason, or no answer at all

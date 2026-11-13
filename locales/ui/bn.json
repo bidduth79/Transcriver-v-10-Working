@@ -407,9 +407,6 @@
   "envKeyFailed": "{label}: key কাজ করছে না। {message}",
   "keyRequestsToday": "আজ {count}টি অনুরোধ",
   "keyQuotaUsedUp": "{model}: কোটা শেষ, {time}-এ ফিরবে",
-  "adBlockLabel": "বিজ্ঞাপন / প্রোমো",
-  "adBlockShow": "দেখুন",
-  "adBlockHide": "লুকান",
   "watchFolderReviewFiles": "নজরে রাখা ফোল্ডারের {count}টি নতুন অডিও ব্যাচের তালিকায় রাখা হয়েছে: দেখে নিয়ে 'শুরু করুন' চাপুন",
   "watchFolderModeAuto": "অটো",
   "watchFolderModeReview": "রিভিউ",
@@ -418,5 +415,12 @@
   "serverBusyWaiting": "সার্ভার ব্যস্ত। {name} {minutes} মিনিট পর আবার চেষ্টা করা হবে।",
   "serverBusyBatchPaused": "সার্ভার এখনো ব্যস্ত, তাই ব্যাচ এই ফাইলেই থামানো হয়েছে। পরে আবার চালু করুন; কোনো ফাইল ব্যর্থ ধরা হয়নি।",
   "otherTabTranscribing": "অ্যাপের অন্য একটি ট্যাবে ট্রান্সক্রিপশন চলছে। ওই ফাইল শেষ হলে এই ব্যাচ এগোবে।",
-  "answerLoopRetrying": "উত্তরে একই কথা বারবার লেখা হয়েছে, আবার চেষ্টা করা হচ্ছে..."
+  "answerLoopRetrying": "উত্তরে একই কথা বারবার লেখা হয়েছে, আবার চেষ্টা করা হচ্ছে...",
+  "transcriptWarningBadge": "যাচাই",
+  "transcriptWarningTitle": "এই ট্রান্সক্রিপ্টে ভুল থাকতে পারে; দেখে নিন, অথবা আবার ট্রান্সক্রাইব করুন:",
+  "transcriptWarningLoop": "Gemini-র উত্তরে একই কথা বারবার এসেছিল (পুনরাবৃত্তি বাদ দেওয়া হয়েছে), তাই কিছু কথা বাদ পড়ে থাকতে পারে",
+  "transcriptWarningLittleText": "অডিওর দৈর্ঘ্যের তুলনায় লেখা অনেক কম",
+  "transcriptWarningEndsEarly": "অডিও শেষ হওয়ার ৫ মিনিটেরও বেশি আগে লেখা থেমে গেছে",
+  "transcriptWarningPastEnd": "সময়গুলো অডিওর শেষ ছাড়িয়ে গেছে, তাই কিছু লেখা বানানো হতে পারে",
+  "transcriptWarningGap": "মাঝে কয়েক মিনিট প্রায় কোনো লেখা নেই"
 }

@@ -5,7 +5,7 @@ vi.mock('../../services/db', () => ({ STORES: { HISTORY: 'studio_history' }, add
 vi.mock('../../utils/sensitiveKeywords', () => ({ getSensitiveKeywords: () => m.keywords }));
 vi.mock('../../services/bgbAnalysisService', () => ({ analyzeTranscriptForBgb: m.analyze }));
 
-import { scheduleBgbAnalysis } from './transcriptionHistory';
+import { scheduleBgbAnalysis, buildHistoryItem } from './transcriptionHistory';
 import { useHistoryStore } from '../useHistoryStore';
 
 const item: any = { id: 'h1', fileName: 'a.mp3', transcript: 'সীমান্তে মাদক', bgbRemark: undefined };
@@ -44,5 +44,17 @@ describe('scheduleBgbAnalysis', () => {
     expect(m.analyze).toHaveBeenCalledTimes(1);
     expect(m.addToStore).not.toHaveBeenCalled();
     expect((useHistoryStore.getState().history as any[])[0].bgbRemark).toBeUndefined();
+  });
+});
+
+describe('buildHistoryItem', () => {
+  const file = new File(['x'], 'show.opus');
+  const meta = { duration: '20:00' };
+  const looping = Array.from({ length: 30 }, (_, i) => `[${String(i).padStart(2, '0')}:00] **Speaker 1:** আজকের আলোচনায় আমরা কথা বলব দেশের অর্থনীতি নিয়ে।`).join('\n');
+
+  it("keeps the warnings found in Gemini's answer, and leaves the field out when there are none", () => {
+    expect(buildHistoryItem(file, meta, '[00:00] **Speaker 1:** কথা', 30, 'gemini-3.5-flash', looping).warnings).toEqual(expect.arrayContaining(['loop', 'littleText']));
+    expect(buildHistoryItem(file, meta, 'text', 30, 'gemini-3.5-flash')).not.toHaveProperty('warnings');
+    expect(buildHistoryItem(file, { duration: '01:00' }, 'text', 30, 'gemini-3.5-flash', 'text')).not.toHaveProperty('warnings');
   });
 });
