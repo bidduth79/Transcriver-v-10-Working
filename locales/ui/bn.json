@@ -422,5 +422,7 @@
   "transcriptWarningLittleText": "অডিওর দৈর্ঘ্যের তুলনায় লেখা অনেক কম",
   "transcriptWarningEndsEarly": "অডিও শেষ হওয়ার ৫ মিনিটেরও বেশি আগে লেখা থেমে গেছে",
   "transcriptWarningPastEnd": "সময়গুলো অডিওর শেষ ছাড়িয়ে গেছে, তাই কিছু লেখা বানানো হতে পারে",
-  "transcriptWarningGap": "মাঝে কয়েক মিনিট প্রায় কোনো লেখা নেই"
+  "transcriptWarningGap": "মাঝে কয়েক মিনিট প্রায় কোনো লেখা নেই",
+  "keyRejectedInvalid": "Gemini বলছে এই key বৈধ নয়: সরিয়ে দিন, অথবা নতুন key যোগ করুন",
+  "keyRejectedNoAccess": "এই key-এর প্রজেক্টে ফ্রি টিয়ার নেই (Gemini billing চায়): এটি সবার শেষে চেষ্টা করা হয়"
 }

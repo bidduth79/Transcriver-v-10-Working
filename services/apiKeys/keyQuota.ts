@@ -63,3 +63,7 @@ export const keyQuotaToday = (tail: string, now = Date.now()) => {
   const exhausted = readExhausted().filter(q => q.tail === tail && q.resetAt > now);
   return { requests, exhausted };
 };
+
+// This key's daily quota for this model is used up
+export const isQuotaUsedUp = (tail: string, model: string, now = Date.now()) =>
+  readExhausted().some(q => q.tail === tail && q.model === model && q.resetAt > now);

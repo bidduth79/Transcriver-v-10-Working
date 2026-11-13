@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const m = vi.hoisted(() => ({ setActive: vi.fn(), fallbacks: [] as any[] }));
 vi.mock('../../services/ApiKeyManager', () => ({
   getFallbackProviders: vi.fn(async () => m.fallbacks),
+  getActiveModel: () => 'gemini-3.8-flash',
   setActiveApiKey: m.setActive,
   getModelDefinition: () => ({ category: 'fast' }),
   isSpeedOptimizationEnabled: () => false,
@@ -10,6 +11,8 @@ vi.mock('../../services/ApiKeyManager', () => ({
 
 import { parseRateLimit, rateLimitWaitMs } from './rateLimit';
 import { generateWithRecovery } from './geminiTranscriptionRunner';
+import { noteKeyRejection } from '../../services/apiKeys/keyRejection';
+import { noteQuotaError } from '../../services/apiKeys/keyQuota';
 
 // The shape @google/genai gives for a 429: the JSON body is in the message
 const geminiError = (quotaId: string, retryDelay?: string) => Object.assign(new Error(JSON.stringify({
@@ -43,7 +46,7 @@ describe('generateWithRecovery on rate limits', () => {
     lang: 'en', setStage: vi.fn(), addToast: vi.fn(),
   });
 
-  beforeEach(() => { calls.length = 0; m.fallbacks = [{ id: 'k2', key: 'KEY-B', source: 'Backup' }]; vi.useFakeTimers(); vi.spyOn(console, 'error').mockImplementation(() => {}); vi.spyOn(console, 'warn').mockImplementation(() => {}); });
+  beforeEach(() => { localStorage.clear(); calls.length = 0; m.fallbacks = [{ id: 'k2', key: 'KEY-B', source: 'Backup' }]; vi.useFakeTimers(); vi.spyOn(console, 'error').mockImplementation(() => {}); vi.spyOn(console, 'warn').mockImplementation(() => {}); });
   afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); m.setActive.mockClear(); });
 
   it('waits as long as Gemini asks on a per-minute limit and retries the same key', async () => {
@@ -70,5 +73,24 @@ describe('generateWithRecovery on rate limits', () => {
     expect(await p).toMatchObject({ apiKey: 'KEY-B' });
     expect(calls).toEqual(['KEY-A', 'KEY-B']);
     expect(m.setActive).toHaveBeenCalledWith('k2');
+  });
+
+  it("passes over keys known to fail today (refused, or this model's day used up), trying them only last", async () => {
+    m.fallbacks = [{ id: 'k2', key: 'KEY-B', source: 'Backup' }, { id: 'k3', key: 'KEY-C', source: 'Third' }];
+    noteKeyRejection('EY-A', Object.assign(new Error('API key not valid'), { status: 401 }));
+    noteQuotaError('EY-B', 'gemini-3.8-flash', geminiError('GenerateRequestsPerDayPerProjectPerModel'));
+    const p = run({ 'KEY-A': [], 'KEY-B': [], 'KEY-C': [{ text: 'c' }] });
+    await vi.dynamicImportSettled();
+    expect(await p).toMatchObject({ apiKey: 'KEY-C', response: { text: 'c' } });
+    expect(calls).toEqual(['KEY-C']);
+  });
+
+  it('still tries the chosen key first when every key is known to fail today (a quota can come back early)', async () => {
+    noteQuotaError('EY-A', 'gemini-3.8-flash', geminiError('GenerateRequestsPerDayPerProjectPerModel'));
+    noteKeyRejection('EY-B', Object.assign(new Error('The Gemini API free tier is not available for this project'), { status: 403 }));
+    const p = run({ 'KEY-A': [{ text: 'a' }], 'KEY-B': [] });
+    await vi.dynamicImportSettled();
+    expect(await p).toMatchObject({ apiKey: 'KEY-A' });
+    expect(calls).toEqual(['KEY-A']);
   });
 });

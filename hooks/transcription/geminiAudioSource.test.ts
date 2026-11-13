@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('./transcriptionUtils', () => ({ blobToBase64: vi.fn(async () => 'BASE64') }));
 vi.mock('../../services/ApiKeyManager', () => ({
   getFallbackProviders: vi.fn(async () => [{ id: 'k2', key: 'KEY-B', source: 'Backup' }]),
+  getActiveModel: () => 'gemini-3.8-flash',
   setActiveApiKey: vi.fn(),
   getModelDefinition: () => ({ category: 'fast' }),
   isSpeedOptimizationEnabled: () => false,

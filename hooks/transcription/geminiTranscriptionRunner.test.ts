@@ -17,6 +17,7 @@ vi.mock('../../services/apiKeys/geminiClient', () => ({
 }));
 vi.mock('../../services/ApiKeyManager', () => ({
   getFallbackProviders: async () => [],
+  getActiveModel: () => 'gemini-3.8-flash',
   setActiveApiKey: vi.fn(),
   getModelDefinition: () => ({ category: 'balanced' }),
   isSpeedOptimizationEnabled: () => true,

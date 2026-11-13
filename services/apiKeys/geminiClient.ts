@@ -8,6 +8,7 @@ import {
 } from './geminiTransport';
 import { messageOf } from '../../utils/errorMessage';
 import { noteQuotaError } from './keyQuota';
+import { noteKeyRejection } from './keyRejection';
 import { isServerBusy } from '../../utils/serverBusy';
 
 const statusOf = (err: unknown) => (err as { status?: number } | null | undefined)?.status;
@@ -66,6 +67,7 @@ export const createGeminiClient = async (apiKey: string): Promise<GeminiClient> 
     } catch (err) {
       logApiCall({ status: 'error', model: params.model, keyTail, latency: Date.now() - started, rateLimited: isRateLimited(err) });
       noteQuotaError(keyTail, params.model, err);
+      noteKeyRejection(keyTail, err);
       if (controller.signal.aborted) throw timedOut();
       throw err;
     } finally {

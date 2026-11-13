@@ -1,6 +1,8 @@
 import type { GoogleGenAI, GenerateContentParameters, GenerateContentResponse } from "../../types/gemini";
 import { parseRateLimit, rateLimitWaitMs, sleepMs } from './rateLimit';
-import { getFallbackProviders, setActiveApiKey } from '../../services/ApiKeyManager';
+import { getFallbackProviders, setActiveApiKey, getActiveModel } from '../../services/ApiKeyManager';
+import { isQuotaUsedUp } from '../../services/apiKeys/keyQuota';
+import { keyRejection } from '../../services/apiKeys/keyRejection';
 import { detectAudioMimeType, convertAudioToWav } from './transcriptionUtils';
 import { isKeyOrProjectBlockedError } from './transcriptionErrors';
 import { releaseRequestAudio } from './geminiRequest';
@@ -63,8 +65,19 @@ const generateWaitingOnRateLimit = async (ai: GoogleGenAI, request: GenerateCont
   }
 };
 
+// Keys that will fail today (this model's daily quota used up, or refused by Gemini as invalid or without access)
+// come after the others. They are still tried last: a quota can come back before the time Gemini gave.
+const failsToday = (key: string, model: string) => isQuotaUsedUp(key.slice(-4), model) || keyRejection(key.slice(-4)) !== null;
+const workingFirst = <T extends { key: string }>(keys: T[], model: string) =>
+  [...keys.filter(k => !failsToday(k.key, model)), ...keys.filter(k => failsToday(k.key, model))];
+
 // Calls Gemini; on blocked/quota errors tries fallback keys, and drops thinkingConfig if a model rejects it.
-export const generateWithRecovery = async ({ provider, buildRequest, lang, setStage, addToast }: RecoveryOptions) => {
+export const generateWithRecovery = async ({ provider: chosen, buildRequest, lang, setStage, addToast }: RecoveryOptions) => {
+  const model = getActiveModel();
+  // A chosen key known to fail today gives way to one that should work, so no request is spent on it first
+  const provider = failsToday(chosen.key, model)
+    ? (await getFallbackProviders(chosen.key)).find(fb => !failsToday(fb.key, model)) ?? chosen
+    : chosen;
   let ai = await createGeminiClient(provider.key);
   let apiKey = provider.key;
   let request: GenerateContentParameters | null = null;
@@ -80,7 +93,7 @@ export const generateWithRecovery = async ({ provider, buildRequest, lang, setSt
     if (messageOf(err)?.includes('RECITATION') || messageOf(err)?.includes('Recitation')) {
       console.warn("Caught recitation in generateContent error");
     } else if (isKeyOrProjectBlockedError(err)) {
-      const fallbacks = await getFallbackProviders(provider.key);
+      const fallbacks = workingFirst(await getFallbackProviders(provider.key), model);
       let recoveredWithFallback = false;
 
       for (const fb of fallbacks) {

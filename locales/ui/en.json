@@ -422,5 +422,7 @@
   "transcriptWarningLittleText": "Much less text than usual for the length of the audio",
   "transcriptWarningEndsEarly": "The transcript stops more than 5 minutes before the end of the audio",
   "transcriptWarningPastEnd": "Its times go past the end of the audio, so some text may be made up",
-  "transcriptWarningGap": "Several minutes in the middle have almost no text"
+  "transcriptWarningGap": "Several minutes in the middle have almost no text",
+  "keyRejectedInvalid": "Gemini says this key is not valid: remove it, or add a new one",
+  "keyRejectedNoAccess": "This key's project has no free tier (Gemini asks for billing): it is tried last"
 }
