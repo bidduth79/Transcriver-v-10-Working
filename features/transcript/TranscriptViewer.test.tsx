@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, fireEvent, cleanup } from '@testing-library/react';
 import { FormattedTranscript } from './TranscriptViewer';
-import { UNCLEAR_MARK, AD_START, AD_END } from '../../constants/instructions';
+import { UNCLEAR_MARK } from '../../constants/instructions';
 
 afterEach(cleanup);
 
@@ -23,22 +23,12 @@ describe('FormattedTranscript', () => {
     expect(onSeek).toHaveBeenLastCalledWith('[02:40]');
   });
 
-  it('folds an advertisement block into one line that opens on click, and opens all while searching', () => {
-    const withAd = `[15:20] **Host:** before the break
-[15:32] ${AD_START}
-[16:01] **Woman 1:** buy this soap
-[17:10] ${AD_END}
-[17:12] **Host:** welcome back`;
-    const view = (searchTerm: string) => render(<FormattedTranscript text={withAd} searchTerm={searchTerm} isDark={false} currentMatchIndex={0} />);
-    const { container, getByRole } = view('');
+  it('shows an advertisement like any other talk, with nothing folded', () => {
+    const withAd = '[15:20] **Host:** before the break\n[16:01] **Woman 1:** buy this soap\n[17:12] **Host:** welcome back';
+    const { container, queryByRole } = render(<FormattedTranscript text={withAd} searchTerm="" isDark={false} currentMatchIndex={0} />);
     expect(container.textContent).toContain('before the break');
-    expect(container.textContent).toContain('welcome back');
-    expect(container.textContent).not.toContain('buy this soap');
-    const fold = getByRole('button');
-    expect(fold.textContent).toContain('[15:32–17:10]');
-    fireEvent.click(fold);
     expect(container.textContent).toContain('buy this soap');
-    cleanup();
-    expect(view('soap').container.textContent).toContain('buy this soap');
+    expect(container.textContent).toContain('welcome back');
+    expect(queryByRole('button')).toBeNull();
   });
 });

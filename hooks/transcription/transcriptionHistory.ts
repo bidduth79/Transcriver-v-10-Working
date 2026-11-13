@@ -1,11 +1,10 @@
 import type { FileMeta, HistoryItem } from '../../types';
 import { addToStore, STORES } from '../../services/db';
-import { withoutAds } from '../../utils/adBlocks';
 
 // File info shown in the sidebar; YouTube downloads add the channel
 type SourceMeta = Partial<FileMeta> & { channelName?: string };
 
-export const buildHistoryItem = (inputFile: Blob, inputMetadata: SourceMeta, transcript: string, elapsedSeconds: number) => {
+export const buildHistoryItem = (inputFile: Blob, inputMetadata: SourceMeta, transcript: string, elapsedSeconds: number, model?: string) => {
   const fileName = (inputFile as File).name || inputMetadata.name || "audio_file";
   const fileExtension = fileName.includes('.') ? fileName.split('.').pop() : 'mp3';
   return {
@@ -17,6 +16,8 @@ export const buildHistoryItem = (inputFile: Blob, inputMetadata: SourceMeta, tra
     transcript,
     extension: fileExtension,
     timeTaken: `${elapsedSeconds}s`,
+    // The model that wrote it: later time estimates learn from runs of the same model
+    model,
     channelName: inputMetadata.channelName,
     size: inputMetadata.size || `${(inputFile.size / (1024 * 1024)).toFixed(2)} MB`,
     bgbRemark: undefined as string | undefined
@@ -66,12 +67,10 @@ export const scheduleBgbAnalysis = (item: TranscriptionHistoryItem, text: string
       const { getSensitiveKeywords } = await import('../../utils/sensitiveKeywords');
       const { analyzeTranscriptForBgb } = await import('../../services/bgbAnalysisService');
       const keywords = getSensitiveKeywords();
-      // Advertisements in the programme's breaks are not part of what is analysed
-      const programmeText = withoutAds(text);
-      const lower = programmeText.toLowerCase();
+      const lower = text.toLowerCase();
       const matches = keywords.filter((kw: string) => lower.includes(kw.toLowerCase()));
       if (matches.length > 0) {
-        const result = await analyzeTranscriptForBgb(programmeText, matches);
+        const result = await analyzeTranscriptForBgb(text, matches);
         if (result?.remark) {
           itemForBgb.bgbRemark = result.remark;
           await addToStore(STORES.HISTORY, itemForBgb);

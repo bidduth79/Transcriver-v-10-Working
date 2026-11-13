@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getSensitiveKeywords } from '../../../utils/sensitiveKeywords';
-import { withoutAds } from '../../../utils/adBlocks';
 import { loadHistoryTranscript } from '../../../hooks/history/useHistoryTranscript';
 import type { HistoryItem } from '../../../types';
 
@@ -51,7 +50,7 @@ export const useExpandedHistory = (
          const transcript = item.transcript ?? await loadHistoryTranscript(item.id).catch(() => '');
          if (!alive) return;
          if (transcript) {
-           const lower = withoutAds(transcript).toLowerCase();
+           const lower = transcript.toLowerCase();
            const matches = sensitiveKeywords
              .filter(kw => kw && kw.trim().length > 0 && lower.includes(kw.toLowerCase()))
              .sort((a, b) => b.length - a.length);

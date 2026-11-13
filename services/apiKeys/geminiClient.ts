@@ -18,17 +18,15 @@ const isRateLimited = (err: unknown) =>
 const isOverloaded = (err: unknown) =>
   statusOf(err) === 503 || /\b503\b|UNAVAILABLE|high demand|overloaded/i.test(String(messageOf(err) ?? ''));
 
-// Waits before retrying a busy model (growing, as Google recommends), then one similar model is tried
+// A request cancelled at its time limit (it is reported as a busy model, with this mark)
+const isTimedOut = (err: unknown) => (err as { timedOut?: boolean } | null | undefined)?.timedOut === true;
+
+// Waits before asking a busy model again (growing, as Google recommends)
 export const OVERLOAD_RETRY_DELAYS_MS = [2000, 6000];
-export const OVERLOAD_FALLBACK_MODEL: Record<string, string> = {
-  'gemini-3.8-flash': 'gemini-3.5-flash',
-  'gemini-3.5-flash': 'gemini-3.5-flash-lite',
-  'gemini-3.1-pro-preview': 'gemini-3.8-flash',
-};
 
 const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
 
-// A request that hangs is cancelled and treated like a busy model. Audio can legitimately take minutes.
+// A request that hangs is cancelled. Audio can legitimately take minutes.
 export const TEXT_TIMEOUT_MS = 90_000;
 export const MEDIA_TIMEOUT_MS = 600_000;
 const hasMedia = (contents: unknown) =>
@@ -39,6 +37,7 @@ const hasMedia = (contents: unknown) =>
  * Every Gemini client in the app is created here and routes requests through the server API.
  * Each generateContent request (retries and failures included) is logged with Gemini's own token
  * counts, the model and the key's last 4 characters, so the quota monitor shows real usage.
+ * A request always goes to the model it names: the user's choice of model is never changed here.
  */
 export const createGeminiClient = async (apiKey: string): Promise<GeminiClient> => {
   const keyTail = apiKey.slice(-4);
@@ -50,7 +49,7 @@ export const createGeminiClient = async (apiKey: string): Promise<GeminiClient> 
     const timeoutMs = wantedTimeout ?? (hasMedia(params.contents) ? MEDIA_TIMEOUT_MS : TEXT_TIMEOUT_MS);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
-    const timedOut = () => Object.assign(new Error(`503 UNAVAILABLE: no answer from ${params.model} within ${timeoutMs / 1000}s`), { status: 503 });
+    const timedOut = () => Object.assign(new Error(`503 UNAVAILABLE: no answer from ${params.model} within ${timeoutMs / 1000}s`), { status: 503, timedOut: true });
     try {
       const response = await requestGenerateContent(apiKey, {
         ...params,
@@ -81,15 +80,10 @@ export const createGeminiClient = async (apiKey: string): Promise<GeminiClient> 
           try {
             return await trackedGenerate(params);
           } catch (err) {
-            if (!isOverloaded(err)) throw err;
-            if (attempt < OVERLOAD_RETRY_DELAYS_MS.length) {
-              await sleep(OVERLOAD_RETRY_DELAYS_MS[attempt]);
-              continue;
-            }
-            const fallback = OVERLOAD_FALLBACK_MODEL[params.model];
-            if (!fallback) throw err;
-            console.info(`[Gemini] ${params.model} is busy; using ${fallback} for this request`);
-            return await trackedGenerate({ ...params, model: fallback });
+            // A busy model is asked again after a wait. One that gave no answer in time is not: it would most likely
+            // make the request wait just as long again (a batch waits minutes for a busy server and tries once more).
+            if (!isOverloaded(err) || isTimedOut(err) || attempt >= OVERLOAD_RETRY_DELAYS_MS.length) throw err;
+            await sleep(OVERLOAD_RETRY_DELAYS_MS[attempt]);
           }
         }
       },

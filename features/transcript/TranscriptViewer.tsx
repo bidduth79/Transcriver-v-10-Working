@@ -1,7 +1,6 @@
-import React, { useRef, useMemo, useState } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useTranscriptFormatter } from './hooks/useTranscriptFormatter.tsx';
 import { parseTranscriptLines } from './utils/parseTranscriptLines';
-import { AdBlockToggle } from './components/AdBlockToggle';
 import { UNCLEAR_MARK } from '../../constants/instructions';
 import { useThemeStore } from '../../hooks/useThemeStore';
 import { uiText } from '../../utils/uiText';
@@ -44,30 +43,17 @@ export const FormattedTranscript = React.memo(({
   matchIndexRef.current = 0;
 
   // Pre-parse the entire transcript ONCE per text change (0ms re-render overhead)
-  const { lines: parsedLines, adRanges } = useMemo(() => parseTranscriptLines(text), [text]);
-  // Advertisement blocks stay folded until opened; while searching all are open, so every match can be reached
-  const [openAds, setOpenAds] = useState<ReadonlySet<number>>(() => new Set());
-  const toggleAd = (block: number) => setOpenAds(prev => {
-    const next = new Set(prev);
-    if (!next.delete(block)) next.add(block);
-    return next;
-  });
+  const parsedLines = useMemo(() => parseTranscriptLines(text), [text]);
 
   if (!text) return null;
 
   return (
     <div className="space-y-2 selection:bg-indigo-500/30">
-      {parsedLines.map(({ timestamp, seekTime, parsedParts, adBlock, adStart }, i) => {
-        if (adBlock !== null) {
-          const isOpen = !!searchTerm || openAds.has(adBlock);
-          if (adStart) return <AdBlockToggle key={i} range={adRanges[adBlock]} isOpen={isOpen} onToggle={() => toggleAd(adBlock)} isDark={isDark} appLang={appLang} />;
-          if (!isOpen) return null;
-        }
-        return (
-        <div 
+      {parsedLines.map(({ timestamp, seekTime, parsedParts }, i) => (
+        <div
           key={i}
           style={!searchTerm ? { contentVisibility: 'auto', containIntrinsicSize: '0 36px' } : undefined}
-          className={`mb-1.5 min-h-[1.5em] leading-relaxed flex items-start group${adBlock !== null ? ' opacity-60' : ''}`}
+          className="mb-1.5 min-h-[1.5em] leading-relaxed flex items-start group"
         >
           {timestamp && (
             <span 
@@ -131,8 +117,7 @@ export const FormattedTranscript = React.memo(({
             })}
           </div>
         </div>
-        );
-      })}
+      ))}
     </div>
   );
 });

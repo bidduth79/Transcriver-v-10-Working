@@ -117,13 +117,14 @@ export const generateWithRecovery = async ({ provider, buildRequest, lang, setSt
       if (!recoveredWithFallback) {
         throw err;
       }
-    } else if (request?.config?.thinkingConfig) {
-      // Safe fallback if a specific preview model rejected thinkingConfig
+    } else if (request?.config?.thinkingConfig && /thinking/i.test(messageOf(err) ?? '')) {
+      // A model that does not take thinkingConfig is asked again without it. Only for that error: asking a busy
+      // or slow model the same thing again would only lose more minutes.
       try {
         const classicOptions = { ...request, config: { ...request.config } };
         delete classicOptions.config.thinkingConfig;
         response = await ai.models.generateContent(classicOptions);
-      } catch (innerErr) {
+      } catch {
         throw err;
       }
     } else {

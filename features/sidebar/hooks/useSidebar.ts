@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getSensitiveKeywords } from '../../../utils/sensitiveKeywords';
-import { withoutAds } from '../../../utils/adBlocks';
 import type { Translations } from '../../../translations';
 import type { FileChangeEvent } from '../../../hooks/useFileHandler';
 import { uiText } from '../../../utils/uiText';
@@ -37,7 +36,7 @@ export const useSidebar = (
     const cached = matchCacheRef.current.get(text);
     if (cached) return cached;
 
-    const lower = withoutAds(text).toLowerCase();
+    const lower = text.toLowerCase();
     const matches: string[] = [];
     for (let i = 0; i < preparedKeywords.length; i++) {
       const kw = preparedKeywords[i];

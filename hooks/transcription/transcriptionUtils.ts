@@ -40,14 +40,20 @@ export const DEFAULT_SECONDS_PER_AUDIO_SECOND = 0.12;
 // Upload, preparation and the answer's first words take time even for a short clip
 const FIXED_SECONDS = 15;
 
-// The speed of earlier transcriptions (median of the last 20 with a known length and time), or the default
-export const learnedSecondsPerAudioSecond = (history: { duration?: string; timeTaken?: string | number }[]) => {
-    const rates = history
+type PastRun = { duration?: string; timeTaken?: string | number; model?: unknown };
+
+// The speed of earlier transcriptions (median of the last 20 with a known length and time), or the default.
+// Models differ up to sixfold in speed, so when a model is named and has at least three runs of its own, only
+// those are used (older items have no model saved; the estimate then comes from all runs, as before).
+export const learnedSecondsPerAudioSecond = (history: PastRun[], model?: string) => {
+    const ratesOf = (runs: PastRun[]) => runs
         .map(item => ({ audio: parseDurationToSeconds(item.duration), took: parseFloat(String(item.timeTaken ?? '')) }))
         .filter(({ audio, took }) => audio >= 60 && took > 0)
         .slice(0, 20)
         .map(({ audio, took }) => Math.max(0, took - FIXED_SECONDS) / audio)
         .sort((x, y) => x - y);
+    const own = model ? ratesOf(history.filter(item => item.model === model)) : [];
+    const rates = own.length >= 3 ? own : ratesOf(history);
     return rates.length < 3 ? DEFAULT_SECONDS_PER_AUDIO_SECOND : rates[Math.floor(rates.length / 2)];
 };
 
@@ -71,6 +77,7 @@ export const parseDurationToSeconds = (durationStr: string | undefined): number 
     return audioDurationSeconds;
 };
 
-export { removeRepetitiveBlocks, splitLongParagraphs } from './textCleanup';
+export { removeRepetitiveBlocks } from './textCleanup';
+export { cleanTranscript } from './textRepetition';
 export { isFormatNativelySupportedByGemini, detectAudioMimeType } from './audioMimeDetection';
 export { convertAudioToWav } from './wavConversion';

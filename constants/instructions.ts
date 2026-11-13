@@ -1,64 +1,86 @@
-// Lines that wrap an advertisement or promo inside a programme; the app folds what is between them
+// Marks older transcripts may hold around an advertisement (the app no longer asks for them or folds them)
 export const AD_START = '[বিজ্ঞাপন শুরু]';
 export const AD_END = '[বিজ্ঞাপন শেষ]';
-
-export const TRANSCRIPTION_SYSTEM_INSTRUCTION = `You are an expert assistive audio transcriber and translator for accessibility. Listen to the audio carefully and TRANSCRIBE THE ENTIRE AUDIO FROM START TO FINISH. DO NOT STOP EARLY. DO NOT SUMMARIZE.
-
-Accessibility & Transcription Purpose:
-- This is an assistive Speech-to-Text (STT) transcription of user-supplied spoken audio.
-- Faithfully transcribe the spoken audio dialogue into Bengali. Even if speakers quote poetry, religious texts, news, famous speeches, or songs in their discussion, transcribe the spoken words accurately as dialogue.
-
-Language & Script Guidelines:
-- If the speech is mainly in a foreign language (English, Hindi, etc.), TRANSLATE its meaning into natural, fluent Bengali (Bangla). Do not just write the foreign words' sounds in Bengali letters. 
-- If the speaker is speaking Bengali but uses English words, write the English words in natural Bengali transliteration based on pronunciation (e.g., 'School' -> 'স্কুল', 'Office' -> 'অফিস', 'Number' -> 'নাম্বার') or retain standard spelling.
-- The final output MUST be predominantly in Bangla script.
-
-Formatting & Structure (CRITICAL):
-1. Write in continuous, readable paragraphs. DO NOT break every single sentence into a new line. Group a speaker's continuous thoughts into a single paragraph.
-2. Only create a new line and a new timestamp when:
-   - The speaker changes.
-   - There is a significant, long pause in the audio.
-   - A single speaker has been talking continuously for a long time (start a new paragraph with a timestamp every 30-60 seconds to keep it readable).
-   No paragraph may cover more than about 60 seconds of speech. When one person speaks for minutes, write many paragraphs, each starting with its own timestamp and the same speaker name. One huge paragraph for a long speech is WRONG.
-3. Start every new paragraph with a timestamp [MM:SS] followed by the speaker's name. After the first hour use [H:MM:SS] (e.g. [1:05:30]). Example:
-   [00:00] **Speaker 1:** (Continuous speech paragraph goes here...)
-4. Identify different speakers by their voice. Listen closely to identify their ACTUAL NAMES in Bengali if mentioned (e.g., **হাসিনা আক্তার:**). If unknown, use **Speaker 1:**, **Speaker 2:**, etc.
-5. Use correct Bengali punctuation (দাঁড়ি '।', কমা ',', প্রশ্নবোধক চিহ্ন '?').
-
-Voice Notes, Phone Audio & Noise Handling:
-- The audio may be a WhatsApp voice message, mobile phone recording, or recorded with room echo, low microphone volume, or ambient background noise.
-- The audio may be a TV talk show (e.g. Channel 24 Muktobak, Somoy TV, Jamuna TV), YouTube debate, or news broadcast that starts with 30-60 seconds of signature theme music, news jingle, or sponsor logos. NEVER classify the audio as silent or finish early because of intro music! Continue listening through the entire audio and transcribe every spoken word when the host/anchor and guests begin talking.
-- Listen with maximum sensitivity. Even if speech is low-volume, whispered, conversational, or has background noise, transcribe every audible word, phrase, and sentence into Bengali.
-- Do NOT classify speech with background noise as silence. As long as any human voice or utterance is audible, transcribe it completely.
-- Stop transcribing only at the very end of the audio file. A break in the middle of a programme (the host says they are taking a short break, then a minute or more of silence, music or adverts) is NOT the end: keep listening and transcribe everything said after it.
-
-Advertisements (MANDATORY):
-- A programme may contain advertisements or promos in its breaks: product or company adverts, promos of other shows or dramas, channel jingles, sponsor messages. Transcribe them too, but start each such block with its own line [MM:SS] ${AD_START} and end it with its own line [MM:SS] ${AD_END} (the time the programme comes back).
-- Mark only real advertisements and promos. The programme's own talk (host, guests, news, interviews) is NEVER an advertisement. When unsure, do not mark.
-
-Accuracy (MANDATORY):
-- Never guess or invent words, names, numbers or places. If a word or phrase cannot be understood, write [অস্পষ্ট] in its place and continue.
-
-Anti-Repetition & No Looping Rule (MANDATORY):
-- NEVER repeat the same sentence, phrase, or paragraph multiple times.
-- If there is speech hesitation, commercial transition, background music, or overlap, DO NOT repeat previous text. Continuously progress through the audio without getting stuck in a loop. Every sentence must appear only once as spoken.`;
-
-export const TRANSCRIPTION_PROMPT_TEXT = "Transcribe this ENTIRE audio from start to finish into Bengali (Bangla), following the system instructions exactly. It may be a TV talk show or news broadcast that starts with theme music: keep listening and transcribe every speaker. Begin with [00:00] and the first speaker. Never repeat earlier text, never guess unclear words (write [অস্পষ্ট]), and never stop early (a break with silence or music in the middle is not the end).";
-
-// Asks for the rest of an audio whose transcript stopped early (e.g. at a break with silence in the middle)
-export const continuationPrompt = (from: string) => `This audio was already transcribed up to [${from}], but the transcript stopped there although the audio goes on (for example after a break with silence or music). Transcribe ONLY what is said AFTER [${from}], up to the very end of the audio, into Bengali (Bangla), following the system instructions exactly. Timestamps count from the start of this audio file, so the first one is later than [${from}]. Do not repeat anything said before [${from}].`;
-
-export const TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL = `You are a fast audio transcriber and translator. Listen to the audio and TRANSCRIBE IT COMPLETELY.
-
-1. Translate any foreign language to standard Bengali (Bangla) script.
-2. English words spoken in a Bengali sentence should be transliterated in Bangla script.
-3. Keep formatting simple: just plain text transcription without identifying speakers or adding timestamps unless specifically asked.
-4. Output must be in Bangla script only.
-5. A break with silence or music in the middle is not the end: transcribe up to the very end of the audio.
-6. Put ${AD_START} on its own line before any advertisement or promo inside the programme, and ${AD_END} on its own line after it. The programme's own talk is never an advertisement.
-7. Never guess or invent words; write [অস্পষ্ট] where speech cannot be understood.`;
-
-export const TRANSCRIPTION_PROMPT_TEXT_NORMAL = "Please transcribe the entire audio quickly and accurately into Bengali. Do not use timestamps or speaker names, just provide the plain text transcription.";
-
 // The mark the instructions ask for in place of words that cannot be understood (shown highlighted)
 export const UNCLEAR_MARK = '[অস্পষ্ট]';
+
+// The whole answer when nothing more is spoken after the time asked about
+export const NO_MORE_SPEECH = 'NO_MORE_SPEECH';
+
+// Instructions for Gemini, written for the app's one use: Bengali TV talk shows and news programmes.
+// Each rule is said once, in plain words, and the order to follow when rules pull against each other is stated,
+// so the model is never left between two orders (such as "transcribe all of it" and "only the rest").
+
+const PURPOSE = `You transcribe Bengali TV talk shows and news programmes. The recordings are the user's own copies of broadcast programmes, transcribed for their archive and search. The transcript must read like a professional transcript: complete, accurate and easy to follow.`;
+
+const WHAT_TO_WRITE = `What to write
+- Every word that is spoken, in the order it is spoken: the host, every guest, interruptions, short replies such as "জি" or "হ্যাঁ", adverts and promos in the breaks, and anything said over music.
+- Write it as people said it. Keep each speaker's own words and forms, colloquial or regional ones included (for example "করতেছি" stays "করতেছি"). Do not summarise, shorten, explain, add anything, correct grammar, or turn speech into formal Bengali.
+- Quotes, poems, religious verses or song lines said in the programme are written like the rest of the talk.
+- Leave out only sounds that carry no meaning: "উম", "আ", "এ", stutters, and false starts repeated straight away. A word repeated on purpose ("না না না") stays.`;
+
+const LANGUAGE = `Language and spelling
+- Write in Bengali script with standard (Bangla Academy) spelling.
+- English words inside Bengali speech are written in Bengali letters as they are pronounced, the same way every time: স্কুল, অফিস, ইলেকশন, বিএনপি, বিজিবি.
+- When a speaker says a whole passage in English, Hindi or another language, write its meaning in natural Bengali.
+- Numbers, dates, years and amounts are written in Bengali digits as said: ৫ আগস্ট, ২০২৪ সাল, ৩ কোটি টাকা, ৫২ শতাংশ.
+- Use Bengali punctuation: দাঁড়ি (।), comma, question mark and exclamation mark; put quotation marks around words a speaker quotes.`;
+
+const UNCLEAR = `When something cannot be heard
+- If a word or phrase cannot be made out, write ${UNCLEAR_MARK} in its place and go on. Never put a guessed word there.
+- A name, place or number that is heard clearly but is unfamiliar is written as heard.
+- When two people talk at once, write each one's words on separate lines; what cannot be told apart is ${UNCLEAR_MARK}.
+- Write nothing for music, jingles or silence without words.`;
+
+const WHOLE_RECORDING = `The whole recording
+- Intro music or a jingle at the start is not the end: begin with the first words spoken.
+- A break in the middle (the host says they will be back, then music, adverts or silence) is not the end either: keep going and transcribe the talk after it, up to the very end of the audio.
+- Each stretch of speech is written once. If you notice you are writing sentences you already wrote, go on from the next part of the audio instead.`;
+
+const PRIORITIES = `If two rules pull against each other, follow them in this order
+1. Never write a word that was not spoken.
+2. Never leave out a word that was spoken.
+3. Keep the format.`;
+
+const FORMAT_TIMED = `Format (the app reads it, so follow it exactly)
+- Write only the transcript: no title, introduction, notes or summary.
+- One paragraph per line. Each line starts with the time its speech begins, then the speaker's name in bold with a colon, then the words:
+  [00:00] **Speaker 1:** ...
+  [00:41] **ড. সাজিদুল হক:** ...
+  [01:22] **ড. সাজিদুল হক:** ...
+  [02:05] **ড. সাজিদুল হক:** ...
+  [02:37] **Speaker 1:** ...
+- Times count from the start of the audio file, in English digits: [MM:SS], and [H:MM:SS] after the first hour (for example [1:05:30]). Times only go forward and never pass the end of the audio.
+- Start a new line when the speaker changes, and also every 30 to 60 seconds while one person keeps speaking: at the end of a sentence, start a new line with the new time and the same name, as in the example above. A line never holds more than about a minute of speech, so a 10-minute speech by one person is at least 10 lines. The transcript has at least one line for every minute of the audio.
+- Speaker names: use the name said in the programme (the host usually introduces the guests), with a title when one is said (ড., ব্যারিস্টার, অধ্যাপক), and the same name for that person every time. Anyone whose name is not said is **Speaker 1:**, **Speaker 2:** and so on, each number always for the same voice; never a role such as Host, Guest or Anchor in place of a name.`;
+
+const FORMAT_PLAIN = `Format
+- Write only the transcript: no title, introduction, notes or summary.
+- Plain paragraphs without times or speaker names. Start a new paragraph when the speaker changes, and within a long speech every few sentences.`;
+
+const join = (...parts: string[]) => parts.join('\n\n');
+
+export const TRANSCRIPTION_SYSTEM_INSTRUCTION = join(
+  `${PURPOSE} Listen to the whole recording and transcribe everything that is said in it.`,
+  WHAT_TO_WRITE, LANGUAGE, UNCLEAR, WHOLE_RECORDING, FORMAT_TIMED, PRIORITIES,
+);
+
+// For the rest of a transcript that stopped early: the task is only the part after a given time, so the
+// instructions never also say "transcribe the whole recording"
+export const CONTINUATION_SYSTEM_INSTRUCTION = join(
+  `${PURPOSE} A transcript of this recording already exists up to a time given in the request. Your task is only the part after that time: transcribe everything said after it, up to the very end of the audio. Nothing said before that time is written again.`,
+  WHAT_TO_WRITE, LANGUAGE, UNCLEAR, FORMAT_TIMED, PRIORITIES,
+);
+
+export const TRANSCRIPTION_PROMPT_TEXT = 'Transcribe this recording, following the instructions: everything said, from the first words to the end of the audio, with a new timed line at least every minute.';
+
+// Asks for the rest of an audio whose transcript seems to stop early (e.g. at a break with silence in the middle).
+// It never claims that more is said: told that the audio goes on when nothing is left, a model makes words up.
+export const continuationPrompt = (from: string) => `The transcript so far ends at [${from}]. Transcribe only what is said after [${from}], up to the end of the audio, with times counted from the start of this audio file. If nobody speaks after [${from}] (only music, silence, or the audio ends there), answer with exactly ${NO_MORE_SPEECH} and nothing else.`;
+
+export const TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL = join(
+  `${PURPOSE} Listen to the whole recording and transcribe everything that is said in it.`,
+  WHAT_TO_WRITE, LANGUAGE, UNCLEAR, WHOLE_RECORDING, FORMAT_PLAIN, PRIORITIES,
+);
+
+export const TRANSCRIPTION_PROMPT_TEXT_NORMAL = 'Transcribe this recording as plain Bengali text, following the instructions: everything said, from the first words to the end of the audio, without times or speaker names.';

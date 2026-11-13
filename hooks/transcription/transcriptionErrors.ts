@@ -84,12 +84,28 @@ export const formatErrorMessage = (rawError: unknown, lang: 'bn' | 'en', keyInfo
   return rawMsg.length > 300 ? rawMsg.substring(0, 300) + '...' : rawMsg;
 };
 
+// Answers refused for what the audio says: asking again brings the same
+const REFUSAL_REASONS = ['SAFETY', 'RECITATION', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII'];
+
+// 'busy': the server is overloaded or gave no answer in time, worth waiting for. 'refused': never worth retrying.
+export type FailureKind = 'busy' | 'refused' | 'other';
+
+export const failureKindOf = (error: unknown): FailureKind => {
+  const { reason, status } = (error ?? {}) as { reason?: string; status?: number };
+  if (REFUSAL_REASONS.includes(reason ?? '')) return 'refused';
+  return status === 503 || /\b503\b|UNAVAILABLE|high demand|overloaded/i.test(messageOf(error) ?? '') ? 'busy' : 'other';
+};
+
+// The error of an answer without text, carrying the reason so the batch can tell a refusal from a busy server
+export const emptyTranscriptError = (reason: string | undefined, lang: 'bn' | 'en', piece?: { part: number; parts: number }): Error =>
+  Object.assign(buildEmptyTranscriptError(reason, lang, piece), { reason });
+
 /**
  * The error for an answer without text. It is never shown as "no speech": the audio has speech, so an
  * empty answer means the request failed (busy server, time limit, or a block). `piece` names the part of a
  * long recording that came back empty.
  */
-export const emptyTranscriptError = (reason: string | undefined, lang: 'bn' | 'en', piece?: { part: number; parts: number }): Error => {
+const buildEmptyTranscriptError = (reason: string | undefined, lang: 'bn' | 'en', piece?: { part: number; parts: number }): Error => {
   if (reason === 'SAFETY') {
     return new Error(lang === 'bn'
       ? 'এআই নিরাপত্তা নীতিমালার কারণে এই অডিওটির ট্রান্সক্রিপশন সম্পন্ন করা সম্ভব হয়নি।'
@@ -98,6 +114,10 @@ export const emptyTranscriptError = (reason: string | undefined, lang: 'bn' | 'e
     return new Error(lang === 'bn'
       ? 'অডিওটিতে থাকা বক্তব্য/উদ্ধৃতি কপিরাইট বা রিসিটেশন ফিল্টারে পড়েছে। অনুগ্রহ করে Settings থেকে অন্য কোনো মডেল (যেমন: Gemini 3.5 Flash বা 3.5 Flash Lite) অথবা Normal মোড দিয়ে পুনরায় চেষ্টা করুন।'
       : 'Transcription was blocked due to copyright or recitation policies. Please select another model in Settings or try Normal mode.');
+  } else if (reason === 'PROHIBITED_CONTENT' || reason === 'BLOCKLIST' || reason === 'SPII') {
+    return new Error(lang === 'bn'
+      ? `এই অডিওটি Gemini-র কনটেন্ট নীতিতে আটকে গেছে (${reason})। সার্ভারের সমস্যা নয়, তাই আবার চেষ্টা করলে একই ফল আসবে।`
+      : `Gemini refused this audio under its content policy (${reason}). The server is not at fault, so trying again will give the same result.`);
   } else if (reason === 'NOT_A_TRANSCRIPT') {
     return new Error(lang === 'bn'
       ? 'Gemini অডিওর লেখার বদলে অন্য কিছু ফেরত দিয়েছে (যেমন নিজের কাজের বর্ণনা), তাই এটা সেভ করা হয়নি। আবার চেষ্টা করুন, না হলে Settings থেকে অন্য মডেল বেছে নিন।'

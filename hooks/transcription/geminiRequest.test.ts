@@ -6,7 +6,10 @@ vi.mock('../../services/ApiKeyManager', () => ({
 }));
 
 import { buildTranscriptionRequest, extractResponseText, transcriptionTimeoutMs } from './geminiRequest';
-import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT } from '../../constants/instructions';
+import {
+  TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, CONTINUATION_SYSTEM_INSTRUCTION, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL,
+  TRANSCRIPTION_PROMPT_TEXT_NORMAL, continuationPrompt, UNCLEAR_MARK, NO_MORE_SPEECH,
+} from '../../constants/instructions';
 
 const audio = { inlineData: { mimeType: 'audio/wav', data: 'AAA' } };
 
@@ -25,6 +28,31 @@ describe('Gemini transcription requests', () => {
     expect(req.config.safetySettings).toHaveLength(4);
     // Low, so unclear parts are not filled with invented words
     expect(req.config.temperature).toBe(0.35);
+  });
+
+  it('asks for the rest of a transcript with instructions for that part only, and normal mode with its own', () => {
+    const rest = view(buildTranscriptionRequest('gemini-3.8-flash', 'pro', audio, false, '26:35'));
+    expect(rest.config.systemInstruction).toBe(CONTINUATION_SYSTEM_INSTRUCTION);
+    expect(rest.contents[0].parts).toEqual([audio, { text: continuationPrompt('26:35') }]);
+    const normal = view(buildTranscriptionRequest('gemini-3.8-flash', 'normal', audio));
+    expect(normal.config.systemInstruction).toBe(TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL);
+    expect(normal.contents[0].parts).toEqual([audio, { text: TRANSCRIPTION_PROMPT_TEXT_NORMAL }]);
+  });
+
+  it('gives the model no orders that pull against each other', () => {
+    // The rest is never also told to transcribe the whole recording
+    expect(CONTINUATION_SYSTEM_INSTRUCTION).not.toMatch(/whole recording and transcribe/);
+    expect(continuationPrompt('26:35')).toContain(NO_MORE_SPEECH);
+    // Normal mode asks for no times or speaker names; the timed modes ask for both, in the format the app reads
+    expect(TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL).not.toContain('[MM:SS]');
+    for (const instruction of [TRANSCRIPTION_SYSTEM_INSTRUCTION, CONTINUATION_SYSTEM_INSTRUCTION]) {
+      expect(instruction).toContain('[00:00] **Speaker 1:**');
+      expect(instruction).toContain(UNCLEAR_MARK);
+      // Which rule wins is stated: never invent before never leave out
+      expect(instruction.indexOf('Never write a word that was not spoken')).toBeLessThan(instruction.indexOf('Never leave out a word that was spoken'));
+    }
+    // Adverts are transcribed like any other talk, with no marks to fold them
+    expect(TRANSCRIPTION_SYSTEM_INSTRUCTION).not.toMatch(/বিজ্ঞাপন শুরু|বিজ্ঞাপন শেষ/);
   });
 
   it('sends speech-only transcribe models just the audio with diarization turned on', () => {

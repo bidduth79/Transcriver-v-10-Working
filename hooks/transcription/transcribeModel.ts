@@ -2,15 +2,9 @@
 // with `audioTranscription` parts in the spoken language, so speaker turns and times come from the
 // model's own diarization and word timestamps, formatted here like the app's normal transcripts.
 
+// A transcribe model takes at most 98,304 input tokens (audio is 32 tokens a second, about 51 minutes); the app does
+// not swap it for another model on longer audio, so Gemini's own error is shown then.
 export const isTranscribeModel = (model: string) => model.includes('transcribe');
-
-// A transcribe model takes at most 98,304 input tokens, and audio is 32 tokens a second (about 51 minutes).
-// Longer audio goes to the general model, which takes over a million tokens; the margin is for rounding.
-export const TRANSCRIBE_MAX_SECONDS = 48 * 60;
-export const LONG_AUDIO_MODEL = 'gemini-3.8-flash';
-
-export const modelForAudioLength = (model: string, audioSeconds: number) =>
-  isTranscribeModel(model) && audioSeconds > TRANSCRIBE_MAX_SECONDS ? LONG_AUDIO_MODEL : model;
 
 // Sent through the SDK's extraBody: the SDK has no typed field for it yet
 export const TRANSCRIBE_HTTP_OPTIONS = {

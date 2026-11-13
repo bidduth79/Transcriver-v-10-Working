@@ -386,7 +386,6 @@
   "watchFolderNeedsPermission": "Allow access to \"{name}\" again",
   "watchFolderAllow": "Allow",
   "watchFolderStop": "Stop watching this folder",
-  "longAudioOtherModel": "The audio is longer than Gemini 3.5 Transcribe can take (about 50 minutes), so it is transcribed with {model}",
   "watchFolderPaused": "Paused: {name}",
   "watchFolderPause": "Pause: new audio is not taken until it is turned on again",
   "watchFolderResume": "Turn watching back on",
@@ -415,5 +414,9 @@
   "watchFolderModeAuto": "Auto",
   "watchFolderModeReview": "Review",
   "watchFolderModeAutoHint": "New audio is transcribed at once, up to 10 at a time",
-  "watchFolderModeReviewHint": "New audio (up to 10 at a time) waits in the batch list; remove what you do not want, then press Start"
+  "watchFolderModeReviewHint": "New audio (up to 10 at a time) waits in the batch list; remove what you do not want, then press Start",
+  "serverBusyWaiting": "The server is busy. {name} will be tried again in {minutes} minute(s).",
+  "serverBusyBatchPaused": "The server is still busy, so the batch was paused at this file. Press Resume later; no file was marked as failed.",
+  "otherTabTranscribing": "Another tab of the app is transcribing. This batch goes on when that file is done.",
+  "answerLoopRetrying": "The answer wrote the same words over and over; asking once more..."
 }

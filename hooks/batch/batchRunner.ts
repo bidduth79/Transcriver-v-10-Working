@@ -2,7 +2,10 @@ import React from 'react';
 import { TranscriptMeta, FileMeta } from '../../types';
 import { getFileMetadata } from './batchUtils';
 import { setHeavyProcessingActive } from '../../services/firebaseThrottledQueue';
-import { rateLimitWaitMs, type RateLimitInfo } from '../transcription/rateLimit';
+import type { RateLimitInfo } from '../transcription/rateLimit';
+import type { FailureKind } from '../transcription/transcriptionErrors';
+import { planAfterFailure, BATCH_FILE_LOCK, OTHER_TAB_WAIT_MS } from './batchFailure';
+import { claimTabLock } from '../../services/tabLock';
 import { notifyWhenHidden } from '../../services/browserNotification';
 import { messageOf } from '../../utils/errorMessage';
 import type { TranscriptionOutcome } from '../useTranscription';
@@ -90,7 +93,17 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
     ctx.startCountdown(nextIndex, queue.length, () => processNextBatchFile(queue, nextIndex), finishProcessing);
   };
 
-  const processNextBatchFile = async (queue: File[], index: number, retryCount = 0): Promise<void> => {
+  // Tries the same file again after a wait, unless the batch was paused meanwhile
+  const tryAgainAfter = (waitMs: number, queue: File[], index: number, retryCount: number, toldWaiting = false) => {
+    clearRetryTimeout();
+    retryTimeoutRef.current = window.setTimeout(() => {
+      retryTimeoutRef.current = null;
+      if (!isBatchPausedRef.current) processNextBatchFile(queue, index, retryCount, toldWaiting);
+      else ctx.setCurrentBatchIndex(index);
+    }, waitMs);
+  };
+
+  const processNextBatchFile = async (queue: File[], index: number, retryCount = 0, toldWaiting = false): Promise<void> => {
     clearRetryTimeout();
     pendingNextIndexRef.current = null;
     if (index >= queue.length) {
@@ -119,6 +132,14 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
       return;
     }
 
+    // One file at a time across the app's tabs. While another tab transcribes, this one waits its turn and then
+    // starts this file from the top again, so a file the other tab has just done is skipped as already transcribed.
+    const release = await claimTabLock(BATCH_FILE_LOCK);
+    if (!release) {
+      if (!toldWaiting) addToast(uiText(appLang, 'otherTabTranscribing'), 'info');
+      return tryAgainAfter(OTHER_TAB_WAIT_MS, queue, index, retryCount, true);
+    }
+
     // Revoke previous Object URL first and yield 150ms for V8 Garbage Collector before allocating new audio buffers
     if (prevBatchUrlRef.current) {
       URL.revokeObjectURL(prevBatchUrlRef.current);
@@ -144,36 +165,28 @@ export const createBatchRunner = (ctx: BatchRunnerContext) => {
       const metadata = await getFileMetadata(currentFile);
       if (!isJobInBackground()) ctx.setFileMeta(metadata);
       const result = await ctx.processTranscription(currentFile, metadata, true);
+      release();
       // processTranscription reports a failure in its result instead of throwing
       if (result?.success === false) {
-        throw Object.assign(new Error(result.error || 'Transcription failed'), { rateLimit: result.rateLimit });
+        throw Object.assign(new Error(result.error || 'Transcription failed'), { rateLimit: result.rateLimit, kind: result.kind });
       }
       inFlightIndexRef.current = null;
       ctx.setProcessedCount(prev => prev + 1);
       startCountdownForNextFile(queue, index + 1);
     } catch (error) {
+      release();
       inFlightIndexRef.current = null;
       console.error(`Error processing ${currentFile.name}:`, error);
-      const limit: RateLimitInfo | undefined = (error as { rateLimit?: RateLimitInfo } | undefined)?.rateLimit;
+      const { rateLimit, kind } = (error ?? {}) as { rateLimit?: RateLimitInfo; kind?: FailureKind };
+      const plan = planAfterFailure(kind, rateLimit, retryCount);
 
-      // No key has quota left today: pause here instead of failing (and spending requests on) the rest
-      if (limit?.isDaily) {
+      if (plan.action === 'pause') {
+        // No key has quota left today, or the server stays busy: pause here instead of failing the rest
         ctx.pauseForQuota(index);
-        addToast(uiText(appLang, 'dailyQuotaIsUsedUpOn'), 'error');
-        return;
-      }
-
-      if (retryCount < 1) {
-        addToast(uiText(appLang, 'fileFailedRetrying', { name: currentFile.name }), 'warning');
-        clearRetryTimeout();
-        retryTimeoutRef.current = window.setTimeout(() => {
-          retryTimeoutRef.current = null;
-          if (!isBatchPausedRef.current) {
-            processNextBatchFile(queue, index, retryCount + 1);
-          } else {
-            ctx.setCurrentBatchIndex(index);
-          }
-        }, (limit && rateLimitWaitMs(limit)) || 3000);
+        addToast(uiText(appLang, plan.why === 'quota' ? 'dailyQuotaIsUsedUpOn' : 'serverBusyBatchPaused'), 'error');
+      } else if (plan.action === 'retry') {
+        addToast(uiText(appLang, plan.busy ? 'serverBusyWaiting' : 'fileFailedRetrying', { name: currentFile.name, minutes: plan.waitMs / 60_000 }), 'warning');
+        tryAgainAfter(plan.waitMs, queue, index, retryCount + 1);
       } else {
         addToast(uiText(appLang, 'fileTranscribeFailed', { name: currentFile.name }), 'error');
         ctx.setFailedFiles(prev => [...prev, { file: currentFile, reason: messageOf(error) || 'Transcription failed' }]);

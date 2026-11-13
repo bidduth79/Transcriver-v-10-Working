@@ -76,6 +76,8 @@ export interface GenerateContentResponse {
   promptFeedback?: {
     blockReason?: string;
   };
+  // The model that wrote the answer
+  modelVersion?: string;
 }
 
 export interface GeminiFileMetadata {

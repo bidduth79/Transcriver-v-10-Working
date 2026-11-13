@@ -31,6 +31,8 @@ export interface HistoryItem {
   size?: string;
   // How long the transcription took, e.g. "42s"
   timeTaken?: string;
+  // The Gemini model that wrote the transcript (saved since November 2026)
+  model?: string;
   hasBeenOpened?: boolean;
   // Other fields some features add (BGB analysis, sync flags, ...)
   [key: string]: unknown;

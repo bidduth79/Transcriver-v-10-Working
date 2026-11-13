@@ -1,6 +1,6 @@
 import React from 'react';
 import { Megaphone, ChevronRight, ChevronDown } from 'lucide-react';
-import type { AdRange } from '../utils/parseTranscriptLines';
+import type { AdRange } from '../../../utils/adBlocks';
 import { uiText } from '../../../utils/uiText';
 
 interface Props {

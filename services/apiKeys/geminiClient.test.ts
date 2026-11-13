@@ -58,17 +58,14 @@ describe('busy model (503)', () => {
     vi.useRealTimers();
   });
 
-  it('then uses a similar model on the same key, and gives up on other errors at once', async () => {
+  it('gives up when the model stays busy, never asking another model, and gives up on other errors at once', async () => {
     vi.useFakeTimers();
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    m.queue = [busy(), busy(), busy(), { text: 'from 3.5' }];
+    m.queue = [busy(), busy(), busy(), { text: 'never asked' }];
     const p = (await createGeminiClient('KEY-1234')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' });
+    const failed = expect(p).rejects.toThrow('high demand');
     await vi.advanceTimersByTimeAsync(8000);
-    expect(await p).toEqual({ text: 'from 3.5' });
-    expect(m.models.at(-1)).toBe('gemini-3.5-flash');
-    expect(m.logged.map(l => [l.model, l.status])).toEqual([
-      ['gemini-3.8-flash', 'error'], ['gemini-3.8-flash', 'error'], ['gemini-3.8-flash', 'error'], ['gemini-3.5-flash', 'success'],
-    ]);
+    await failed;
+    expect(m.models).toEqual(['gemini-3.8-flash', 'gemini-3.8-flash', 'gemini-3.8-flash']);
     m.models = []; m.queue = [new Error('400 bad request')];
     await expect((await createGeminiClient('K')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' })).rejects.toThrow('400');
     expect(m.models).toHaveLength(1);
@@ -77,25 +74,26 @@ describe('busy model (503)', () => {
 });
 
 describe('request time limit', () => {
-  it('cancels a text request with no answer after 90 s and treats it as busy', async () => {
+  it('cancels a request with no answer after 90 s, and does not ask the same model again at once', async () => {
     vi.useFakeTimers();
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    m.queue = ['hang', 'hang', 'hang', { text: 'fallback' }];
+    m.queue = ['hang', { text: 'never asked' }];
     const p = (await createGeminiClient('K')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' });
-    await vi.advanceTimersByTimeAsync(90000);
+    const failed = expect(p).rejects.toThrow('no answer from gemini-3.8-flash within 90s');
+    await vi.advanceTimersByTimeAsync(89999);
     expect(m.models).toHaveLength(1);
-    await vi.advanceTimersByTimeAsync(2000 + 90000 + 6000 + 90000);
-    expect(await p).toEqual({ text: 'fallback' });
-    expect(m.models).toEqual(['gemini-3.8-flash', 'gemini-3.8-flash', 'gemini-3.8-flash', 'gemini-3.5-flash']);
+    await vi.advanceTimersByTimeAsync(1);
+    await failed;
+    expect(m.models).toEqual(['gemini-3.8-flash']);
     vi.useRealTimers();
   });
 
   it('treats a cancelled request that comes back empty as a timeout, not as an answer', async () => {
     vi.useFakeTimers();
-    m.queue = ['hangEmpty', { text: 'second try' }];
+    m.queue = ['hangEmpty', { text: 'never asked' }];
     const p = (await createGeminiClient('K')).models.generateContent({ model: 'gemini-3.8-flash', contents: 'x' });
-    await vi.advanceTimersByTimeAsync(90000 + 2000);
-    expect(await p).toEqual({ text: 'second try' });
+    const failed = expect(p).rejects.toThrow('no answer');
+    await vi.advanceTimersByTimeAsync(90000);
+    await failed;
     expect(m.logged[0]).toMatchObject({ status: 'error' });
     vi.useRealTimers();
   });

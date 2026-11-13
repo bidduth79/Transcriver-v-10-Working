@@ -24,7 +24,7 @@ vi.mock('../services/apiKeys/geminiTransport', () => ({
   requestDeleteFile: vi.fn(),
 }));
 vi.mock('../services/ApiKeyManager', () => ({
-  getActiveProvider: m.getActiveProvider,
+  getActiveProvider: m.getActiveProvider, getActiveModel: () => 'gemini-3.8-flash',
   getFallbackProviders: m.getFallbackProviders,
   setActiveApiKey: m.setActiveApiKey,
   incrementTotalCalls: m.incrementTotalCalls,
@@ -46,6 +46,7 @@ vi.mock('./transcription/transcriptionUtils', async (orig) => ({
 }));
 
 import { useTranscription } from './useTranscription';
+import { TRANSCRIPTION_PROMPT_TEXT_NORMAL } from '../constants/instructions';
 
 const resp = (text: string, finishReason = 'STOP') => ({
   candidates: [{ content: { parts: text ? [{ text }] : [] }, finishReason }],
@@ -108,8 +109,7 @@ describe('useTranscription.processTranscription', () => {
     const { run } = setup('normal');
     await run();
     const req = m.generate.mock.calls[0][1];
-    expect(req.contents[0].parts[1].text).toMatch(/^Please transcribe the entire audio/);
-    expect(req.contents[0].parts[1].text).not.toContain('CRITICAL FOR THIS MODEL');
+    expect(req.contents[0].parts[1].text).toBe(TRANSCRIPTION_PROMPT_TEXT_NORMAL);
   });
 
   it('rejects files over 500MB without calling the API', async () => {
@@ -154,13 +154,14 @@ describe('useTranscription.processTranscription', () => {
     expect(out.error).toContain('Primary (****AAAA)');
   });
 
-  it('asks once more with the same request (not a looser one) when the first answer is empty', async () => {
+  it('asks the same model once more, with the same instructions (not looser ones), when the first answer is empty', async () => {
     m.generate.mockResolvedValueOnce(resp('')).mockResolvedValueOnce(resp('retry text'));
     const { run } = setup();
     const out = await run();
     expect(out.text).toBe('retry text');
     expect(m.generate).toHaveBeenCalledTimes(2);
     expect(m.generate.mock.calls[1][1].config.systemInstruction).toBe(m.generate.mock.calls[0][1].config.systemInstruction);
+    expect(m.generate.mock.calls.map((call: any[]) => call[1].model)).toEqual(['gemini-3.8-flash', 'gemini-3.8-flash']);
   });
 
   it('shows an error to retry, never a "no speech" text, when Gemini returns nothing', async () => {

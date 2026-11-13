@@ -6,6 +6,7 @@ import {
   saveWatchFolder, loadWatchFolder, forgetWatchFolder, saveWatchPaused, loadWatchPaused,
 } from '../services/watchFolder';
 import { pickNewFiles } from './batch/folderWatchUtils';
+import { claimTabLock } from '../services/tabLock';
 import { useHistoryStore } from './useHistoryStore';
 import { useBackgroundJobStore } from './transcription/useBackgroundJobStore';
 import { uiText } from '../utils/uiText';
@@ -49,6 +50,7 @@ export const useFolderWatchStore = create<FolderWatchState>(set => ({
 }));
 
 const LOOK_EVERY_MS = 15_000;
+const WATCH_LOCK = 'transcriver-folder-watch';
 // New files are taken at most this many at a time; the rest come once that batch is done
 export const MAX_FILES_PER_BATCH = 10;
 
@@ -112,6 +114,7 @@ export const useFolderWatch = (
   // Files handed to a batch in this session: not taken again, even when they failed
   const takenRef = useRef<File[]>([]);
   const lastSizesRef = useRef(new Map<string, number>());
+  const releaseWatchRef = useRef<(() => void) | null>(null);
   // Read after the folder is listed, so a batch started meanwhile is seen
   const isBusyRef = useRef(isBatchProcessing);
 
@@ -137,6 +140,15 @@ export const useFolderWatch = (
   const look = useEffectEvent(async () => {
     const isBusy = () => isBusyRef.current || useBackgroundJobStore.getState().running !== null;
     if (!handle || isBusy()) return;
+    // Only one of the app's tabs looks into the folder; another takes over when that tab closes or stops watching
+    releaseWatchRef.current ??= await claimTabLock(WATCH_LOCK);
+    if (!releaseWatchRef.current) return;
+    // Watching was stopped while the lock was being taken: it is given back at once
+    if (useFolderWatchStore.getState().status !== 'watching') {
+      releaseWatchRef.current();
+      releaseWatchRef.current = null;
+      return;
+    }
     let files: File[];
     try {
       files = await listFolderFiles(handle);
@@ -164,6 +176,10 @@ export const useFolderWatch = (
     if (status !== 'watching' || !handle) return;
     look();
     const timer = window.setInterval(look, LOOK_EVERY_MS);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      releaseWatchRef.current?.();
+      releaseWatchRef.current = null;
+    };
   }, [status, handle]);
 };

@@ -8,7 +8,6 @@ import type { Translations } from '../../translations';
 import type { ToastType } from '../../hooks/useToast';
 import type { ActiveColors } from '../../hooks/useAppTheme';
 import { uiText } from '../../utils/uiText';
-import { withoutAds } from '../../utils/adBlocks';
 import { useThemeStore } from '../../hooks/useThemeStore';
 
 interface DownloadMenuProps {
@@ -22,9 +21,7 @@ interface DownloadMenuProps {
   activeColors?: ActiveColors;
 }
 
-export const DownloadMenu = ({ transcript: fullTranscript, fileName, t, searchTerm, sensitiveMatches = [], addToast, customTrigger }: DownloadMenuProps) => {
-  // Downloads hold the programme only; advertisement blocks are left out
-  const transcript = withoutAds(fullTranscript);
+export const DownloadMenu = ({ transcript, fileName, t, searchTerm, sensitiveMatches = [], addToast, customTrigger }: DownloadMenuProps) => {
   const appLang = useThemeStore(state => state.appLang);
   const [isOpen, setIsOpen] = useState(false);
   const [includeKeywords, setIncludeKeywords] = useState(true);

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback, useDeferredValue } from 'react';
 import { useAppStore } from '@/hooks/useAppStore';
 import { getSensitiveKeywords } from '../../../utils/sensitiveKeywords';
-import { withoutAds } from '../../../utils/adBlocks';
 
 export const useTranscriptScroll = (
   matchCount: number,
@@ -107,8 +106,6 @@ export const useLogoAnimation = () => {
 export const useSensitiveKeywords = (transcript: string) => {
   const [sensitiveKeywords, setSensitiveKeywordsList] = useState<string[]>(EMPTY_ARRAY);
   const deferredTranscript = useDeferredValue(transcript);
-  // Keywords are looked for in the programme only, not in its advertisements
-  const programmeText = useMemo(() => withoutAds(deferredTranscript), [deferredTranscript]);
   const prevMatchesRef = useRef<string[]>(EMPTY_ARRAY);
 
   const sensitiveKeywordsUpdated = useAppStore(state => state.sensitiveKeywordsUpdated);
@@ -118,11 +115,11 @@ export const useSensitiveKeywords = (transcript: string) => {
   }, [sensitiveKeywordsUpdated]);
 
   const sensitiveMatches = useMemo(() => {
-    if (!programmeText || sensitiveKeywords.length === 0) {
+    if (!deferredTranscript || sensitiveKeywords.length === 0) {
       prevMatchesRef.current = EMPTY_ARRAY;
       return EMPTY_ARRAY;
     }
-    const lower = programmeText.toLowerCase();
+    const lower = deferredTranscript.toLowerCase();
     const matched = sensitiveKeywords
       .filter(kw => typeof kw === 'string' && kw.trim().length >= 2 && lower.includes(kw.trim().toLowerCase()))
       .sort((a, b) => b.length - a.length);
@@ -138,10 +135,10 @@ export const useSensitiveKeywords = (transcript: string) => {
     }
     prevMatchesRef.current = matched;
     return matched;
-  }, [programmeText, sensitiveKeywords]);
+  }, [deferredTranscript, sensitiveKeywords]);
 
   const sensitiveWordCounts = useMemo(() => {
-    if (!programmeText || sensitiveMatches.length === 0) return EMPTY_ARRAY;
+    if (!deferredTranscript || sensitiveMatches.length === 0) return EMPTY_ARRAY;
     
     const counts: Record<string, number> = {};
     const lowerToOriginal: Record<string, string> = {};
@@ -158,7 +155,7 @@ export const useSensitiveKeywords = (transcript: string) => {
 
     try {
       const combinedRegex = new RegExp(cleanMatches.join('|'), 'gi');
-      const allMatches = programmeText.match(combinedRegex) || [];
+      const allMatches = deferredTranscript.match(combinedRegex) || [];
       for (let i = 0; i < allMatches.length; i++) {
         const origKey = lowerToOriginal[allMatches[i].toLowerCase()];
         if (origKey !== undefined) {
@@ -170,7 +167,7 @@ export const useSensitiveKeywords = (transcript: string) => {
     }
     
     return sensitiveMatches.map(kw => ({ word: kw, count: counts[kw] || 0 }));
-  }, [programmeText, sensitiveMatches]);
+  }, [deferredTranscript, sensitiveMatches]);
 
   const isSensitive = sensitiveMatches.length > 0;
 

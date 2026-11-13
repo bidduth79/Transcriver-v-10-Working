@@ -1,16 +1,15 @@
 import { useEffect, useRef } from 'react';
-import { getActiveProvider, incrementTotalCalls } from '../services/ApiKeyManager';
+import { getActiveProvider, getActiveModel, incrementTotalCalls } from '../services/ApiKeyManager';
 import { setHeavyProcessingActive } from '../services/firebaseThrottledQueue';
 import { logSystemActivity } from '../services/SystemLogger';
 import { useTranscriptionState } from './transcription/useTranscriptionState';
-import { removeRepetitiveBlocks, splitLongParagraphs, calculateEstimatedSeconds, parseDurationToSeconds, learnedSecondsPerAudioSecond } from './transcription/transcriptionUtils';
-import { formatErrorMessage, emptyTranscriptError } from './transcription/transcriptionErrors';
+import { cleanTranscript, calculateEstimatedSeconds, parseDurationToSeconds, learnedSecondsPerAudioSecond } from './transcription/transcriptionUtils';
+import { formatErrorMessage, emptyTranscriptError, failureKindOf, type FailureKind } from './transcription/transcriptionErrors';
 import { useHistoryStore } from './useHistoryStore';
 import { useBackgroundJobStore, isJobInBackground } from './transcription/useBackgroundJobStore';
 import { getDecodingStage, getProgressStage } from './transcription/transcriptionStages';
 import { prepareAudio, keyLabelOf } from './transcription/geminiTranscriptionRunner';
 import { transcribeAudio } from './transcription/runTranscription';
-import { modelForAudioLength } from './transcription/transcribeModel';
 import { parseRateLimit, type RateLimitInfo } from './transcription/rateLimit';
 import type { FileMeta } from '../types';
 import { buildHistoryItem, addToInMemoryHistory, persistHistoryItem, scheduleBgbAnalysis } from './transcription/transcriptionHistory';
@@ -21,7 +20,7 @@ const MAX_FILE_SIZE = 500 * 1024 * 1024;
 
 export type TranscriptionOutcome =
   | { success: true; text: string }
-  | { success: false; error: string; rateLimit: RateLimitInfo };
+  | { success: false; error: string; rateLimit: RateLimitInfo; kind: FailureKind };
 
 export const useTranscription = (
   appLang: 'en' | 'bn',
@@ -92,7 +91,7 @@ export const useTranscription = (
 
     const audioDurationSeconds = parseDurationToSeconds(inputMetadata?.duration);
     // Learned from how long earlier transcriptions took on this device
-    const estimated = calculateEstimatedSeconds(audioDurationSeconds, inputFile.size, learnedSecondsPerAudioSecond(useHistoryStore.getState().history));
+    const estimated = calculateEstimatedSeconds(audioDurationSeconds, inputFile.size, learnedSecondsPerAudioSecond(useHistoryStore.getState().history, getActiveModel()));
 
     console.debug(`Estimating transcription time: ${estimated}s for ${audioDurationSeconds}s audio`);
     setEstimatedSeconds(estimated);
@@ -114,9 +113,8 @@ export const useTranscription = (
       const { effectiveFile, effectiveMimeType } = await prepareAudio(inputFile, currentFileName);
 
       setCurrentStage(uiText(appLang, 'preparingAudioForAi'));
-      const chosenModel = provider.model || DEFAULT_MODEL;
-      const modelName = modelForAudioLength(chosenModel, audioDurationSeconds);
-      if (modelName !== chosenModel) addToast(uiText(appLang, 'longAudioOtherModel', { model: modelName }), 'info');
+      // The model the user chose, always: the app never swaps it for another
+      const modelName = provider.model || DEFAULT_MODEL;
       modelUsed = modelName;
       const result = await transcribeAudio(effectiveFile, effectiveMimeType, audioDurationSeconds, {
         provider, modelName, mode: transcriptionMode, lang: appLang, setStage: setCurrentStage, addToast,
@@ -126,12 +124,12 @@ export const useTranscription = (
 
       clearTranscriptionTimer();
 
-      const fullText = splitLongParagraphs(removeRepetitiveBlocks(result.text));
+      const fullText = cleanTranscript(result.text);
       // The audio has speech: an answer without text is a failed request, shown as an error to retry
       if (!fullText.trim()) throw emptyTranscriptError(result.emptyReason ?? finishReason, appLang);
 
       const actualElapsedSeconds = Math.round((Date.now() - startTime) / 1000);
-      const historyItem = buildHistoryItem(inputFile, inputMetadata, fullText, actualElapsedSeconds);
+      const historyItem = buildHistoryItem(inputFile, inputMetadata, fullText, actualElapsedSeconds, modelUsed);
 
       await addToInMemoryHistory(historyItem);
 
@@ -179,7 +177,7 @@ export const useTranscription = (
       }
       logSystemActivity('TRANSCRIPTION', 'ERROR', 'Failed',
         `${safeMsg} | model: ${modelUsed} | audio: ${audioDurationSeconds}s | after: ${Math.round((Date.now() - startTime) / 1000)}s`);
-      return { success: false, error: safeMsg, rateLimit: parseRateLimit(error) };
+      return { success: false, error: safeMsg, rateLimit: parseRateLimit(error), kind: failureKindOf(error) };
     } finally {
       clearTranscriptionTimer();
       useBackgroundJobStore.getState().setRunning(null);

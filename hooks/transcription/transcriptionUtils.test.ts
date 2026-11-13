@@ -38,6 +38,16 @@ describe('small helpers', () => {
     expect(learnedSecondsPerAudioSecond([...runs.slice(0, 2), { duration: '00:30', timeTaken: '9s' }, { duration: '05:00' }])).toBe(0.12);
   });
 
+  it("learns from the chosen model's own runs when it has three, since models differ much in speed", () => {
+    const run = (model: string | undefined, timeTaken: string) => ({ duration: '10:00', timeTaken, model });
+    const runs = [run('slow', '255s'), run('fast', '45s'), run('slow', '255s'), run('fast', '45s'), run('slow', '255s'), run('fast', '45s'), run(undefined, '75s')];
+    expect(learnedSecondsPerAudioSecond(runs, 'slow')).toBe(0.4);
+    expect(learnedSecondsPerAudioSecond(runs, 'fast')).toBe(0.05);
+    // A model without three runs of its own, or no model named: every run counts, as before
+    expect(learnedSecondsPerAudioSecond(runs, 'new')).toBe(0.1);
+    expect(learnedSecondsPerAudioSecond(runs)).toBe(0.1);
+  });
+
   it('calculateEstimatedSeconds and parseDurationToSeconds', () => {
     expect(calculateEstimatedSeconds(0, 0)).toBe(15);
     expect(calculateEstimatedSeconds(0, 5 * 1024 * 1024)).toBe(87);
