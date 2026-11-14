@@ -38,7 +38,7 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
     };
 
     return (
-        <div className="flex flex-col h-full space-y-6">
+        <div className="flex flex-col h-full space-y-6 overflow-y-auto custom-scrollbar pr-2 [&>*]:shrink-0">
             {/* Input Area */}
             <div className={`p-6 rounded-3xl border flex flex-col gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
                 <h3 className="text-xs font-black uppercase tracking-widest bn:tracking-normal opacity-60">
@@ -63,10 +63,10 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
                 </div>
             </div>
 
-            {/* List Area */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+            {/* List Area: a long list scrolls on its own, so the name list below stays in view */}
+            <div className="max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
                 {keywords.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center opacity-30">
+                    <div className="py-6 flex flex-col items-center justify-center opacity-30">
                         <p className="text-sm font-black uppercase tracking-widest bn:tracking-normal">{uiText(appLang, 'noKeywordsFound')}</p>
                     </div>
                 ) : (

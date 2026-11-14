@@ -24,7 +24,7 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
     } = useApiKeySettings(appLang, addToast);
 
     return (
-        <div className="flex flex-col h-full space-y-6">
+        <div className="flex flex-col h-full space-y-6 overflow-y-auto custom-scrollbar pr-2 [&>*]:shrink-0">
             {/* AI Model Selection */}
             <ApiKeyModelSelect isDark={isDark} appLang={appLang} selectedModel={selectedModel} onChange={handleModelChange} />
 

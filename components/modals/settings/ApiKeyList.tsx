@@ -13,9 +13,9 @@ interface Props {
 
 // Keys saved in the browser (masked, used before the .env keys) with radio-style selection, today's use and delete buttons
 export const ApiKeyList = ({ keyList, activeKeyId, isDark, appLang, onSelect, onDelete }: Props) => (
-            <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+            <div>
                 {keyList.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center opacity-30">
+                    <div className="py-6 flex flex-col items-center justify-center opacity-30">
                         <p className="text-sm font-black uppercase tracking-widest">No Keys Found</p>
                         <p className="text-xs mt-2">Add a key above to start</p>
                     </div>
