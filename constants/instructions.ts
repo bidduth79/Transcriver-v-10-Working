@@ -81,3 +81,11 @@ export const TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL = join(
 );
 
 export const TRANSCRIPTION_PROMPT_TEXT_NORMAL = 'Transcribe this recording as plain Bengali text, following the instructions: everything said, from the first words to the end of the audio, without times or speaker names.';
+
+// "Fix punctuation" on a finished transcript: only punctuation may change. The app checks every line it gets back
+// (time, speaker and every letter and digit) and keeps the original line wherever anything else changed.
+export const PUNCTUATION_SYSTEM_INSTRUCTION = `You add punctuation to a Bengali transcript, and do nothing else.
+- Answer with the same lines in the same order, one answer line for each line you are given, and nothing more: no title, notes or explanation.
+- Copy the start of each line exactly as it is: the time in square brackets and the speaker's name in bold with its colon.
+- In the words, add or correct only punctuation where the speech clearly needs it: দাঁড়ি (।), comma, question mark, exclamation mark, and quotation marks around quoted words.
+- Never add, remove, replace, join, split, reorder or re-spell a word or a number, and keep marks such as ${UNCLEAR_MARK} as they are. A line whose words change is thrown away.`;

@@ -459,5 +459,13 @@
   "customModelBadge": "Added",
   "customModelHowItWorks": "A Google model added from Settings → \"Find new models\". It transcribes following the app's instructions.",
   "customModelSpeed": "Not measured yet; the first transcripts will show it.",
-  "customModelBestFor": "Trying a new model. Compare its transcripts on real audio before using it every day."
+  "customModelBestFor": "Trying a new model. Compare its transcripts on real audio before using it every day.",
+  "punctuationFix": "Punctuation",
+  "punctuationRunning": "Fixing…",
+  "punctuationHint": "Adds full stops (।), commas and question marks with AI without changing a word: every line is checked, and a line whose words would change stays as it is. Digits in the text become Bengali.",
+  "punctuationDone": "Punctuation fixed in {changed} paragraph(s); {kept} kept as they were because more than punctuation would have changed",
+  "punctuationFailed": "Punctuation could not be fixed: {message}",
+  "punctuationUndo": "Undo",
+  "punctuationUndoHint": "Back to the transcript as it was before the punctuation fix",
+  "punctuationUndone": "The transcript is back as it was"
 }

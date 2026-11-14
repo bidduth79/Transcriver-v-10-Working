@@ -4,7 +4,7 @@ import { useBgbAnalysis } from './useBgbAnalysis';
 import { useSpeakerProfile } from '../../../hooks/useSpeakerProfile';
 import { escapeRegExp } from '../TranscriptViewer';
 import type { TranscriptOutputProps } from '../transcriptOutputTypes';
-import type { HistoryItem } from '../../../types';
+import { saveHistoryTranscript } from '../../../hooks/history/saveHistoryTranscript';
 import { uiText } from '../../../utils/uiText';
 
 type Options = Pick<TranscriptOutputProps,
@@ -34,17 +34,7 @@ export const useTranscriptOutputState = ({
       const updatedTranscript = transcript.replace(regex, `**${newName}$1**`);
       setTranscript(updatedTranscript);
       addToast(uiText(appLang, 'speakerRenamedSuccessfully'), 'success');
-
-      if (activeHistoryId) {
-        const { getFromStore, addToStore, STORES } = await import('../../../services/db');
-        const item = await getFromStore(STORES.HISTORY, activeHistoryId) as HistoryItem | undefined;
-        if (item) {
-          item.transcript = updatedTranscript;
-          await addToStore(STORES.HISTORY, item);
-          const { rememberHistoryTranscript } = await import('../../../hooks/history/useHistoryTranscript');
-          rememberHistoryTranscript(activeHistoryId, updatedTranscript);
-        }
-      }
+      await saveHistoryTranscript(activeHistoryId, updatedTranscript);
     }
   }, [appLang, renamingSpeaker, transcript, setTranscript, addToast, activeHistoryId]);
 

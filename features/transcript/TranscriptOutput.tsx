@@ -37,7 +37,7 @@ export const TranscriptOutput: React.FC<TranscriptOutputProps> = (props) => {
         fontSize={fontSize} setFontSize={setFontSize} transformTranscript={transformTranscript}
         transformingType={transformingType} setIsAnalysisOpen={state.setIsAnalysisOpen} setTranscript={setTranscript}
         setStatus={setStatus} addToast={addToast} setActiveHistoryId={setActiveHistoryId} fileMeta={props.activeTranscriptSourceMeta || fileMeta}
-        transcript={transcript} sensitiveMatches={keywords.sensitiveMatches}
+        transcript={transcript} sensitiveMatches={keywords.sensitiveMatches} activeHistoryId={props.activeHistoryId}
       />
 
       {/* Main Content Area */}

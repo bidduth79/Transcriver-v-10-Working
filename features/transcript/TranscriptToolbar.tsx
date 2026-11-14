@@ -1,6 +1,7 @@
 import React from 'react';
 import { Expand } from 'lucide-react';
 import { DownloadMenu } from '../../components/common/DownloadMenu';
+import { PunctuationButton } from './components/PunctuationButton';
 import { useTranscriptToolbar } from './hooks/useTranscriptToolbar';
 import { unicodeToBijoy, bijoyToUnicode, isUnicode } from '@abdalgolabs/ansi-unicode-converter';
 import type { TranscriptToolbarProps } from './transcriptToolbarTypes';
@@ -11,7 +12,7 @@ export const TranscriptToolbar = ({
   t, status, appLang, handleSummaryClick, setIsReportOpen, isDisabled, activeColors,
   searchTerm, handleSearchChange, handleKeyDown, clearSearch, transcriptSearchInputRef, matchCount, currentMatchIndex,
   fontSize, setFontSize, transformTranscript, transformingType, setIsAnalysisOpen,
-  transcript, fileMeta, addToast, setTranscript, setStatus, setActiveHistoryId, sensitiveMatches
+  transcript, fileMeta, addToast, setTranscript, setStatus, setActiveHistoryId, sensitiveMatches, activeHistoryId
 }: TranscriptToolbarProps) => {
   const { handleDelete } = useTranscriptToolbar(setTranscript, setStatus, setActiveHistoryId);
 
@@ -105,6 +106,8 @@ export const TranscriptToolbar = ({
               বাংলা
             </button>
           </div>
+
+          <PunctuationButton transcript={transcript} setTranscript={setTranscript} activeHistoryId={activeHistoryId} appLang={appLang} addToast={addToast} />
 
           {/* Encoding Toggle */}
           <div className="flex items-center bg-white/5 rounded-2xl p-0.5 border border-white/10">

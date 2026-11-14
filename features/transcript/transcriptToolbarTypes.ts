@@ -3,7 +3,8 @@ import type { TranscriptOutputProps } from './transcriptOutputTypes';
 
 export type TranscriptToolbarProps = Pick<TranscriptOutputProps, 't' | 'status' | 'appLang' | 'activeColors' | 'searchTerm'
   | 'handleSearchChange' | 'transcriptSearchInputRef' | 'matchCount' | 'currentMatchIndex' | 'fontSize' | 'setFontSize'
-  | 'transformTranscript' | 'transformingType' | 'transcript' | 'addToast' | 'setTranscript' | 'setStatus' | 'setActiveHistoryId'> & {
+  | 'transformTranscript' | 'transformingType' | 'transcript' | 'addToast' | 'setTranscript' | 'setStatus' | 'setActiveHistoryId'
+  | 'activeHistoryId'> & {
   handleSummaryClick: () => void;
   setIsReportOpen: (open: boolean) => void;
   isDisabled: boolean;
