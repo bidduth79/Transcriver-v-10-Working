@@ -468,5 +468,15 @@
   "punctuationUndo": "Undo",
   "punctuationUndoHint": "Back to the transcript as it was before the punctuation fix",
   "punctuationUndone": "The transcript is back as it was",
-  "transcriptWarningLessThanCaptions": "Much less text than the recording's YouTube captions: a part may be missing"
+  "transcriptWarningLessThanCaptions": "Much less text than the recording's YouTube captions: a part may be missing",
+  "knownNamesTitle": "Name list",
+  "knownNamesHint": "Gemini is given these names with their spelling, so a person is written the same way every time (never a name that is not said). Names are learned from transcripts once they come up in {min}; the first {max} are used. Remove a wrong one, or add your own.",
+  "knownNamesLearn": "Learn from history",
+  "knownNamesLearning": "Reading history…",
+  "knownNamesLearned": "{count} name(s) in the list now",
+  "knownNamesLearnFailed": "The history could not be read",
+  "knownNamesPlaceholder": "A name as it should be spelled (several separated by commas)",
+  "knownNamesEmpty": "No names yet: they are learned from new transcripts, or press \"Learn from history\"",
+  "knownNamesYours": "Added by you",
+  "knownNamesCount": "In {count} transcripts"
 }

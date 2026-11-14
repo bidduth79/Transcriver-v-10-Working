@@ -6,6 +6,7 @@ vi.mock('../../services/ApiKeyManager', () => ({
 }));
 
 import { buildTranscriptionRequest, extractResponseText, transcriptionTimeoutMs } from './geminiRequest';
+import { addKnownName } from '../../services/knownNames';
 import {
   TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, CONTINUATION_SYSTEM_INSTRUCTION, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL,
   TRANSCRIPTION_PROMPT_TEXT_NORMAL, continuationPrompt, UNCLEAR_MARK, NO_MORE_SPEECH,
@@ -53,6 +54,17 @@ describe('Gemini transcription requests', () => {
     }
     // Adverts are transcribed like any other talk, with no marks to fold them
     expect(TRANSCRIPTION_SYSTEM_INSTRUCTION).not.toMatch(/বিজ্ঞাপন শুরু|বিজ্ঞাপন শেষ/);
+  });
+
+  it('adds the name list with its spelling to the instructions, and nothing when the list is empty', () => {
+    localStorage.clear();
+    expect(view(buildTranscriptionRequest('gemini-3.8-flash', 'pro', audio)).config.systemInstruction).toBe(TRANSCRIPTION_SYSTEM_INSTRUCTION);
+    addKnownName('সুরভী তরণী');
+    const withNames = view(buildTranscriptionRequest('gemini-3.8-flash', 'normal', audio)).config.systemInstruction as string;
+    expect(withNames.startsWith(TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL)).toBe(true);
+    expect(withNames).toContain('written as they should be spelled: সুরভী তরণী.');
+    expect(withNames).toContain('Never write a name that is not said in the recording.');
+    localStorage.clear();
   });
 
   it('sends speech-only transcribe models just the audio: speakers and times in Pro, smart (punctuated) text in Normal', () => {

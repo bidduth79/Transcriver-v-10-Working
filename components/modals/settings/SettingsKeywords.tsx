@@ -3,6 +3,7 @@ import { getSensitiveKeywords, setSensitiveKeywords } from '../../../utils/sensi
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { ToastType } from '../../../hooks/useToast';
 import { uiText } from '../../../utils/uiText';
+import { KnownNamesCard } from './KnownNamesCard';
 
 interface SettingsKeywordsProps {
     isDark: boolean;
@@ -90,6 +91,9 @@ export const SettingsKeywords: React.FC<SettingsKeywordsProps> = ({ isDark, acti
                     </div>
                 )}
             </div>
+
+            {/* Names Gemini is given with their spelling */}
+            <KnownNamesCard isDark={isDark} appLang={appLang} addToast={addToast} />
         </div>
     );
 };

@@ -2,6 +2,7 @@ import type { FileMeta, HistoryItem } from '../../types';
 import { addToStore, STORES } from '../../services/db';
 import { transcriptWarnings } from './transcriptWarnings';
 import { captionOf, captionLetters } from '../../services/captions';
+import { learnNames } from '../../services/knownNames';
 import { parseDurationToSeconds } from './transcriptionUtils';
 
 // File info shown in the sidebar; YouTube downloads add the channel
@@ -51,8 +52,10 @@ export const addToInMemoryHistory = async (item: TranscriptionHistoryItem) => {
   }
 };
 
-// Save directly to local IndexedDB (Firebase sync is paused via setHeavyProcessingActive and only queues the tiny ID string)
+// Save directly to local IndexedDB (Firebase sync is paused via setHeavyProcessingActive and only queues the tiny ID string).
+// The speakers' names are counted for the name list, so the next transcripts spell them the same way.
 export const persistHistoryItem = async (item: TranscriptionHistoryItem) => {
+  learnNames(item.transcript);
   try {
     await addToStore(STORES.HISTORY, item);
     try {

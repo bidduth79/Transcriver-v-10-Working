@@ -1,6 +1,7 @@
 import type { HarmCategory, HarmBlockThreshold, ThinkingLevel, Part, GenerateContentConfig, GenerateContentParameters, ThinkingConfig } from "../../types/gemini";
 import { getModelDefinition, isSpeedOptimizationEnabled } from '../../services/ApiKeyManager';
-import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL, TRANSCRIPTION_PROMPT_TEXT_NORMAL, CONTINUATION_SYSTEM_INSTRUCTION, continuationPrompt } from '../../constants/instructions';
+import { TRANSCRIPTION_SYSTEM_INSTRUCTION, TRANSCRIPTION_PROMPT_TEXT, TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL, TRANSCRIPTION_PROMPT_TEXT_NORMAL, CONTINUATION_SYSTEM_INSTRUCTION, continuationPrompt, knownNamesNote } from '../../constants/instructions';
+import { namesForPrompt } from '../../services/knownNames';
 import { isTranscribeModel, transcribeHttpOptions, formatAudioTranscription } from './transcribeModel';
 
 const SAFETY_SETTINGS = [
@@ -64,8 +65,11 @@ export const buildTranscriptionRequest = (
   continueFrom?: string
 ): GenerateContentParameters => {
   // The rest of a transcript gets instructions for that part only, never also "transcribe the whole recording"
-  const systemInstruction = mode === 'normal' ? TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL
+  const instruction = mode === 'normal' ? TRANSCRIPTION_SYSTEM_INSTRUCTION_NORMAL
     : continueFrom ? CONTINUATION_SYSTEM_INSTRUCTION : TRANSCRIPTION_SYSTEM_INSTRUCTION;
+  // The spelling of names that often come up in the user's programmes, when there are any
+  const names = knownNamesNote(namesForPrompt());
+  const systemInstruction = names ? `${instruction}\n\n${names}` : instruction;
   const promptText = continueFrom ? continuationPrompt(continueFrom) : mode === 'normal' ? TRANSCRIPTION_PROMPT_TEXT_NORMAL : TRANSCRIPTION_PROMPT_TEXT;
   if (cleanFallback) {
     return buildAudioRequest(modelName, mode, audioPart, promptText, { systemInstruction });

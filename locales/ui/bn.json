@@ -468,5 +468,15 @@
   "punctuationUndo": "ফিরুন",
   "punctuationUndoHint": "বিরামচিহ্ন ঠিক করার আগের লেখায় ফিরে যান",
   "punctuationUndone": "ট্রান্সক্রিপ্ট আগের মতো ফিরে এসেছে",
-  "transcriptWarningLessThanCaptions": "এই অডিওর YouTube সাবটাইটেলের তুলনায় লেখা অনেক কম: কোনো অংশ বাদ পড়ে থাকতে পারে"
+  "transcriptWarningLessThanCaptions": "এই অডিওর YouTube সাবটাইটেলের তুলনায় লেখা অনেক কম: কোনো অংশ বাদ পড়ে থাকতে পারে",
+  "knownNamesTitle": "নামের তালিকা",
+  "knownNamesHint": "এই নামগুলো সঠিক বানানসহ Gemini-কে দেওয়া হয়, যাতে একজনের নাম প্রতিবার একইভাবে লেখা হয় (যে নাম বলা হয়নি তা কখনো লেখা হয় না)। কোনো নাম {min}টি ট্রান্সক্রিপ্টে এলে তালিকায় আসে; প্রথম {max}টি ব্যবহার হয়। ভুল নাম সরিয়ে দিন, অথবা নিজে যোগ করুন।",
+  "knownNamesLearn": "হিস্টোরি থেকে শিখুন",
+  "knownNamesLearning": "হিস্টোরি পড়া হচ্ছে…",
+  "knownNamesLearned": "এখন তালিকায় {count}টি নাম",
+  "knownNamesLearnFailed": "হিস্টোরি পড়া যায়নি",
+  "knownNamesPlaceholder": "সঠিক বানানে নাম (একাধিক হলে কমা দিয়ে)",
+  "knownNamesEmpty": "এখনো কোনো নাম নেই: নতুন ট্রান্সক্রিপ্ট থেকে শেখা হবে, অথবা \"হিস্টোরি থেকে শিখুন\" চাপুন",
+  "knownNamesYours": "আপনার যোগ করা",
+  "knownNamesCount": "{count}টি ট্রান্সক্রিপ্টে এসেছে"
 }
