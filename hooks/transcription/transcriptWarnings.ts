@@ -34,10 +34,18 @@ const longestThinStretch = (text: string) => {
   return longest;
 };
 
-// `answer` is Gemini's text before repeats were taken out; `text` is the transcript as saved
-export const transcriptWarnings = (text: string, answer: string, audioSeconds: number): TranscriptWarning[] => {
+// Against YouTube's captions of the same recording: complete transcripts of the user's talk shows had 83-104% of
+// their captions' Bengali letters, a 54-minute one that stopped 12 minutes early about 78%
+const MIN_CAPTION_SHARE = 0.8;
+// Captions this short say too little to compare with
+const MIN_CAPTION_LETTERS = 500;
+
+// `answer` is Gemini's text before repeats were taken out; `text` is the transcript as saved; `captionLetters` the
+// Bengali letters of the recording's YouTube captions, when they were found next to it
+export const transcriptWarnings = (text: string, answer: string, audioSeconds: number, captionLetters = 0): TranscriptWarning[] => {
   const warnings: TranscriptWarning[] = [];
   if (repeatedShare(answer) >= LOOP_SHARE) warnings.push('loop');
+  if (captionLetters >= MIN_CAPTION_LETTERS && bengaliLetters(text) / captionLetters < MIN_CAPTION_SHARE) warnings.push('lessThanCaptions');
   // (an unknown length, NaN, is not judged either)
   if (!(audioSeconds >= MIN_JUDGED_SECONDS)) return warnings;
 

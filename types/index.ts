@@ -14,8 +14,9 @@ export interface TranscriptMeta {
 }
 
 // A sign that a transcript may be wrong: Gemini's answer went round in a loop, little text for the audio's length,
-// words end well before the audio does or go past its end, or minutes in the middle with almost no text
-export type TranscriptWarning = 'loop' | 'littleText' | 'endsEarly' | 'pastEnd' | 'gap';
+// words end well before the audio does or go past its end, minutes in the middle with almost no text, or much
+// less text than the recording's YouTube captions
+export type TranscriptWarning = 'loop' | 'littleText' | 'endsEarly' | 'pastEnd' | 'gap' | 'lessThanCaptions';
 
 export interface HistoryItem {
   id: string;

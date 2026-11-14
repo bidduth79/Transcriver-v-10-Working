@@ -467,5 +467,6 @@
   "punctuationFailed": "Punctuation could not be fixed: {message}",
   "punctuationUndo": "Undo",
   "punctuationUndoHint": "Back to the transcript as it was before the punctuation fix",
-  "punctuationUndone": "The transcript is back as it was"
+  "punctuationUndone": "The transcript is back as it was",
+  "transcriptWarningLessThanCaptions": "Much less text than the recording's YouTube captions: a part may be missing"
 }

@@ -15,6 +15,7 @@ const MESSAGE_KEYS: Record<TranscriptWarning, UiTextKey> = {
   endsEarly: 'transcriptWarningEndsEarly',
   pastEnd: 'transcriptWarningPastEnd',
   gap: 'transcriptWarningGap',
+  lessThanCaptions: 'transcriptWarningLessThanCaptions',
 };
 
 // A small "check this" mark on a history card whose transcript may be wrong; hovering lists the reasons

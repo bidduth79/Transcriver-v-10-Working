@@ -59,6 +59,17 @@ describe('transcriptWarnings', () => {
     expect(check(clean, 1200, looping)).toEqual(['loop']);
   });
 
+  it("warns when the transcript has under 80% of the recording's YouTube captions, also on short audio", () => {
+    const text = timed(0, 600);
+    const letters = (text.match(/[ঀ-৿]/g) || []).length;
+    expect(check(text, 600)).toEqual([]);
+    expect(transcriptWarnings(text, text, 600, Math.round(letters / 0.75))).toEqual(['lessThanCaptions']);
+    expect(transcriptWarnings(text, text, 600, Math.round(letters / 0.85))).toEqual([]);
+    expect(transcriptWarnings(timed(0, 120, 50), timed(0, 120, 50), 120, 5000)).toEqual(['lessThanCaptions']);
+    // Captions of only a few words say too little
+    expect(transcriptWarnings(timed(0, 120, 50), timed(0, 120, 50), 120, 400)).toEqual([]);
+  });
+
   it('judges only the loop on short audio, an unknown length, or a transcript without times', () => {
     expect(check(timed(0, 120, 50), 240)).toEqual([]);
     expect(check(timed(0, 120, 50), NaN)).toEqual([]);

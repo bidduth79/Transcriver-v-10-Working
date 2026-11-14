@@ -6,6 +6,7 @@ vi.mock('../../utils/sensitiveKeywords', () => ({ getSensitiveKeywords: () => m.
 vi.mock('../../services/bgbAnalysisService', () => ({ analyzeTranscriptForBgb: m.analyze }));
 
 import { scheduleBgbAnalysis, buildHistoryItem } from './transcriptionHistory';
+import { rememberCaption } from '../../services/captions';
 import { useHistoryStore } from '../useHistoryStore';
 
 const item: any = { id: 'h1', fileName: 'a.mp3', transcript: 'সীমান্তে মাদক', bgbRemark: undefined };
@@ -56,5 +57,11 @@ describe('buildHistoryItem', () => {
     expect(buildHistoryItem(file, meta, '[00:00] **Speaker 1:** কথা', 30, 'gemini-3.5-flash', looping).warnings).toEqual(expect.arrayContaining(['loop', 'littleText']));
     expect(buildHistoryItem(file, meta, 'text', 30, 'gemini-3.5-flash')).not.toHaveProperty('warnings');
     expect(buildHistoryItem(file, { duration: '01:00' }, 'text', 30, 'gemini-3.5-flash', 'text')).not.toHaveProperty('warnings');
+  });
+
+  it('compares with the YouTube captions found next to the recording', () => {
+    const recording = new File(['x'], 'talk.opus');
+    rememberCaption(recording, Array.from({ length: 40 }, (_, i) => `[০০:${i}] আজকের আলোচনায় আমরা কথা বলব দেশের অর্থনীতি নিয়ে`).join('\n'));
+    expect(buildHistoryItem(recording, { duration: '01:00' }, '[00:00] **Speaker 1:** আজকের আলোচনা', 30, 'gemini-3.5-flash', 'x').warnings).toEqual(['lessThanCaptions']);
   });
 });

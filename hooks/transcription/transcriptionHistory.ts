@@ -1,16 +1,19 @@
 import type { FileMeta, HistoryItem } from '../../types';
 import { addToStore, STORES } from '../../services/db';
 import { transcriptWarnings } from './transcriptWarnings';
+import { captionOf, captionLetters } from '../../services/captions';
 import { parseDurationToSeconds } from './transcriptionUtils';
 
 // File info shown in the sidebar; YouTube downloads add the channel
 type SourceMeta = Partial<FileMeta> & { channelName?: string };
 
-// `answer` is Gemini's text before cleanup; given, the item gets the warnings of transcriptWarnings
+// `answer` is Gemini's text before cleanup; given, the item gets the warnings of transcriptWarnings, compared with
+// the recording's YouTube captions too when they were found next to it in the watched folder
 export const buildHistoryItem = (inputFile: Blob, inputMetadata: SourceMeta, transcript: string, elapsedSeconds: number, model?: string, answer?: string) => {
   const fileName = (inputFile as File).name || inputMetadata.name || "audio_file";
   const fileExtension = fileName.includes('.') ? fileName.split('.').pop() : 'mp3';
-  const warnings = answer === undefined ? [] : transcriptWarnings(transcript, answer, parseDurationToSeconds(inputMetadata.duration));
+  const caption = captionOf(inputFile);
+  const warnings = answer === undefined ? [] : transcriptWarnings(transcript, answer, parseDurationToSeconds(inputMetadata.duration), caption ? captionLetters(caption) : 0);
   return {
     id: `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
     fileName: fileName,

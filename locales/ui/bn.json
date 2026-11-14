@@ -467,5 +467,6 @@
   "punctuationFailed": "বিরামচিহ্ন ঠিক করা যায়নি: {message}",
   "punctuationUndo": "ফিরুন",
   "punctuationUndoHint": "বিরামচিহ্ন ঠিক করার আগের লেখায় ফিরে যান",
-  "punctuationUndone": "ট্রান্সক্রিপ্ট আগের মতো ফিরে এসেছে"
+  "punctuationUndone": "ট্রান্সক্রিপ্ট আগের মতো ফিরে এসেছে",
+  "transcriptWarningLessThanCaptions": "এই অডিওর YouTube সাবটাইটেলের তুলনায় লেখা অনেক কম: কোনো অংশ বাদ পড়ে থাকতে পারে"
 }

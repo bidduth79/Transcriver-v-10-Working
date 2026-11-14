@@ -10,6 +10,7 @@ import { claimTabLock } from '../services/tabLock';
 import { useHistoryStore } from './useHistoryStore';
 import { useBackgroundJobStore } from './transcription/useBackgroundJobStore';
 import { uiText } from '../utils/uiText';
+import { attachCaptions } from '../services/captions';
 
 // 'needsPermission': a folder is saved, but after a reload the browser wants one click before it can be read.
 // 'paused': the folder is kept, but not looked into until it is turned on again.
@@ -163,6 +164,8 @@ export const useFolderWatch = (
     if (ready.length === 0 || isBusy()) return;
     const batch = ready.slice(0, MAX_FILES_PER_BATCH);
     takenRef.current.push(...batch);
+    // YouTube's captions next to each recording, to compare the transcript with
+    await attachCaptions(batch, files);
     if (useFolderWatchStore.getState().mode === 'review') {
       toast.info(uiText(appLang, 'watchFolderReviewFiles', { count: batch.length }));
       queueFiles(batch);
