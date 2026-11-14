@@ -1,5 +1,6 @@
 import React from 'react';
-import { AVAILABLE_MODELS, MODEL_CATEGORY_GROUPS, DEFAULT_MODEL } from '../../../services/ApiKeyManager.ts';
+import { MODEL_CATEGORY_GROUPS, DEFAULT_MODEL } from '../../../services/ApiKeyManager.ts';
+import { allModels } from '../../../services/apiKeys/customModels';
 import type { ModelSelectorState } from './useModelSelector';
 import { uiText } from '../../../utils/uiText';
 import { useThemeStore } from '../../../hooks/useThemeStore';
@@ -16,7 +17,7 @@ export const ModelCategoryList = ({ activeModelName, selector }: Props) => {
   return (
              <div className="p-2.5 max-h-[370px] overflow-y-auto custom-scrollbar space-y-3">
                {MODEL_CATEGORY_GROUPS.map(group => {
-                 const groupModels = AVAILABLE_MODELS.filter(m => m.category === group.id);
+                 const groupModels = allModels().filter(m => m.category === group.id);
                  return (
                    <div key={group.id} className="bg-slate-950/50 border border-white/5 rounded-xl p-2">
                      <div className="px-2 py-1 mb-1 border-b border-white/5">

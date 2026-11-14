@@ -5,6 +5,7 @@ import { ApiKeyModelSelect } from './ApiKeyModelSelect';
 import { ApiKeyList } from './ApiKeyList';
 import { EnvKeyList } from './EnvKeyList';
 import { KeyCheckButton } from './KeyCheckButton';
+import { ModelFinder } from './ModelFinder';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { ToastType } from '../../../hooks/useToast';
 import { uiText } from '../../../utils/uiText';
@@ -26,6 +27,9 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
         <div className="flex flex-col h-full space-y-6">
             {/* AI Model Selection */}
             <ApiKeyModelSelect isDark={isDark} appLang={appLang} selectedModel={selectedModel} onChange={handleModelChange} />
+
+            {/* Find new models */}
+            <ModelFinder isDark={isDark} appLang={appLang} addToast={addToast} />
 
             {/* Input Area */}
             <div className={`p-6 rounded-3xl border flex flex-col gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>

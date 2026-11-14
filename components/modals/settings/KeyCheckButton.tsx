@@ -4,7 +4,7 @@ import { checkKey } from '../../../services/apiKeys/keyCheck';
 import { listEnvKeys } from '../../../services/apiKeys/envKeys';
 import { isTranscribeModel } from '../../../hooks/transcription/transcribeModel';
 import { DEFAULT_MODEL } from '../../../constants/aiModels';
-import { AVAILABLE_MODELS } from '../../../constants/aiModelList';
+import { allModels } from '../../../services/apiKeys/customModels';
 import type { UserApiKey } from '../../../services/ApiKeyManager';
 import type { ToastType } from '../../../hooks/useToast';
 import { uiText } from '../../../utils/uiText';
@@ -23,7 +23,7 @@ interface Props {
 export const KeyCheckButton = ({ keyList, selectedModel, isDark, appLang, addToast }: Props) => {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const model = isTranscribeModel(selectedModel) ? DEFAULT_MODEL : selectedModel;
-  const modelLabel = AVAILABLE_MODELS.find(m => m.id === model)?.label ?? model;
+  const modelLabel = allModels().find(m => m.id === model)?.label ?? model;
 
   const checkAll = async () => {
     const saved = keyList.map(k => (k.key || '').trim()).filter(Boolean);

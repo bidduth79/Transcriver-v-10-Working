@@ -1,6 +1,7 @@
 import React from 'react';
 import { Cpu } from 'lucide-react';
-import { AVAILABLE_MODELS, MODEL_CATEGORY_GROUPS } from '../../../services/ApiKeyManager';
+import { MODEL_CATEGORY_GROUPS } from '../../../services/ApiKeyManager';
+import { allModels } from '../../../services/apiKeys/customModels';
 import { uiText } from '../../../utils/uiText';
 
 interface Props {
@@ -37,7 +38,7 @@ export const ApiKeyModelSelect = ({ isDark, appLang, selectedModel, onChange }: 
                     >
                         {MODEL_CATEGORY_GROUPS.map(group => (
                             <optgroup key={group.id} label={appLang === 'bn' ? group.titleBn : group.titleEn}>
-                                {AVAILABLE_MODELS.filter(m => m.category === group.id).map((m) => (
+                                {allModels().filter(m => m.category === group.id).map((m) => (
                                     <option key={m.id} value={m.id}>
                                         {m.label} — {m.speedBadgeBn} {m.badge ? `(${m.badge})` : ''}
                                     </option>

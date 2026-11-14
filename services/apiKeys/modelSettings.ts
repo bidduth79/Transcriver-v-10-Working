@@ -1,12 +1,12 @@
 import { useAppStore } from '../../hooks/useAppStore';
 import { DEFAULT_MODEL, type AIModelDefinition } from '../../constants/aiModels';
-import { AVAILABLE_MODELS } from '../../constants/aiModelList';
+import { allModels } from './customModels';
 import { ACTIVE_MODEL_STORAGE, SPEED_OPT_STORAGE } from './storageKeys';
 
 export const getModelDefinition = (modelId: string): AIModelDefinition => {
   return (
-    AVAILABLE_MODELS.find(m => m.id === modelId) ||
-    AVAILABLE_MODELS.find(m => m.id === DEFAULT_MODEL)!
+    allModels().find(m => m.id === modelId) ||
+    allModels().find(m => m.id === DEFAULT_MODEL)!
   );
 };
 
@@ -33,5 +33,5 @@ export const setActiveModel = (modelId: string) => {
 // A saved choice of a model that is no longer offered (retired by Google) falls back to the default
 export const getActiveModel = () => {
   const saved = localStorage.getItem(ACTIVE_MODEL_STORAGE);
-  return saved && AVAILABLE_MODELS.some(m => m.id === saved) ? saved : DEFAULT_MODEL;
+  return saved && allModels().some(m => m.id === saved) ? saved : DEFAULT_MODEL;
 };

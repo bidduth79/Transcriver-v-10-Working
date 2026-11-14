@@ -3,7 +3,7 @@ import { useAppStore } from '../../../hooks/useAppStore';
 import { keyQuotaToday } from '../../../services/apiKeys/keyQuota';
 import { keyRejection } from '../../../services/apiKeys/keyRejection';
 import { lastKeyCheck, type KeyCheckStatus } from '../../../services/apiKeys/keyCheck';
-import { AVAILABLE_MODELS } from '../../../constants/aiModelList';
+import { allModels } from '../../../services/apiKeys/customModels';
 import { uiText, type UiTextKey } from '../../../utils/uiText';
 
 interface Props {
@@ -21,7 +21,7 @@ export const KeyQuotaLine = ({ tail, appLang }: Props) => {
   const rejection = keyRejection(tail);
   const check = lastKeyCheck(tail);
   const time = (ms: number) => new Date(ms).toLocaleTimeString(appLang === 'bn' ? 'bn-BD' : 'en-US', { hour: 'numeric', minute: '2-digit' });
-  const modelLabel = (id: string) => AVAILABLE_MODELS.find(m => m.id === id)?.label ?? id;
+  const modelLabel = (id: string) => allModels().find(m => m.id === id)?.label ?? id;
   // A refused key and a used-up quota have their own lines below; the test shows the other outcomes
   const checkKeys: Partial<Record<KeyCheckStatus, UiTextKey>> = { ok: 'keyCheckOk', rateLimited: 'keyCheckRateLimited', busy: 'keyCheckBusy', error: 'keyCheckError' };
   const checkKey = check && checkKeys[check.status];

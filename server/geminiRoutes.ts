@@ -25,6 +25,28 @@ export const registerGeminiRoutes = (app: express.Express) => {
 
   app.use(express.json({ limit: '50mb' }));
 
+  // The models a key can use, for "Find new models" in Settings (listing spends no quota)
+  app.post('/api/gemini/models', async (req, res) => {
+    try {
+      const models = await runWithKey(req.body?.apiKey, async (ai) => {
+        const found: { id: string; label: string; inputTokenLimit?: number; actions: string[] }[] = [];
+        for await (const model of await ai.models.list({ config: { pageSize: 1000 } })) {
+          found.push({
+            id: String(model.name ?? '').replace(/^models\//, ''),
+            label: model.displayName ?? '',
+            inputTokenLimit: model.inputTokenLimit,
+            actions: model.supportedActions ?? [],
+          });
+        }
+        return found;
+      });
+      res.json({ models });
+    } catch (err) {
+      const status = statusFromError(err);
+      res.status(status).json({ error: { message: (err as Error)?.message || String(err), status } });
+    }
+  });
+
   app.post('/api/gemini/generate', async (req, res) => {
     try {
       const { apiKey, model, contents, config } = req.body ?? {};
