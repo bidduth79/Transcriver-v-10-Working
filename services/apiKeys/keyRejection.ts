@@ -43,6 +43,17 @@ export const noteKeyRejection = (tail: string, err: unknown, now = Date.now()) =
   }
 };
 
+// A request that worked: the key is fine again (billing turned on, or a new key with the same last letters)
+export const clearKeyRejection = (tail: string) => {
+  const list = readRejected();
+  if (!list.some(k => k.tail === tail)) return;
+  try {
+    localStorage.setItem(REJECTED_STORAGE, JSON.stringify(list.filter(k => k.tail !== tail)));
+  } catch {
+    // Storage blocked: the mark simply runs out at the end of the quota day
+  }
+};
+
 // Why Gemini refused this key today, if it did
 export const keyRejection = (tail: string, now = Date.now()): KeyRejection | null =>
   readRejected().find(k => k.tail === tail && k.until > now)?.reason ?? null;

@@ -20,6 +20,8 @@ vi.mock('./geminiTransport', () => ({
 vi.mock('./apiCallStats', () => ({ logApiCall: (e: any) => m.logged.push(e) }));
 
 import { createGeminiClient } from './geminiClient';
+import { noteKeyRejection, keyRejection } from './keyRejection';
+import { noteQuotaError, isQuotaUsedUp } from './keyQuota';
 import { pacificDayStart, pacificDayIndex } from '../../components/modals/quota/pacificDay';
 
 beforeEach(() => { m.logged = []; m.queue = []; m.models = []; m.configs = []; });
@@ -39,6 +41,21 @@ describe('createGeminiClient', () => {
       { status: 'error', model: 'gemini-3.5-flash', keyTail: 'WXYZ', rateLimited: false },
     ]);
     expect(JSON.stringify(m.logged)).not.toContain('SECRET');
+  });
+});
+
+describe('marks of a key that failed before', () => {
+  it("a request that works clears an earlier refusal and that model's used-up quota for the key", async () => {
+    localStorage.clear();
+    noteKeyRejection('WXYZ', Object.assign(new Error('API key not valid'), { status: 401 }));
+    noteQuotaError('WXYZ', 'gemini-3.5-flash', Object.assign(new Error('GenerateRequestsPerDayPerProjectPerModel'), { status: 429 }));
+    expect(isQuotaUsedUp('WXYZ', 'gemini-3.5-flash')).toBe(true);
+    noteQuotaError('WXYZ', 'gemini-3.8-flash', Object.assign(new Error('GenerateRequestsPerDayPerProjectPerModel'), { status: 429 }));
+    m.queue = [{ text: 'ok' }];
+    await (await createGeminiClient('SECRET-KEY-WXYZ')).models.generateContent({ model: 'gemini-3.5-flash', contents: 'x' });
+    expect(keyRejection('WXYZ')).toBeNull();
+    expect(isQuotaUsedUp('WXYZ', 'gemini-3.5-flash')).toBe(false);
+    expect(isQuotaUsedUp('WXYZ', 'gemini-3.8-flash')).toBe(true);
   });
 });
 

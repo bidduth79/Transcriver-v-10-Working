@@ -15,4 +15,9 @@ describe('KeyQuotaLine', () => {
     expect(render(<KeyQuotaLine tail="0yPg" appLang="en" />).container.textContent).toContain('no free tier');
     expect(render(<KeyQuotaLine tail="Dva0" appLang="en" />).container.textContent).toBe('0 request(s) today');
   });
+
+  it('shows the last test of the key', () => {
+    localStorage.setItem('key_check_results', JSON.stringify({ Dva0: { tail: 'Dva0', status: 'ok', model: 'gemini-3.5-flash', at: Date.UTC(2026, 10, 14, 6, 5) } }));
+    expect(render(<KeyQuotaLine tail="Dva0" appLang="en" />).container.textContent).toMatch(/✓ works \(Gemini 3\.5 Flash, tested .+\)/);
+  });
 });

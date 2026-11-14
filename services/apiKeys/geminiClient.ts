@@ -7,8 +7,8 @@ import {
   requestDeleteFile,
 } from './geminiTransport';
 import { messageOf } from '../../utils/errorMessage';
-import { noteQuotaError } from './keyQuota';
-import { noteKeyRejection } from './keyRejection';
+import { noteQuotaError, clearQuotaUsedUp } from './keyQuota';
+import { noteKeyRejection, clearKeyRejection } from './keyRejection';
 import { isServerBusy } from '../../utils/serverBusy';
 
 const statusOf = (err: unknown) => (err as { status?: number } | null | undefined)?.status;
@@ -63,6 +63,9 @@ export const createGeminiClient = async (apiKey: string): Promise<GeminiClient> 
         status: 'success', model: params.model, keyTail, latency: Date.now() - started,
         promptTokens: usage?.promptTokenCount ?? 0, tokens: usage?.totalTokenCount ?? 0,
       });
+      // It worked: earlier marks of a refused key or a used-up quota no longer hold
+      clearKeyRejection(keyTail);
+      clearQuotaUsedUp(keyTail, params.model);
       return response;
     } catch (err) {
       logApiCall({ status: 'error', model: params.model, keyTail, latency: Date.now() - started, rateLimited: isRateLimited(err) });

@@ -426,5 +426,15 @@
   "keyRejectedInvalid": "Gemini বলছে এই key বৈধ নয়: সরিয়ে দিন, অথবা নতুন key যোগ করুন",
   "keyRejectedNoAccess": "এই key-এর প্রজেক্টে ফ্রি টিয়ার নেই (Gemini billing চায়): এটি সবার শেষে চেষ্টা করা হয়",
   "transcribeLongAudioPro": "এই অডিও {minutes} মিনিটের। প্রো মোডে (বক্তা ও সময়সহ) Transcribe মডেল এক অনুরোধে ৩০ মিনিট পর্যন্ত লেখে (Google-এর সীমা), তাই শেষের অংশ বাদ পড়তে পারে। নরমাল মোডে ১ ঘণ্টা পর্যন্ত লেখে; পুরোটা একবারে চাইলে Flash মডেল বেছে নিন।",
-  "transcribeLongAudioNormal": "এই অডিও {minutes} মিনিটের। Transcribe মডেল এক অনুরোধে ১ ঘণ্টা পর্যন্ত লেখে (Google-এর সীমা), তাই শেষের অংশ বাদ পড়তে পারে। পুরোটা চাইলে Flash মডেল বেছে নিন।"
+  "transcribeLongAudioNormal": "এই অডিও {minutes} মিনিটের। Transcribe মডেল এক অনুরোধে ১ ঘণ্টা পর্যন্ত লেখে (Google-এর সীমা), তাই শেষের অংশ বাদ পড়তে পারে। পুরোটা চাইলে Flash মডেল বেছে নিন।",
+  "keyCheckTitle": "key পরীক্ষা",
+  "keyCheckHint": "প্রতিটি key দিয়ে {model} মডেলে একটি ছোট প্রশ্ন পাঠানো হয়: এতে সেই key-এর আজকের কোটা থেকে ১টি অনুরোধ খরচ হয়।",
+  "keyCheckAll": "সব key পরীক্ষা করুন",
+  "keyCheckRunning": "পরীক্ষা চলছে… {done}/{total}",
+  "keyCheckDone": "{total}টি key-এর মধ্যে {ok}টি কাজ করছে",
+  "keyCheckNoKeys": "পরীক্ষা করার মতো কোনো key নেই",
+  "keyCheckOk": "✓ কাজ করছে ({model}, {time}-এ পরীক্ষা)",
+  "keyCheckRateLimited": "পরীক্ষার সময় মিনিটের সীমায় ছিল ({time}); এক মিনিট পরে আবার চেষ্টা করুন",
+  "keyCheckBusy": "পরীক্ষার সময় Gemini ব্যস্ত ছিল ({time}); পরে আবার চেষ্টা করুন",
+  "keyCheckError": "পরীক্ষা ব্যর্থ ({time}); কারণ দেখতে মাউস রাখুন"
 }

@@ -4,6 +4,7 @@ import { useApiKeySettings } from './useApiKeySettings';
 import { ApiKeyModelSelect } from './ApiKeyModelSelect';
 import { ApiKeyList } from './ApiKeyList';
 import { EnvKeyList } from './EnvKeyList';
+import { KeyCheckButton } from './KeyCheckButton';
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { ToastType } from '../../../hooks/useToast';
 import { uiText } from '../../../utils/uiText';
@@ -53,6 +54,9 @@ export const SettingsApiKeys: React.FC<SettingsApiKeysProps> = ({ isDark, active
                     </button>
                 </div>
             </div>
+
+            {/* Test all keys */}
+            <KeyCheckButton keyList={keyList} selectedModel={selectedModel} isDark={isDark} appLang={appLang} addToast={addToast} />
 
             {/* List Area */}
             <ApiKeyList keyList={keyList} activeKeyId={activeKeyId} isDark={isDark} appLang={appLang} onSelect={handleSelectKey} onDelete={handleDeleteKey} />

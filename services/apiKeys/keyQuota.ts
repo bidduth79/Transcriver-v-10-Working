@@ -64,6 +64,17 @@ export const keyQuotaToday = (tail: string, now = Date.now()) => {
   return { requests, exhausted };
 };
 
+// A request that worked: this model's quota on this key is back (it can return before the time Gemini gave)
+export const clearQuotaUsedUp = (tail: string, model: string) => {
+  const list = readExhausted();
+  if (!list.some(q => q.tail === tail && q.model === model)) return;
+  try {
+    localStorage.setItem(EXHAUSTED_STORAGE, JSON.stringify(list.filter(q => !(q.tail === tail && q.model === model))));
+  } catch {
+    // Storage blocked: the mark simply runs out at its reset time
+  }
+};
+
 // This key's daily quota for this model is used up
 export const isQuotaUsedUp = (tail: string, model: string, now = Date.now()) =>
   readExhausted().some(q => q.tail === tail && q.model === model && q.resetAt > now);

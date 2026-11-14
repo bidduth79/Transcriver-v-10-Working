@@ -426,5 +426,15 @@
   "keyRejectedInvalid": "Gemini says this key is not valid: remove it, or add a new one",
   "keyRejectedNoAccess": "This key's project has no free tier (Gemini asks for billing): it is tried last",
   "transcribeLongAudioPro": "This audio is {minutes} minutes. In Pro mode (speakers and times) the Transcribe model handles 30 minutes per request (Google's limit), so the end may be missing. Normal mode handles up to 1 hour; a Flash model takes it whole.",
-  "transcribeLongAudioNormal": "This audio is {minutes} minutes. The Transcribe model handles 1 hour per request (Google's limit), so the end may be missing. A Flash model takes it whole."
+  "transcribeLongAudioNormal": "This audio is {minutes} minutes. The Transcribe model handles 1 hour per request (Google's limit), so the end may be missing. A Flash model takes it whole.",
+  "keyCheckTitle": "Test keys",
+  "keyCheckHint": "Each key is asked one tiny question on {model}: it spends one of that key's requests for today.",
+  "keyCheckAll": "Test all keys",
+  "keyCheckRunning": "Testing… {done}/{total}",
+  "keyCheckDone": "{ok} of {total} key(s) work",
+  "keyCheckNoKeys": "There is no key to test",
+  "keyCheckOk": "✓ works ({model}, tested {time})",
+  "keyCheckRateLimited": "at its per-minute limit when tested ({time}); try again in a minute",
+  "keyCheckBusy": "Gemini was busy when tested ({time}); try again later",
+  "keyCheckError": "test failed ({time}); hover for the reason"
 }
