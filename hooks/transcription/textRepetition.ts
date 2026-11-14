@@ -5,6 +5,7 @@
 import { removeRepetitiveBlocks, splitLongParagraphs } from './textCleanup';
 import { TIMESTAMP_SOURCE } from '../../utils/transcriptTimes';
 import { removeTimedCopies } from './timedCopies';
+import { joinSpeakerParagraphs } from './speakerParagraphs';
 
 const TIMES = new RegExp(TIMESTAMP_SOURCE, 'g');
 
@@ -128,7 +129,8 @@ export const repeatsOf = (pieces: string[], transcript: string): (boolean | null
   });
 };
 
-// The saved form of an answer: lines written again with their old times and other repeats taken out, long
-// paragraphs split for reading
+// The saved form of an answer: lines written again with their old times and other repeats taken out (line by line,
+// where copies are easiest to see), long paragraphs split, then one speaker's lines joined into paragraphs of
+// about five sentences
 export const cleanTranscript = (text: string) =>
-  removeRepeatedPieces(splitLongParagraphs(removeRepetitiveBlocks(removeTimedCopies(text))));
+  joinSpeakerParagraphs(removeRepeatedPieces(splitLongParagraphs(removeRepetitiveBlocks(removeTimedCopies(text)))));
