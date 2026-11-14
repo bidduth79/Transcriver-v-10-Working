@@ -68,6 +68,22 @@ export const AVAILABLE_MODELS: AIModelDefinition[] = [
       quotaInfo: 'উচ্চ কোটা লিমিট (কোটা মনিটর → সীমা বদলান)'
     }
   },
+  {
+    id: 'gemini-4-hydrogen',
+    label: 'Gemini 4 Hydrogen',
+    badge: 'Gemini 4',
+    category: 'balanced',
+    categoryLabelBn: '⚖️ ব্যালেন্সড',
+    categoryLabelEn: 'Balanced',
+    speedBadgeBn: 'মাঝারি গতি',
+    thinkingBehavior: 'minimal',
+    infoBn: {
+      howItWorks: 'Google-এর নতুন প্রজন্মের (Gemini 4) মডেল। অ্যাপের নির্দেশনা মেনে বক্তার আসল নাম, দাঁড়ি-কমা ও বাংলা অঙ্কসহ লেখে; যা বোঝা যায় না সেখানে [অস্পষ্ট] লেখে।',
+      speedAndTime: 'মাঝারি: Gemini 3.5 Flash-এর চেয়ে প্রায় ১.৩–২ গুণ সময় নেয় (৪৪ মিনিটের টকশো প্রায় ৩ মিনিটে)।',
+      bestFor: 'টকশো ও আলোচনা। আপনার তিনটি টকশোতে পরীক্ষায় লেখা Gemini 3.5 Flash-এর মতোই সম্পূর্ণ (YouTube সাবটাইটেলের ৮৯–৯৯%), কোনো পুনরাবৃত্তি ছাড়া। এর কোটা আলাদা, তাই অন্য মডেলের কোটা শেষ হলে এটি বেছে নিতে পারেন।',
+      quotaInfo: 'উচ্চ কোটা লিমিট (কোটা মনিটর → সীমা বদলান)'
+    }
+  },
 
   // 3. THINKING / SLOW CATEGORY
   {

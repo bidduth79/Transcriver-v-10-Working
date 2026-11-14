@@ -18,22 +18,25 @@ describe('ModelFinder', () => {
     m.list.mockResolvedValue([
       { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' },
       { id: 'gemini-4-hydrogen', label: 'Gemini 4 Hydrogen' },
+      { id: 'gemini-4-carbon', label: 'Gemini 4 Carbon' },
     ]);
     m.check.mockResolvedValue({ status: 'ok' });
     const addToast = vi.fn();
     const { getByText, queryByText, getAllByText } = render(<ModelFinder isDark={false} appLang="en" addToast={addToast} />);
     fireEvent.click(getByText('Find new models'));
-    await waitFor(() => expect(getByText('Gemini 4 Hydrogen')).toBeTruthy());
+    await waitFor(() => expect(getByText('Gemini 4 Carbon')).toBeTruthy());
+    // Models the app already offers (built in, like Gemini 3.5 Flash and Gemini 4 Hydrogen) are not shown
     expect(queryByText('Gemini 3.5 Flash')).toBeNull();
+    expect(queryByText('Gemini 4 Hydrogen')).toBeNull();
     expect(m.list).toHaveBeenCalledWith('env:env-1:gXeQ');
 
     fireEvent.click(getByText('Test'));
     await waitFor(() => expect(getByText('✓ works with your key')).toBeTruthy());
-    expect(m.check).toHaveBeenCalledWith('env:env-1:gXeQ', 'gemini-4-hydrogen');
+    expect(m.check).toHaveBeenCalledWith('env:env-1:gXeQ', 'gemini-4-carbon');
 
     fireEvent.click(getByText('Add'));
-    expect(readCustomModels()).toEqual([{ id: 'gemini-4-hydrogen', label: 'Gemini 4 Hydrogen' }]);
-    expect(addToast).toHaveBeenCalledWith('Gemini 4 Hydrogen was added: it is in the model lists now', 'success');
+    expect(readCustomModels()).toEqual([{ id: 'gemini-4-carbon', label: 'Gemini 4 Carbon' }]);
+    expect(addToast).toHaveBeenCalledWith('Gemini 4 Carbon was added: it is in the model lists now', 'success');
     await waitFor(() => expect(getByText('Models you added')).toBeTruthy());
 
     fireEvent.click(getAllByText('Remove')[0]);
