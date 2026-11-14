@@ -4,7 +4,7 @@ const m = vi.hoisted(() => ({ parts: null as { blob: Blob; startSeconds: number 
 
 // The answers here are short English stand-ins; only an answer saying so counts as "not a transcript"
 vi.mock('./answerCheck', () => ({ isNotATranscript: (text: string) => text.includes('describes its work') }));
-vi.mock('./audioChunks', () => ({ planAudioChunks: vi.fn(async () => m.parts) }));
+vi.mock('./audioChunks', () => ({ planAudioChunks: vi.fn(async () => m.parts), SPLIT_FROM_SECONDS: 1800 }));
 vi.mock('./geminiAudioSource', () => ({
   createAudioSource: (blob: Blob) => ({ partFor: async () => ({ name: (blob as File).name }), cleanup: () => { m.cleanups++; } }),
 }));
@@ -41,6 +41,7 @@ vi.mock('./geminiTranscriptionRunner', () => ({
 }));
 
 import { transcribeAudio } from './runTranscription';
+import { planAudioChunks } from './audioChunks';
 
 // 'break' stops at a programme's break; asked for the rest, it repeats a little and goes on to the end
 const BREAK_ANSWERS: Record<string, string> = {
@@ -128,6 +129,18 @@ describe('transcribeAudio', () => {
     expect(normal.addToast).not.toHaveBeenCalled();
     await transcribeAudio(named('break'), 'audio/ogg', 3720, normal);
     expect(normal.addToast).toHaveBeenCalledWith(expect.stringContaining('This audio is 62 minutes. The Transcribe model handles 1 hour'), 'warning');
+  });
+
+  it('asks for parts where they do better, and for none when the switch is off', async () => {
+    const planned = vi.mocked(planAudioChunks);
+    await transcribeAudio(named('whole'), 'audio/ogg', 2640, { ...options(), modelName: 'gemini-3.5-flash-lite' });
+    expect(planned).toHaveBeenLastCalledWith(expect.anything(), 'audio/ogg', 2640, { ogg: 1200, other: 1200 });
+    await transcribeAudio(named('whole'), 'audio/ogg', 2640, options());
+    expect(planned.mock.lastCall?.[3]).toMatchObject({ ogg: null });
+    localStorage.setItem('split_long_audio', 'off');
+    await transcribeAudio(named('whole'), 'audio/ogg', 2640, { ...options(), modelName: 'gemini-3.5-flash-lite' });
+    expect(planned.mock.lastCall?.[3]).toEqual({ ogg: null, other: null });
+    localStorage.clear();
   });
 
   it('warns when the rest cannot be had, and keeps what was written', async () => {

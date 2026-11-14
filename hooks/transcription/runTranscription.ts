@@ -4,6 +4,7 @@ import { transcribeOnce, type PieceResult, type TranscribeOptions } from './tran
 import { continueUntilEnd } from './continueTranscript';
 import { emptyTranscriptError } from './transcriptionErrors';
 import { isTranscribeModel, TRANSCRIBE_LIMIT_SECONDS } from './transcribeModel';
+import { splitLimits } from './splitPolicy';
 import { uiText } from '../../utils/uiText';
 
 // Parts of a long recording sent to Gemini at the same time
@@ -46,12 +47,14 @@ const transcribeParts = async (parts: AudioChunk[], totalSeconds: number, option
 };
 
 /**
- * Transcribes prepared audio. Recordings over 30 minutes (WAV or MP3) are cut into parts that
- * are transcribed two at a time and joined with their timestamps moved to the right place; a part that
- * fails is retried on its own by the usual key fallbacks. The model the user chose is used as it is.
+ * Transcribes prepared audio. A long recording is cut into parts where that does better (splitPolicy: Lite and
+ * transcribe models, WAV/MP3 over 30 minutes; the user can turn it off), transcribed two at a time and joined
+ * with their timestamps moved to the right place; a part that fails is retried on its own by the usual key
+ * fallbacks. The model the user chose is used as it is.
  */
 export const transcribeAudio = async (blob: Blob, mimeType: string, durationSeconds: number, options: TranscribeOptions) => {
-  const parts = await planAudioChunks(blob, mimeType, durationSeconds).catch(() => null);
+  const limits = splitLimits(options.modelName, options.mode);
+  const parts = await planAudioChunks(blob, mimeType, durationSeconds, limits).catch(() => null);
   if (parts && parts.length > 1) return transcribeParts(parts, durationSeconds, options);
   // Sent whole past Google's limit, a transcribe model silently stops before the end: said before it starts
   const limit = TRANSCRIBE_LIMIT_SECONDS[options.mode];

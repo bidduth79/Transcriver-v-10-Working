@@ -1,5 +1,6 @@
-// Splits a long WAV or MP3 recording into parts without decoding it: the parts are slices of the
-// original file (plus a small header for WAV), so memory stays low even for hours of audio.
+// Splits a long WAV, MP3 or Ogg Opus recording into parts without decoding it: the parts are slices of the
+// original file (plus a small header for WAV, rewritten pages for Ogg), so memory stays low even for hours of audio.
+import { splitOggOpus } from './oggChunks';
 
 export const SPLIT_FROM_SECONDS = 30 * 60;
 // Under 15 minutes, the limit of speech-only models when they separate speakers
@@ -76,9 +77,9 @@ const quietestNear = async (blob: Blob, f: WavFormat, target: number) => {
   return Math.floor(best / f.blockAlign) * f.blockAlign;
 };
 
-const splitWav = async (blob: Blob, f: WavFormat): Promise<AudioChunk[] | null> => {
+const splitWav = async (blob: Blob, f: WavFormat, minSeconds: number): Promise<AudioChunk[] | null> => {
   const duration = f.dataSize / f.byteRate;
-  if (duration < SPLIT_FROM_SECONDS) return null;
+  if (duration < minSeconds) return null;
   const parts = Math.ceil(duration / CHUNK_SECONDS);
   const cuts = [0];
   for (let k = 1; k < parts; k++) {
@@ -96,8 +97,8 @@ const isMp3FrameStart = (b: Uint8Array, i: number) =>
   b[i] === 0xff && (b[i + 1] & 0xe0) === 0xe0 && ((b[i + 1] >> 1) & 3) !== 0 && (b[i + 2] >> 4) !== 0xf && ((b[i + 2] >> 2) & 3) !== 3;
 
 // MP3 has no length table: cut points come from the known duration (a constant bitrate is assumed)
-const splitMp3 = async (blob: Blob, head: Uint8Array, duration: number): Promise<AudioChunk[] | null> => {
-  if (duration < SPLIT_FROM_SECONDS) return null;
+const splitMp3 = async (blob: Blob, head: Uint8Array, duration: number, minSeconds: number): Promise<AudioChunk[] | null> => {
+  if (duration < minSeconds) return null;
   const audioStart = ascii(head, 0).startsWith('ID3')
     ? 10 + (((head[6] & 0x7f) << 21) | ((head[7] & 0x7f) << 14) | ((head[8] & 0x7f) << 7) | (head[9] & 0x7f))
     : 0;
@@ -118,14 +119,25 @@ const splitMp3 = async (blob: Blob, head: Uint8Array, duration: number): Promise
   }));
 };
 
+// From how many seconds a recording is sent in parts, by kind of file; null: never (see splitPolicy)
+export interface SplitLimits {
+  ogg: number | null;
+  other: number | null;
+}
+
 /**
- * The parts to transcribe one by one, or null when the recording is short enough for one request or is
- * not a WAV/MP3 file (other formats cannot be cut without decoding them).
+ * The parts to transcribe one by one, or null when the recording is short enough for one request, is not to be
+ * split, or is not a WAV, MP3 or Ogg Opus file (other formats cannot be cut without decoding them).
  */
-export const planAudioChunks = async (blob: Blob, mimeType: string, durationSeconds: number): Promise<AudioChunk[] | null> => {
+export const planAudioChunks = async (
+  blob: Blob, mimeType: string, durationSeconds: number,
+  limits: SplitLimits = { ogg: null, other: SPLIT_FROM_SECONDS },
+): Promise<AudioChunk[] | null> => {
   const head = await readBytes(blob, 0, 65536);
+  if (ascii(head, 0) === 'OggS') return limits.ogg === null ? null : splitOggOpus(blob, limits.ogg, CHUNK_SECONDS);
+  if (limits.other === null) return null;
   const wav = readWavFormat(head, blob.size);
-  if (wav) return splitWav(blob, wav);
+  if (wav) return splitWav(blob, wav, limits.other);
   const looksMp3 = /mpeg|mp3/.test(mimeType) || ascii(head, 0).startsWith('ID3') || isMp3FrameStart(head, 0);
-  return looksMp3 && durationSeconds > 0 ? splitMp3(blob, head, durationSeconds) : null;
+  return looksMp3 && durationSeconds > 0 ? splitMp3(blob, head, durationSeconds, limits.other) : null;
 };

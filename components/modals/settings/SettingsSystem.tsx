@@ -4,6 +4,7 @@ import { isLocalServerEnabled, setLocalServerEnabled } from '../../../utils/conf
 import type { ActiveColors } from '../../../hooks/useAppTheme';
 import type { ToastType } from '../../../hooks/useToast';
 import { uiText } from '../../../utils/uiText';
+import { SplitAudioToggle } from './SplitAudioToggle';
 
 interface SettingsSystemProps {
     isDark: boolean;
@@ -73,6 +74,9 @@ export const SettingsSystem: React.FC<SettingsSystemProps> = ({ isDark, activeCo
                         : (uiText(appLang, 'disabled'))}
                 </button>
             </div>
+
+            {/* Long audio sent in parts, where that does better */}
+            <SplitAudioToggle isDark={isDark} appLang={appLang} addToast={addToast} />
 
             {/* 2. Local XAMPP Server Toggle */}
             <div className={`p-6 rounded-3xl border flex items-center justify-between gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>

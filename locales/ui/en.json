@@ -478,5 +478,9 @@
   "knownNamesPlaceholder": "A name as it should be spelled (several separated by commas)",
   "knownNamesEmpty": "No names yet: they are learned from new transcripts, or press \"Learn from history\"",
   "knownNamesYours": "Added by you",
-  "knownNamesCount": "In {count} transcripts"
+  "knownNamesCount": "In {count} transcripts",
+  "splitAudioTitle": "Split long audio",
+  "splitAudioHint": "On: a long recording is sent in parts of about 14 minutes where that gives better transcripts: Lite models over 20 minutes (whole, they loop), the Transcribe model past its limit (30 minutes Pro, 1 hour Normal), and WAV/MP3 over 30 minutes. Flash and Hydrogen get Opus whole, which they transcribe completely with fewer requests. Off: every recording is sent whole.",
+  "splitAudioTurnedOn": "Long audio will be sent in parts where that does better",
+  "splitAudioTurnedOff": "Every recording will be sent whole"
 }
