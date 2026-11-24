@@ -75,7 +75,11 @@ export const ExpandedHistoryCard = ({
                           <svg className={`w-6 h-6 ${isSensitive ? 'text-red-400' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                        </div>
                     </div>
-                    <h4 className={`text-sm font-black line-clamp-2 mb-8 uppercase tracking-tight leading-relaxed transition-colors font-stylish-bn group-hover:text-indigo-500 relative z-10 ${isDark ? 'text-white' : 'text-slate-800'}`}>{item.fileName}</h4>
+                    <h4 className={`text-sm font-black line-clamp-2 mb-8 uppercase tracking-tight leading-relaxed transition-colors font-stylish-bn group-hover:text-indigo-500 relative z-10 ${
+                      item.hasBeenOpened 
+                        ? (activeColors?.text || (isDark ? 'text-indigo-400' : 'text-indigo-600')) 
+                        : (isDark ? 'text-white' : 'text-slate-800')
+                    }`}>{item.fileName}</h4>
                     <div className="mt-auto pt-6 border-t border-slate-100/50 flex items-center justify-between relative z-10">
                        <div className="flex flex-col group/info-date"><span className="text-[10px] font-black opacity-40 uppercase tracking-widest bn:tracking-normal mb-1.5 group-hover/info-date:opacity-100 transition-opacity">{t.historyLabelDate}</span><span className={`text-[11px] font-black ${isDark ? 'text-white/80' : 'text-slate-600'}`}>{new Date(item.date).toLocaleDateString()}</span></div>
                        <div className="flex flex-col items-end group/info-dur">

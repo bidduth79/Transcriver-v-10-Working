@@ -68,7 +68,15 @@ export const HistoryItemCard = memo(({
       {isPressing && <HoldToDeleteProgress />}
 
       <div className="mb-2 flex justify-between items-start gap-2 relative z-10">
-          <p className={`text-[11px] font-bold ${isPressing ? 'text-red-400' : isActive ? (isDark ? 'text-green-400' : 'text-green-800') : (isDark ? 'text-white/90' : 'text-slate-700')} truncate font-stylish-bn transition-colors group-hover:text-indigo-500`}>
+          <p className={`text-[11px] font-bold ${
+            isPressing 
+              ? 'text-red-400' 
+              : isActive 
+                ? (isDark ? 'text-green-400' : 'text-green-800') 
+                : item.hasBeenOpened 
+                  ? (activeColors?.text || (isDark ? 'text-indigo-400' : 'text-indigo-600'))
+                  : (isDark ? 'text-white/90' : 'text-slate-700')
+          } truncate font-stylish-bn transition-colors group-hover:text-indigo-500`}>
             {item.fileName?.replace(/_/g, ' ').replace(/#/g, '').replace(/\s+/g, ' ').trim()}
           </p>
           <button 
@@ -130,6 +138,7 @@ export const HistoryItemCard = memo(({
 }, (prev, next) => {
   return (
     prev.item === next.item &&
+    prev.item?.hasBeenOpened === next.item?.hasBeenOpened &&
     (prev.activeHistoryId === prev.item?.id) === (next.activeHistoryId === next.item?.id) &&
     prev.isDuplicate === next.isDuplicate &&
     prev.isDark === next.isDark &&
